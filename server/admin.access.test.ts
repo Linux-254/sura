@@ -15,4 +15,15 @@ describe("SURA admin controls", () => {
     const caller = appRouter.createCaller(createUserContext("user"));
     await expect(caller.admin.companyReviewQueue()).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
+
+  it("rejects commission-rate changes for a non-admin account before a company record can change", async () => {
+    const caller = appRouter.createCaller(createUserContext("user"));
+    await expect(caller.admin.setCompanyCommissionRate({ companyId: 1, commissionRatePct: 30 })).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("enforces the 20% to 50% commission boundary before mutation", async () => {
+    const caller = appRouter.createCaller(createUserContext("admin"));
+    await expect(caller.admin.setCompanyCommissionRate({ companyId: 1, commissionRatePct: 19 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(caller.admin.setCompanyCommissionRate({ companyId: 1, commissionRatePct: 51 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
 });

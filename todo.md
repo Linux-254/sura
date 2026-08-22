@@ -56,7 +56,7 @@
 - [ ] Build company product, delivery, contact, discount, and commission controls with order-specific seller settlement visibility.
 - [ ] Add verified post-purchase reviews without fabricated user-generated content.
 - [ ] Add security, permission, commission, delivery, and review validation tests for the AI commerce flows.
-- [ ] Add admin-only company commission controls that enforce and display the 20%–50% platform range.
+- [x] Add admin-only company commission controls that enforce and display the 20%–50% platform range.
 - [x] Create reusable SURA editorial loading, skeleton, empty, processing, and error-state components.
 - [ ] Apply refined state treatments to AI studio, commerce, account/company/admin dashboards, and public discovery routes.
 - [ ] Verify visual state hierarchy and motion across desktop and mobile without obscuring user actions.

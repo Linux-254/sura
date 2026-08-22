@@ -14,6 +14,7 @@ import AiStudioPage from "@/pages/AiStudioPage";
 import { CommerceOrdersPage, ShopPage } from "@/pages/CommercePages";
 import CompanyCatalogPage from "@/pages/CompanyCatalogPage";
 import AestheticPreferencesPage from "@/pages/AestheticPreferencesPage";
+import AdminCommissionPage from "@/pages/AdminCommissionPage";
 import NotFound from "@/pages/NotFound";
 import SharedBuild from "@/pages/SharedBuild";
 import VendorProfile from "@/pages/VendorProfile";
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/company/:id" component={CompanyDetailPage} />
       <Route path="/checkout" component={CheckoutPage} />
       <Route path="/admin" component={AdminPage} />
+      <Route path="/admin/commissions" component={AdminCommissionPage} />
       <Route path="/admin/engagement" component={AdminEngagementPage} />
       <Route path="/share/:token" component={SharedBuild} />
       <Route path="/vendors/:slug" component={VendorProfile} />

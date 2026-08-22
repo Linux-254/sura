@@ -288,6 +288,13 @@ export async function updateCompanyReviewStatus(companyId: number, verificationS
   return { persisted: true };
 }
 
+export async function updateCompanyCommissionRate(companyId: number, commissionRatePct: number) {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  await db.update(companies).set({ commissionRatePct }).where(eq(companies.id, companyId));
+  return { persisted: true };
+}
+
 export async function getOrCreateFreeMembership(userId: number) {
   const db = await getDb();
   if (!db) return { planKey: "sura_free" as const, status: "active" as const, persisted: false };
