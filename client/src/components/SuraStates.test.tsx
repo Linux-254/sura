@@ -23,4 +23,11 @@ describe("SURA editorial state components", () => {
     const { container } = render(<SuraPageSkeleton cards={2} />);
     expect(container.querySelectorAll(".sura-shimmer").length).toBeGreaterThan(4);
   });
+
+  it("keeps a supplied primary action visible in an empty state", () => {
+    const action = vi.fn();
+    render(<SuraEmptyState title="No company spaces yet" copy="You can create a studio when ready." action={<button onClick={action}>Create company</button>} />);
+    screen.getByRole("button", { name: "Create company" }).click();
+    expect(action).toHaveBeenCalledOnce();
+  });
 });
