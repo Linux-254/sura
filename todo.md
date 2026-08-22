@@ -15,3 +15,16 @@
 - [x] Verify the refined experience on desktop and mobile and create the delivery checkpoint.
 - [x] Add clear featured-vendor empty and error treatments on the public landing page.
 - [x] Add clear board-data error treatment for signed-in planning views.
+- [x] Add privacy-conscious browser geolocation with a clear city-confirmation fallback for visitors in Kenya.
+- [x] Persist the visitor’s selected Kenyan city locally and expose it throughout the public experience.
+- [x] Use detected or confirmed city as the default for build recommendations and vendor-directory filters.
+- [x] Add tests and responsive verification for location permission, unsupported, outside-Kenya, and manual-city flows.
+- [x] Replace the current VibeBuild name and VB mark with a premium monochrome brand identity suitable for packaging.
+- [x] Create a clear, highly visible hero image treatment that remains readable on mobile and desktop.
+- [x] Apply the new brand identity consistently across navigation, primary routes, and packaging-ready assets.
+- [x] Replace remaining legacy brand strings in build-board and shared-build experiences.
+- [x] Add provider-level coverage for geolocation failures and manual Kenyan-city selection.
+- [x] Add a deterministic visual QA path for Kenyan location permission and fallback states.
+- [x] Refine the SURA hero to follow the supplied presentation’s warm, rounded editorial portfolio collage.
+- [x] Align the landing-page navigation, type scale, spacing, and sample-edit callout with the supplied presentation’s restrained visual hierarchy.
+- [x] Verify the reference-led SURA landing composition on desktop and mobile.

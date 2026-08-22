@@ -1,10 +1,12 @@
 import { ArrowLeft, ArrowUpRight, Check, CircleAlert, Loader2, MapPin, Sparkles } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { VibeLayout, formatKes } from "@/components/VibeLayout";
 import { InquiryPanel } from "@/components/InquiryPanel";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
+import { useKenyaLocation } from "@/contexts/KenyaLocationContext";
+import type { KenyanCity } from "@/lib/kenyaLocation";
 import { trpc } from "@/lib/trpc";
 import type { DemoBuild, DemoVendor } from "../../../server/vibebuild-data";
 
@@ -26,8 +28,16 @@ function ChoiceRow({ label, options, value, onChange }: { label: string; options
 }
 
 export default function BuildBrief() {
+  const { city: detectedCity, message: locationMessage, setCity: setPreferredCity } = useKenyaLocation();
   const [brief, setBrief] = useState({ budgetKes: 12000, city: "Nairobi", lifestyle: "Creative Work", aesthetic: "Soft Power", priority: "Polish" });
   const [submitted, setSubmitted] = useState(false);
+  const [cityEdited, setCityEdited] = useState(false);
+  useEffect(() => {
+    if (detectedCity && !cityEdited) {
+      setBrief((current) => ({ ...current, city: detectedCity }));
+      setSubmitted(false);
+    }
+  }, [detectedCity, cityEdited]);
   const queryInput = useMemo(() => brief, [brief]);
   const recommendation = trpc.builds.recommend.useQuery(queryInput, { enabled: submitted });
   const revise = <K extends keyof typeof brief>(key: K, value: (typeof brief)[K]) => { setBrief((current) => ({ ...current, [key]: value })); setSubmitted(false); };
@@ -42,7 +52,7 @@ export default function BuildBrief() {
             <div className="flex items-center justify-between border-b border-[#e6dccf] pb-5"><div><p className="vb-kicker text-[#9f5d2d]">Five clear inputs</p><h2 className="vb-serif mt-2 text-3xl text-[#211b16]">Shape your brief</h2></div><span className="rounded-full bg-[#eee0c7] px-3 py-1.5 text-xs font-bold text-[#775024]">01 / 01</span></div>
             <div className="mt-7 space-y-7">
               <div><label htmlFor="budget" className="text-sm font-semibold text-[#403429]">What would you like to spend?</label><div className="mt-3 flex items-center rounded-2xl border border-[#d7c9b8] bg-[#fffdf9] px-4 py-2"><span className="text-sm font-bold text-[#9e5d2d]">KES</span><input id="budget" type="number" min="500" step="500" value={brief.budgetKes} onChange={(event) => revise("budgetKes", Math.max(500, Number(event.target.value) || 500))} className="vb-focus w-full bg-transparent px-3 py-2 text-xl font-semibold text-[#261f19] outline-none" /></div><p className="mt-2 text-xs text-[#7c6d5b]">Start wherever makes sense. We will show an honest range, not a pressure point.</p></div>
-              <ChoiceRow label="Which city are you sourcing from?" options={cities} value={brief.city} onChange={(value) => revise("city", value)} />
+              <div><ChoiceRow label="Which city are you sourcing from?" options={cities} value={brief.city} onChange={(value) => { setCityEdited(true); setPreferredCity(value as KenyanCity); revise("city", value); }} />{detectedCity && <p className="mt-3 inline-flex rounded-full bg-[#ede2cf] px-3 py-1.5 text-xs font-semibold text-[#78532e]">Using your selected city: {detectedCity}</p>}{locationMessage && !detectedCity && <p className="mt-3 text-xs leading-5 text-[#7b6854]">{locationMessage}</p>}</div>
               <ChoiceRow label="What is this build supporting?" options={lifestyles} value={brief.lifestyle} onChange={(value) => revise("lifestyle", value)} />
               <ChoiceRow label="Which direction feels most like you?" options={aesthetics} value={brief.aesthetic} onChange={(value) => revise("aesthetic", value)} />
               <ChoiceRow label="What matters most right now?" options={priorities} value={brief.priority} onChange={(value) => revise("priority", value)} />

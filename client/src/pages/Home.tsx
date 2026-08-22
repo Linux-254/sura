@@ -18,22 +18,22 @@ export default function Home() {
   return (
     <VibeLayout>
       <main>
-        <section className="container grid gap-10 pb-16 pt-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pb-24 lg:pt-16">
+        <section className="container grid gap-10 pb-16 pt-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-12 lg:pb-24 lg:pt-14">
           <div className="relative z-10 flex flex-col justify-center lg:py-10">
             <div className="flex items-center gap-3"><span className="h-px w-8 bg-[#b77835]" /><span className="vb-kicker text-[#9f5d2d]">A local plan, with your name on it</span></div>
-            <h1 className="vb-serif mt-6 max-w-2xl text-[3.45rem] leading-[0.91] tracking-[-0.052em] text-[#201b16] sm:text-[4.8rem] lg:text-[5.7rem]">Make the budget <em className="font-normal text-[#ad6b36]">work</em> beautifully.</h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-[#6f6354] sm:text-lg">VibeBuild turns a real budget into a considered local plan for your style, space, or next occasion. Not a shopping cart. A clear way forward.</p>
+            <h1 className="vb-serif mt-5 max-w-2xl text-[3.4rem] leading-[0.9] tracking-[-0.052em] text-[#201b16] sm:text-[4.65rem] lg:text-[5.25rem]">Make the budget <em className="font-normal text-[#ad6b36]">work</em> beautifully.</h1>
+            <p className="mt-6 max-w-xl text-base leading-7 text-[#6f6354] sm:text-lg">SURA turns a real budget into a considered local plan for your style, space, or next occasion. Not a shopping cart. A clear way forward.</p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <button onClick={() => setLocation("/brief")} className="vb-button vb-focus inline-flex items-center gap-2 rounded-full bg-[#1f1b17] px-6 py-3.5 text-sm font-semibold text-[#f7f2ea] shadow-[0_12px_24px_rgba(38,28,17,0.16)] hover:bg-[#504637]">Build my edit <ArrowUpRight className="h-4 w-4" /></button>
               <Link href="/discover" className="vb-focus inline-flex items-center gap-2 rounded-full border border-[#cfc2b0] bg-[#fbf8f3]/70 px-6 py-3.5 text-sm font-semibold text-[#382f26] hover:border-[#a97745]">Explore local makers <ArrowDown className="h-4 w-4" /></Link>
             </div>
             <div className="mt-10 flex items-center gap-3 text-xs text-[#726654]"><span className="rounded-full bg-[#e7d6b7] px-3 py-1.5 font-semibold">Nairobi-first</span><span>Demonstration vendors & indicative prices, clearly marked.</span></div>
           </div>
-          <div className="relative min-h-[30rem] sm:min-h-[34rem] lg:min-h-[39rem]">
-            <div className="absolute right-[3%] top-0 h-[78%] w-[64%] overflow-hidden rounded-t-[9rem] rounded-bl-[2rem] rounded-br-[2rem] bg-[#d7c0a0] shadow-[0_24px_60px_rgba(65,44,18,0.17)]"><img src="/manus-storage/nairobi-fashion-portrait_558e87d6.jpg" alt="Nairobi fashion editorial" className="h-full w-full object-cover" /></div>
-            <div className="absolute bottom-0 left-0 h-[51%] w-[54%] overflow-hidden rounded-tl-[2rem] rounded-tr-[2rem] rounded-br-[8rem] border-[8px] border-[#f4f0e9] bg-[#b77c4b]"><img src="/manus-storage/nairobi-street-editorial_5f3f7e9e.jpg" alt="Nairobi street style editorial" className="h-full w-full object-cover" /></div>
-            <div className="absolute left-[13%] top-[13%] rounded-full bg-[#f4f0e9] px-4 py-3 text-center shadow-[0_10px_30px_rgba(67,48,26,0.12)]"><p className="vb-kicker text-[#9d5b28]">Your brief</p><p className="mt-1 text-xs font-medium text-[#453526]">Budget-first. Identity-led.</p></div>
-            <div className="absolute bottom-[8%] right-0 rounded-2xl border border-white/60 bg-[#1d1b18] p-4 text-[#fbf5ec] shadow-[0_14px_30px_rgba(32,25,16,0.24)]"><p className="vb-kicker text-[#d39a52]">A sample edit</p><p className="vb-serif mt-2 text-lg leading-5">The Nairobi<br />After Five</p><p className="mt-3 text-xs text-[#d8cbbc]">from {formatKes(9400)}</p></div>
+          <div className="relative min-h-[26rem] sm:min-h-[30rem] lg:min-h-[33rem]">
+            <div className="absolute right-[2%] top-0 h-[79%] w-[62%] overflow-hidden rounded-t-[8rem] rounded-bl-[1.8rem] rounded-br-[1.8rem] bg-[#d7c0a0] shadow-[0_22px_48px_rgba(65,44,18,0.15)]"><img src="/manus-storage/nairobi-fashion-portrait_558e87d6.jpg" alt="Nairobi creative in a SURA editorial portrait" className="h-full w-full object-cover object-center" /></div>
+            <div className="absolute bottom-0 left-0 h-[53%] w-[54%] overflow-hidden rounded-tl-[1.8rem] rounded-tr-[1.8rem] rounded-br-[7rem] border-[7px] border-[#f4f0e9] bg-[#b77c4b] shadow-[0_18px_40px_rgba(65,44,18,0.11)]"><img src="/manus-storage/nairobi-street-editorial_5f3f7e9e.jpg" alt="Nairobi street style in a SURA editorial collage" className="h-full w-full object-cover" /></div>
+            <div className="absolute left-[14%] top-[13%] rounded-full border border-[#e5d9c8] bg-[#fbf8f2]/95 px-4 py-3 text-center shadow-[0_10px_25px_rgba(67,48,26,0.1)]"><p className="vb-kicker text-[#9d5b28]">Your brief</p><p className="mt-1 text-xs font-medium text-[#453526]">Budget-first. Identity-led.</p></div>
+            <div className="absolute bottom-[7%] right-0 rounded-2xl border border-white/60 bg-[#1d1b18] p-4 text-[#fbf5ec] shadow-[0_14px_30px_rgba(32,25,16,0.24)]"><p className="vb-kicker text-[#d39a52]">A sample edit</p><p className="vb-serif mt-2 text-lg leading-5">The Nairobi<br />After Five</p><p className="mt-3 text-xs text-[#d8cbbc]">from {formatKes(9400)}</p></div>
           </div>
         </section>
 
@@ -41,7 +41,7 @@ export default function Home() {
           <div className="container py-16 sm:py-20">
             <div className="grid gap-8 border-b border-white/15 pb-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
               <div><span className="vb-kicker text-[#d59b58]">A better starting point</span><h2 className="vb-serif mt-4 text-4xl leading-[0.98] tracking-[-0.04em] sm:text-5xl">The plan before the purchase.</h2></div>
-              <p className="max-w-xl text-base leading-7 text-[#cfc4b6]">Most local style decisions begin with too many tabs and no way to judge what works together. VibeBuild holds the full picture: intention, spend, sources, and next step.</p>
+              <p className="max-w-xl text-base leading-7 text-[#cfc4b6]">Most local style decisions begin with too many tabs and no way to judge what works together. SURA holds the full picture: intention, spend, sources, and next step.</p>
             </div>
             <div className="mt-10 grid gap-8 md:grid-cols-3">
               {steps.map(({ number, title, copy, icon: Icon }) => <article key={number} className="border-t border-white/20 pt-5"><div className="flex items-center justify-between"><span className="vb-serif text-3xl text-[#d59b58]">{number}</span><Icon className="h-5 w-5 text-[#d59b58]" /></div><h3 className="vb-serif mt-8 text-2xl">{title}</h3><p className="mt-3 max-w-sm text-sm leading-6 text-[#cfc4b6]">{copy}</p></article>)}
