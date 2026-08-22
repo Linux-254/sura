@@ -20,10 +20,11 @@ export async function storeConsentImage(userId: number, imageDataUrl: string) {
   return storagePut(`ai-private/${userId}/source.${extension}`, buffer, mimeType);
 }
 
-export async function createAiAssistPlan(input: { kind: AiAssistKind; brief: string; city: string; budgetKes: number; sizeProfile?: string; imageKey?: string }) {
+export async function createAiAssistPlan(input: { kind: AiAssistKind; brief: string; city: string; budgetKes: number; sizeProfile?: string; imageKey?: string; aestheticMix?: string[] }) {
   const imageUrl = input.imageKey ? await storageGetSignedUrl(input.imageKey) : undefined;
-  const instruction = `You are SURA, a Kenyan aesthetic-commerce planning assistant. Create a practical, respectful style or space plan. Do not identify a person, infer sensitive traits, make health claims, or promise exact fit, stock, delivery, or interior-design outcomes. Use the member's stated brief, city, budget, and optional size notes. Output concise, actionable content for local shopping filters and inspiration.`;
-  const userPrompt = `Brief type: ${input.kind}\nCity: ${input.city}\nBudget: KES ${input.budgetKes}\nSize or fit notes: ${input.sizeProfile ?? "Not supplied"}\nGoal: ${input.brief}`;
+  const instruction = `You are SURA, a Kenyan aesthetic-commerce planning assistant. Create a practical, respectful style or space plan. Do not identify a person, infer sensitive traits, make health claims, or promise exact fit, stock, delivery, or interior-design outcomes. Use the member's stated brief, city, budget, optional size notes, and optional aesthetic mix only as a creative reference. The member's stated goal always takes priority. Output concise, actionable content for local shopping filters and inspiration.`;
+  const mix = input.aestheticMix?.length ? input.aestheticMix.join(" · ") : "Not supplied";
+  const userPrompt = `Brief type: ${input.kind}\nCity: ${input.city}\nBudget: KES ${input.budgetKes}\nSize or fit notes: ${input.sizeProfile ?? "Not supplied"}\nMember aesthetic mix: ${mix}\nGoal: ${input.brief}`;
   const response = await invokeLLM({
     model: "gemini-3-flash-preview",
     messages: [{ role: "system", content: instruction }, { role: "user", content: imageUrl ? [{ type: "text", text: userPrompt }, { type: "image_url", image_url: { url: imageUrl, detail: "low" } }] : userPrompt }],
@@ -48,7 +49,7 @@ export async function createAiAssistPlan(input: { kind: AiAssistKind; brief: str
   const rawContent = response.choices[0]?.message.content;
   if (typeof rawContent !== "string") throw new Error("The AI plan did not return readable content");
   const plan = JSON.parse(rawContent) as AiAssistPlan;
-  const conceptPrompt = `Create an editorial AI concept image for a ${input.kind.replace(/_/g, " ")} plan in ${input.city}. Direction: ${plan.designDirection}. Emphasize ${plan.priorities.join(", ")}. This is a mood and composition concept, not a product advertisement; no text, logos, price tags, or identifiable real person.`;
+  const conceptPrompt = `Create an editorial AI concept image for a ${input.kind.replace(/_/g, " ")} plan in ${input.city}. Direction: ${plan.designDirection}. Optional aesthetic blend: ${mix}. Emphasize ${plan.priorities.join(", ")}. This is a mood and composition concept, not a product advertisement; no text, logos, price tags, or identifiable real person.`;
   const generated = await generateImage({ prompt: conceptPrompt, ...(imageUrl ? { originalImages: [{ url: imageUrl, mimeType: "image/jpeg" }] } : {}) });
   return { plan, generatedImageUrl: generated.url };
 }

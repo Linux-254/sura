@@ -128,7 +128,7 @@ export const appRouter = router({
         }
         const request = await createAiAssistRequest({ userId: ctx.user.id, consentId: consent.id, kind: input.kind, inputImageKey: imageKey, inputImageUrl: imageUrl, brief: input.brief, city: input.city, budgetKes: input.budgetKes, sizeProfile: input.sizeProfile });
         if (!request.persisted || !request.id) throw new Error("Unable to start your private assistance request");
-        const result = await createAiAssistPlan({ kind: input.kind, brief: input.brief, city: input.city, budgetKes: input.budgetKes, sizeProfile: input.sizeProfile, imageKey });
+        const result = await createAiAssistPlan({ kind: input.kind, brief: input.brief, city: input.city, budgetKes: input.budgetKes, sizeProfile: input.sizeProfile, aestheticMix: input.aestheticMix, imageKey });
         await completeAiAssistRequest({ requestId: request.id, outputJson: JSON.stringify(result.plan), generatedImageUrl: result.generatedImageUrl });
         return { requestId: request.id, imageUrl, ...result };
       } catch (error) {

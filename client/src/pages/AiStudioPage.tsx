@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SuraErrorState, SuraProcessing } from "@/components/SuraStates";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useAestheticTheme } from "@/contexts/AestheticThemeContext";
+import { AESTHETIC_THEMES, useAestheticTheme } from "@/contexts/AestheticThemeContext";
 import { useKenyaLocation } from "@/contexts/KenyaLocationContext";
 import { trpc } from "@/lib/trpc";
 
@@ -20,7 +20,7 @@ type JourneyKind = (typeof journeys)[number]["value"];
 export default function AiStudioPage() {
   const { isAuthenticated } = useAuth();
   const { city } = useKenyaLocation();
-  const { aesthetic, palette } = useAestheticTheme();
+  const { aesthetic, palette, preferenceMix } = useAestheticTheme();
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const [kind, setKind] = useState<JourneyKind>("home_refresh");
@@ -31,8 +31,11 @@ export default function AiStudioPage() {
   const [imageName, setImageName] = useState("");
   const [consent, setConsent] = useState(false);
   const assist = trpc.commerce.aiAssist.useMutation();
+  const savedAestheticMix = trpc.account.aestheticPreferences.useQuery(undefined, { enabled: isAuthenticated });
   const activeJourney = journeys.find((journey) => journey.value === kind)!;
   const selectedCity = city ?? "Nairobi";
+  const persistedMix = (savedAestheticMix.data?.aesthetics ?? []).filter((name): name is keyof typeof AESTHETIC_THEMES => name in AESTHETIC_THEMES);
+  const aestheticMix = persistedMix.length ? persistedMix : preferenceMix;
 
   const handleFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -66,7 +69,7 @@ export default function AiStudioPage() {
           <p><MapPin className="mr-2 inline h-4 w-4 text-[var(--sura-accent)]" />Your city is <strong>{selectedCity}</strong>. You can change it from the public header.</p>
           <p><Sparkles className="mr-2 inline h-4 w-4 text-[var(--sura-accent)]" />The after image is an <strong>AI concept</strong>, not a guarantee of final room, fit, stock, or delivery outcomes.</p>
         </div>
-        <div className="mt-6 rounded-2xl bg-[var(--sura-primary)] p-5 text-[var(--sura-paper)]"><p className="vb-kicker text-[var(--sura-accent)]">Current aesthetic</p><p className="vb-serif mt-2 text-3xl">{aesthetic}</p><p className="mt-3 text-sm leading-6 text-white/75">Your palette frames this direction and can be changed from the header.</p></div>
+        <div className="mt-6 rounded-2xl bg-[var(--sura-primary)] p-5 text-[var(--sura-paper)]"><p className="vb-kicker text-[var(--sura-accent)]">Current aesthetic</p><p className="vb-serif mt-2 text-3xl">{aesthetic}</p><p className="mt-3 text-sm leading-6 text-white/75">Your palette frames this direction. Your saved mix gives the AI a creative lens; your written goal remains in charge.</p><div className="mt-4 flex flex-wrap gap-1.5">{aestheticMix.map((name) => <span key={name} className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[0.68rem] font-bold">{name}</span>)}</div></div>
       </aside>
 
       <section className="rounded-[1.6rem] border border-[var(--sura-border)] bg-[var(--sura-paper)] p-6 sm:p-8">
@@ -83,7 +86,7 @@ export default function AiStudioPage() {
         </div>
         <label className="mt-6 flex gap-3 rounded-xl border border-[var(--sura-border)] bg-white p-4 text-xs leading-5 text-[#655647]"><input checked={consent} onChange={(event) => setConsent(event.target.checked)} type="checkbox" className="mt-1 h-4 w-4 accent-[var(--sura-primary)]" /><span>I allow SURA to use this optional image and brief only to create this private {activeJourney.label.toLowerCase()} plan and AI concept. I understand the output is assistive, not a guarantee or identity judgement.</span></label>
         {assist.isError && <div className="mt-4"><SuraErrorState title="Your private plan needs another moment." copy="Check the image size and consent, then try again. Your brief is still here." onRetry={() => assist.reset()} /></div>}
-        <button disabled={!brief || !consent || assist.isPending} onClick={() => assist.mutate({ kind, purposeConsent: true, brief, city: selectedCity, budgetKes, sizeProfile: sizeProfile || undefined, imageDataUrl })} className="vb-button vb-focus mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--sura-primary)] px-6 py-4 text-sm font-bold text-[var(--sura-paper)] disabled:cursor-wait disabled:opacity-60">{assist.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Creating your private direction</> : <><ImagePlus className="h-4 w-4" />Create my AI concept</>}</button>
+        <button disabled={!brief || !consent || assist.isPending} onClick={() => assist.mutate({ kind, purposeConsent: true, brief, city: selectedCity, budgetKes, sizeProfile: sizeProfile || undefined, imageDataUrl, aestheticMix })} className="vb-button vb-focus mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--sura-primary)] px-6 py-4 text-sm font-bold text-[var(--sura-paper)] disabled:cursor-wait disabled:opacity-60">{assist.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Creating your private direction</> : <><ImagePlus className="h-4 w-4" />Create my AI concept</>}</button>
       </section>
     </div>
     {assist.isPending && <section className="mt-7"><SuraProcessing eyebrow="SURA / PRIVATE AI" title="Building your concept with care." copy="Your private image and stated goal are being translated into an assistive direction. This can take a little longer than a normal page load." /></section>}

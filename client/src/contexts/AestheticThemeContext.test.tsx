@@ -24,6 +24,7 @@ describe("SURA aesthetic theme provider", () => {
     expect(window.localStorage.getItem("sura-aesthetic-theme")).toBe("Coastal Ease");
     expect(document.documentElement.dataset.aesthetic).toBe("coastal-ease");
     expect(document.documentElement.style.getPropertyValue("--sura-primary")).toBe("#205963");
+    expect(document.documentElement.style.getPropertyValue("--sura-font-display")).toContain("Fraunces");
   });
 
   it("resets the visual direction to Soft Power", () => {

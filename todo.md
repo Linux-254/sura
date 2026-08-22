@@ -67,6 +67,11 @@
 - [ ] Personalise SURA artistic expressions, recommendations, and aesthetic presentation from each member’s selected preference mix without compromising contrast or dignity-first language.
 - [x] Add validation and responsive tests for the five-aesthetic limit, preference persistence, and accessible palette rendering.
 - [x] Add automated client coverage for expression-board selection count, save-action visibility, and responsive mobile-relevant rendering behaviour.
+- [x] Research and document Kenya-relevant contemporary design palettes, packaging references, and ethical visual cues for SURA themes.
+- [x] Replace ambiguous “local form” brand and discovery copy with a clear, original SURA motto and local-company discovery language.
+- [x] Extend aesthetic toggles to apply accessible typography treatments as well as colour tokens.
+- [x] Add truthful company/package visual presentation using provided or clearly labelled illustrative assets without fabricating products, companies, or customer content.
+- [x] Validate the revised brand language, thematic typography, and visual presentation across desktop and mobile.
 - [x] Add server-enforced company-member access and role-aware client route guards.
 - [x] Add a public profile endpoint and view that filters private social links.
 - [x] Add tests for payment-order ownership and protected dashboard/public-profile behavior.

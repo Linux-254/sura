@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const aiAssistKinds = ["home_refresh", "personal_style", "footwear_fit", "inspiration"] as const;
 export const productCategories = ["apparel", "footwear", "home", "accessory"] as const;
+const aiAssistAesthetics = ["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier", "Ink & Ivory", "Orchid After Dark", "Tangerine Social", "Moss & Marigold", "Cobalt Ritual", "Thermal Bloom"] as const;
 
 export const aiAssistInputSchema = z.object({
   kind: z.enum(aiAssistKinds),
@@ -11,6 +12,7 @@ export const aiAssistInputSchema = z.object({
   budgetKes: z.number().int().min(500).max(5_000_000),
   sizeProfile: z.string().trim().max(500).optional(),
   imageDataUrl: z.string().regex(/^data:image\/(jpeg|png|webp);base64,/).max(7_000_000).optional(),
+  aestheticMix: z.array(z.enum(aiAssistAesthetics)).max(5).default([]).refine((aesthetics) => new Set(aesthetics).size === aesthetics.length, { message: "Each aesthetic can only appear once" }),
 });
 
 export const companyProductInputSchema = z.object({
