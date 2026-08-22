@@ -28,3 +28,21 @@
 - [x] Refine the SURA hero to follow the supplied presentation’s warm, rounded editorial portfolio collage.
 - [x] Align the landing-page navigation, type scale, spacing, and sample-edit callout with the supplied presentation’s restrained visual hierarchy.
 - [x] Verify the reference-led SURA landing composition on desktop and mobile.
+- [x] Design a premium, accessible mobile-first navigation system and refine desktop navigation hierarchy.
+- [x] Add elevated sign-in, sign-out, and role-aware account entry experiences using the existing secure OAuth flow.
+- [x] Add legal Terms and Conditions and Privacy Policy pages with clear links across public and authenticated surfaces.
+- [x] Extend the data model for company accounts, company/user social links, account profiles, and admin review controls.
+- [x] Build secure user, company, and admin dashboard experiences with protected role-specific routes.
+- [x] Add social-link editing with input validation and public-safe display rules.
+- [x] Prepare a protected checkout/payment flow with explicit order states, non-sensitive UI handling, and a gateway integration boundary.
+- [x] Add security-focused tests for protected roles, social-link validation, payment states, authentication controls, and responsive journeys.
+- [ ] Choose and connect a live payment gateway (for example, M-Pesa or Stripe) before collecting any funds.
+- [x] Define accessible colour tokens for each SURA aesthetic direction.
+- [x] Add a persistent user-controlled aesthetic theme preference with a clear reset option.
+- [x] Apply the selected aesthetic palette to public navigation, the planning brief, and private dashboards.
+- [x] Add theme persistence and accessibility contrast tests and verify desktop/mobile theme rendering.
+- [x] Add server-enforced company-member access and role-aware client route guards.
+- [x] Add a public profile endpoint and view that filters private social links.
+- [x] Add tests for payment-order ownership and protected dashboard/public-profile behavior.
+- [x] Add a protected company-detail route that requires membership before exposing company management data.
+- [x] Add explicit client access-resolution rules for admin and company management destinations.

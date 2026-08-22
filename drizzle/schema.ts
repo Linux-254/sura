@@ -22,6 +22,96 @@ export const users = mysqlTable("users", {
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
+export const userProfiles = mysqlTable(
+  "user_profiles",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull().unique(),
+    displayName: varchar("displayName", { length: 120 }),
+    bio: varchar("bio", { length: 500 }),
+    city: varchar("city", { length: 80 }),
+    avatarUrl: text("avatarUrl"),
+    publicSlug: varchar("publicSlug", { length: 96 }).unique(),
+    isPublic: boolean("isPublic").default(false).notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("user_profiles_user_idx").on(table.userId)],
+);
+
+export const companies = mysqlTable(
+  "companies",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    ownerUserId: int("ownerUserId").notNull(),
+    slug: varchar("slug", { length: 96 }).notNull().unique(),
+    name: varchar("name", { length: 160 }).notNull(),
+    description: text("description"),
+    city: varchar("city", { length: 80 }),
+    websiteUrl: text("websiteUrl"),
+    verificationStatus: mysqlEnum("verificationStatus", ["draft", "pending", "verified", "rejected"]).default("draft").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("companies_owner_idx").on(table.ownerUserId), index("companies_status_idx").on(table.verificationStatus)],
+);
+
+export const companyMembers = mysqlTable(
+  "company_members",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    companyId: int("companyId").notNull(),
+    userId: int("userId").notNull(),
+    memberRole: mysqlEnum("memberRole", ["owner", "manager", "editor"]).default("editor").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex("company_members_company_user_unique").on(table.companyId, table.userId), index("company_members_user_idx").on(table.userId)],
+);
+
+export const socialLinks = mysqlTable(
+  "social_links",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId"),
+    companyId: int("companyId"),
+    platform: mysqlEnum("platform", ["instagram", "tiktok", "linkedin", "youtube", "x", "website"]).notNull(),
+    url: varchar("url", { length: 500 }).notNull(),
+    isPublic: boolean("isPublic").default(true).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("social_links_user_idx").on(table.userId), index("social_links_company_idx").on(table.companyId)],
+);
+
+export const legalConsents = mysqlTable(
+  "legal_consents",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    documentType: mysqlEnum("documentType", ["terms", "privacy"]).notNull(),
+    version: varchar("version", { length: 32 }).notNull(),
+    acceptedAt: timestamp("acceptedAt").defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex("legal_consents_user_document_version_unique").on(table.userId, table.documentType, table.version), index("legal_consents_user_idx").on(table.userId)],
+);
+
+export const paymentOrders = mysqlTable(
+  "payment_orders",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    companyId: int("companyId"),
+    orderType: mysqlEnum("orderType", ["company_membership", "vendor_feature", "build_consultation"]).notNull(),
+    amountKes: int("amountKes").notNull(),
+    currency: varchar("currency", { length: 3 }).default("KES").notNull(),
+    provider: mysqlEnum("provider", ["gateway_pending", "mpesa", "stripe"]).default("gateway_pending").notNull(),
+    status: mysqlEnum("status", ["draft", "pending", "paid", "failed", "cancelled"]).default("draft").notNull(),
+    reference: varchar("reference", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("payment_orders_user_idx").on(table.userId), index("payment_orders_company_idx").on(table.companyId), index("payment_orders_status_idx").on(table.status)],
+);
+
 export const vendors = mysqlTable(
   "vendors",
   {

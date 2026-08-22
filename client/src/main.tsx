@@ -7,6 +7,7 @@ import superjson from "superjson";
 import App from "./App";
 import { startLogin } from "./const";
 import { KenyaLocationProvider } from "./contexts/KenyaLocationContext";
+import { AestheticThemeProvider } from "./contexts/AestheticThemeContext";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -76,9 +77,11 @@ const trpcClient = trpc.createClient({
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
-      <KenyaLocationProvider>
-        <App />
-      </KenyaLocationProvider>
+      <AestheticThemeProvider>
+        <KenyaLocationProvider>
+          <App />
+        </KenyaLocationProvider>
+      </AestheticThemeProvider>
     </QueryClientProvider>
   </trpc.Provider>
 );

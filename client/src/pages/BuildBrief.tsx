@@ -6,6 +6,7 @@ import { InquiryPanel } from "@/components/InquiryPanel";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { useKenyaLocation } from "@/contexts/KenyaLocationContext";
+import { type AestheticName, useAestheticTheme } from "@/contexts/AestheticThemeContext";
 import type { KenyanCity } from "@/lib/kenyaLocation";
 import { trpc } from "@/lib/trpc";
 import type { DemoBuild, DemoVendor } from "../../../server/vibebuild-data";
@@ -24,12 +25,14 @@ type RecommendationData = {
 };
 
 function ChoiceRow({ label, options, value, onChange }: { label: string; options: string[]; value: string; onChange: (value: string) => void }) {
-  return <div><p className="mb-3 text-sm font-semibold text-[#403429]">{label}</p><div className="flex flex-wrap gap-2">{options.map((option) => <button key={option} onClick={() => onChange(option)} className={`vb-button vb-focus rounded-full border px-3.5 py-2 text-xs font-semibold sm:text-sm ${value === option ? "border-[#1e1b17] bg-[#1e1b17] text-[#f9f4eb]" : "border-[#d7c9b8] bg-[#fbf8f2] text-[#645646] hover:border-[#a77543]"}`}>{option}</button>)}</div></div>;
+  const { palette } = useAestheticTheme();
+  return <div><p className="mb-3 text-sm font-semibold text-[#403429]">{label}</p><div className="flex flex-wrap gap-2">{options.map((option) => <button key={option} onClick={() => onChange(option)} style={value === option ? { borderColor: palette.primary, backgroundColor: palette.primary, color: palette.paper } : { borderColor: palette.border, backgroundColor: palette.paper, color: palette.ink }} className="vb-button vb-focus rounded-full border px-3.5 py-2 text-xs font-semibold sm:text-sm">{option}</button>)}</div></div>;
 }
 
 export default function BuildBrief() {
   const { city: detectedCity, message: locationMessage, setCity: setPreferredCity } = useKenyaLocation();
-  const [brief, setBrief] = useState({ budgetKes: 12000, city: "Nairobi", lifestyle: "Creative Work", aesthetic: "Soft Power", priority: "Polish" });
+  const { aesthetic, setAesthetic, palette } = useAestheticTheme();
+  const [brief, setBrief] = useState({ budgetKes: 12000, city: "Nairobi", lifestyle: "Creative Work", aesthetic, priority: "Polish" });
   const [submitted, setSubmitted] = useState(false);
   const [cityEdited, setCityEdited] = useState(false);
   useEffect(() => {
@@ -38,6 +41,10 @@ export default function BuildBrief() {
       setSubmitted(false);
     }
   }, [detectedCity, cityEdited]);
+  useEffect(() => {
+    setBrief((current) => current.aesthetic === aesthetic ? current : { ...current, aesthetic });
+    setSubmitted(false);
+  }, [aesthetic]);
   const queryInput = useMemo(() => brief, [brief]);
   const recommendation = trpc.builds.recommend.useQuery(queryInput, { enabled: submitted });
   const revise = <K extends keyof typeof brief>(key: K, value: (typeof brief)[K]) => { setBrief((current) => ({ ...current, [key]: value })); setSubmitted(false); };
@@ -54,9 +61,9 @@ export default function BuildBrief() {
               <div><label htmlFor="budget" className="text-sm font-semibold text-[#403429]">What would you like to spend?</label><div className="mt-3 flex items-center rounded-2xl border border-[#d7c9b8] bg-[#fffdf9] px-4 py-2"><span className="text-sm font-bold text-[#9e5d2d]">KES</span><input id="budget" type="number" min="500" step="500" value={brief.budgetKes} onChange={(event) => revise("budgetKes", Math.max(500, Number(event.target.value) || 500))} className="vb-focus w-full bg-transparent px-3 py-2 text-xl font-semibold text-[#261f19] outline-none" /></div><p className="mt-2 text-xs text-[#7c6d5b]">Start wherever makes sense. We will show an honest range, not a pressure point.</p></div>
               <div><ChoiceRow label="Which city are you sourcing from?" options={cities} value={brief.city} onChange={(value) => { setCityEdited(true); setPreferredCity(value as KenyanCity); revise("city", value); }} />{detectedCity && <p className="mt-3 inline-flex rounded-full bg-[#ede2cf] px-3 py-1.5 text-xs font-semibold text-[#78532e]">Using your selected city: {detectedCity}</p>}{locationMessage && !detectedCity && <p className="mt-3 text-xs leading-5 text-[#7b6854]">{locationMessage}</p>}</div>
               <ChoiceRow label="What is this build supporting?" options={lifestyles} value={brief.lifestyle} onChange={(value) => revise("lifestyle", value)} />
-              <ChoiceRow label="Which direction feels most like you?" options={aesthetics} value={brief.aesthetic} onChange={(value) => revise("aesthetic", value)} />
+              <ChoiceRow label="Which direction feels most like you?" options={aesthetics} value={brief.aesthetic} onChange={(value) => { const nextAesthetic = value as AestheticName; setAesthetic(nextAesthetic); revise("aesthetic", nextAesthetic); }} />
               <ChoiceRow label="What matters most right now?" options={priorities} value={brief.priority} onChange={(value) => revise("priority", value)} />
-              <button onClick={() => setSubmitted(true)} className="vb-button vb-focus inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1e1b17] px-6 py-4 text-sm font-bold text-[#f9f4eb] shadow-[0_12px_25px_rgba(39,28,18,0.14)] hover:bg-[#514636]">Show my local build direction <ArrowUpRight className="h-4 w-4" /></button>
+              <button onClick={() => setSubmitted(true)} style={{ backgroundColor: palette.primary, color: palette.paper }} className="vb-button vb-focus inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-sm font-bold shadow-[0_12px_25px_rgba(39,28,18,0.14)]">Show my local build direction <ArrowUpRight className="h-4 w-4" /></button>
             </div>
           </section>
 

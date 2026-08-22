@@ -2,8 +2,13 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import BuildBrief from "@/pages/BuildBrief";
 import BuildBoard from "@/pages/BuildBoard";
+import AuthPage from "@/pages/AuthPage";
+import { AccountPage, AdminPage, CheckoutPage, CompanyPage } from "@/pages/DashboardPages";
 import Discover from "@/pages/Discover";
 import Home from "@/pages/Home";
+import LegalPage from "@/pages/LegalPage";
+import PublicProfilePage from "@/pages/PublicProfilePage";
+import CompanyDetailPage from "@/pages/CompanyDetailPage";
 import NotFound from "@/pages/NotFound";
 import SharedBuild from "@/pages/SharedBuild";
 import VendorProfile from "@/pages/VendorProfile";
@@ -17,7 +22,17 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/brief" component={BuildBrief} />
       <Route path="/discover" component={Discover} />
+      <Route path="/join" component={AuthPage} />
+      <Route path="/terms" component={LegalPage} />
+      <Route path="/privacy" component={LegalPage} />
+      <Route path="/people/:slug"><PublicProfilePage kind="person" /></Route>
+      <Route path="/studios/:slug"><PublicProfilePage kind="company" /></Route>
       <Route path="/board" component={BuildBoard} />
+      <Route path="/account" component={AccountPage} />
+      <Route path="/company" component={CompanyPage} />
+      <Route path="/company/:id" component={CompanyDetailPage} />
+      <Route path="/checkout" component={CheckoutPage} />
+      <Route path="/admin" component={AdminPage} />
       <Route path="/share/:token" component={SharedBuild} />
       <Route path="/vendors/:slug" component={VendorProfile} />
       <Route path="/404" component={NotFound} />

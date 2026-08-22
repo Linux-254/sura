@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { buildBoardSelections, buildShareItems, buildShares, inquiries, InsertUser, savedVendors, users } from "../drizzle/schema";
+import { buildBoardSelections, buildShareItems, buildShares, companies, companyMembers, inquiries, InsertUser, legalConsents, paymentOrders, savedVendors, socialLinks, userProfiles, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -158,4 +158,104 @@ export async function getBuildShareRecord(shareToken: string) {
   if (!share[0]) return undefined;
   const items = await db.select().from(buildShareItems).where(eq(buildShareItems.shareId, share[0].id));
   return { share: share[0], items };
+}
+
+export async function getAccountProfile(userId: number) {
+  const db = await getDb();
+  if (!db) return { profile: undefined, socialLinks: [] };
+  const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId)).limit(1);
+  const links = await db.select().from(socialLinks).where(eq(socialLinks.userId, userId));
+  return { profile, socialLinks: links };
+}
+
+export async function getPublicAccountProfile(publicSlug: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [profile] = await db.select().from(userProfiles).where(and(eq(userProfiles.publicSlug, publicSlug), eq(userProfiles.isPublic, true))).limit(1);
+  if (!profile) return undefined;
+  const links = await db.select().from(socialLinks).where(and(eq(socialLinks.userId, profile.userId), eq(socialLinks.isPublic, true)));
+  return { profile, socialLinks: links };
+}
+
+export async function upsertAccountProfile(input: { userId: number; displayName: string; bio?: string; city?: string; publicSlug?: string; isPublic: boolean; socialLinks: Array<{ platform: "instagram" | "tiktok" | "linkedin" | "youtube" | "x" | "website"; url: string; isPublic: boolean }> }) {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  await db.insert(userProfiles).values({ userId: input.userId, displayName: input.displayName, bio: input.bio ?? null, city: input.city ?? null, publicSlug: input.publicSlug ?? null, isPublic: input.isPublic }).onDuplicateKeyUpdate({ set: { displayName: input.displayName, bio: input.bio ?? null, city: input.city ?? null, publicSlug: input.publicSlug ?? null, isPublic: input.isPublic } });
+  await db.delete(socialLinks).where(eq(socialLinks.userId, input.userId));
+  if (input.socialLinks.length) await db.insert(socialLinks).values(input.socialLinks.map((link) => ({ userId: input.userId, platform: link.platform, url: link.url, isPublic: link.isPublic })));
+  return { persisted: true };
+}
+
+export async function getCompaniesForUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(companies).where(eq(companies.ownerUserId, userId));
+}
+
+export async function createCompanyForUser(input: { ownerUserId: number; name: string; slug: string; description?: string; city?: string; websiteUrl?: string; socialLinks: Array<{ platform: "instagram" | "tiktok" | "linkedin" | "youtube" | "x" | "website"; url: string; isPublic: boolean }> }) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  const result = await db.insert(companies).values({ ownerUserId: input.ownerUserId, name: input.name, slug: input.slug, description: input.description ?? null, city: input.city ?? null, websiteUrl: input.websiteUrl ?? null, verificationStatus: "pending" });
+  const companyId = Number(result[0]?.insertId ?? 0);
+  if (companyId) {
+    await db.insert(companyMembers).values({ companyId, userId: input.ownerUserId, memberRole: "owner" });
+    if (input.socialLinks.length) await db.insert(socialLinks).values(input.socialLinks.map((link) => ({ companyId, platform: link.platform, url: link.url, isPublic: link.isPublic })));
+  }
+  return { id: companyId, persisted: true };
+}
+
+export async function getCompanyOwnedByUser(companyId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [company] = await db.select().from(companies).where(and(eq(companies.id, companyId), eq(companies.ownerUserId, userId))).limit(1);
+  return company;
+}
+
+export async function getCompanyMembership(companyId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [membership] = await db.select().from(companyMembers).where(and(eq(companyMembers.companyId, companyId), eq(companyMembers.userId, userId))).limit(1);
+  return membership;
+}
+
+export async function getPublicCompanyProfile(slug: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [company] = await db.select().from(companies).where(and(eq(companies.slug, slug), eq(companies.verificationStatus, "verified"))).limit(1);
+  if (!company) return undefined;
+  const links = await db.select().from(socialLinks).where(and(eq(socialLinks.companyId, company.id), eq(socialLinks.isPublic, true)));
+  return { company, socialLinks: links };
+}
+
+export async function getPaymentOrdersForUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(paymentOrders).where(eq(paymentOrders.userId, userId)).limit(50);
+}
+
+export async function createPaymentOrder(input: { userId: number; companyId?: number; orderType: "company_membership" | "vendor_feature" | "build_consultation"; amountKes: number; reference: string }) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  const result = await db.insert(paymentOrders).values({ userId: input.userId, companyId: input.companyId ?? null, orderType: input.orderType, amountKes: input.amountKes, reference: input.reference, status: "draft", provider: "gateway_pending" });
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
+}
+
+export async function recordLegalConsent(userId: number, documentType: "terms" | "privacy", version: string) {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  await db.insert(legalConsents).values({ userId, documentType, version }).onDuplicateKeyUpdate({ set: { acceptedAt: new Date() } });
+  return { persisted: true };
+}
+
+export async function getAdminCompanyReviewQueue() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(companies).limit(50);
+}
+
+export async function updateCompanyReviewStatus(companyId: number, verificationStatus: "draft" | "pending" | "verified" | "rejected") {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  await db.update(companies).set({ verificationStatus }).where(eq(companies.id, companyId));
+  return { persisted: true };
 }
