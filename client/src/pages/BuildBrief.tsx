@@ -7,7 +7,7 @@ import { SuraErrorState, SuraProcessing } from "@/components/SuraStates";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { useKenyaLocation } from "@/contexts/KenyaLocationContext";
-import { type AestheticName, useAestheticTheme } from "@/contexts/AestheticThemeContext";
+import { AESTHETIC_THEMES, type AestheticName, useAestheticTheme } from "@/contexts/AestheticThemeContext";
 import type { KenyanCity } from "@/lib/kenyaLocation";
 import { trpc } from "@/lib/trpc";
 import type { DemoBuild, DemoVendor } from "../../../server/vibebuild-data";
@@ -23,6 +23,7 @@ type RecommendationData = {
   withinBudget: boolean;
   budgetGapKes: number;
   transparencyNote: string;
+  personalisationNote: string;
 };
 
 function ChoiceRow({ label, options, value, onChange }: { label: string; options: string[]; value: string; onChange: (value: string) => void }) {
@@ -33,6 +34,10 @@ function ChoiceRow({ label, options, value, onChange }: { label: string; options
 export default function BuildBrief() {
   const { city: detectedCity, message: locationMessage, setCity: setPreferredCity } = useKenyaLocation();
   const { aesthetic, preferenceMix, setAesthetic, palette } = useAestheticTheme();
+  const { isAuthenticated } = useAuth();
+  const savedAestheticMix = trpc.account.aestheticPreferences.useQuery(undefined, { enabled: isAuthenticated });
+  const persistedMix = (savedAestheticMix.data?.aesthetics ?? []).filter((name): name is AestheticName => name in AESTHETIC_THEMES);
+  const expressionMix = persistedMix.length ? persistedMix : preferenceMix;
   const [brief, setBrief] = useState({ budgetKes: 12000, city: "Nairobi", lifestyle: "Creative Work", aesthetic, priority: "Polish" });
   const [submitted, setSubmitted] = useState(false);
   const [cityEdited, setCityEdited] = useState(false);
@@ -46,7 +51,7 @@ export default function BuildBrief() {
     setBrief((current) => current.aesthetic === aesthetic ? current : { ...current, aesthetic });
     setSubmitted(false);
   }, [aesthetic]);
-  const queryInput = useMemo(() => brief, [brief]);
+  const queryInput = useMemo(() => ({ ...brief, aestheticMix: expressionMix }), [brief, expressionMix]);
   const recommendation = trpc.builds.recommend.useQuery(queryInput, { enabled: submitted });
   const revise = <K extends keyof typeof brief>(key: K, value: (typeof brief)[K]) => { setBrief((current) => ({ ...current, [key]: value })); setSubmitted(false); };
 
@@ -54,7 +59,7 @@ export default function BuildBrief() {
     <main className="container pb-20 pt-8 sm:pt-12">
       <Link href="/" className="vb-focus inline-flex items-center gap-2 text-sm font-semibold text-[#665544] hover:text-[#a36530]"><ArrowLeft className="h-4 w-4" />Back to the overview</Link>
       <div className="mt-8 grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:gap-16">
-        <aside className="lg:sticky lg:top-28 lg:h-fit"><span className="vb-kicker text-[#9f5d2d]">Your build brief</span><h1 className="vb-serif mt-4 text-5xl leading-[0.94] tracking-[-0.045em] text-[#251f1a] sm:text-6xl">A plan that begins with <em className="font-normal text-[#aa6834]">what is real.</em></h1><p className="mt-5 max-w-md text-base leading-7 text-[#746656]">There is no ideal number here. Give us the spend, city, and feeling you want to create. We will show a transparent direction you can shape.</p><div className="mt-8 flex items-center gap-3 rounded-2xl border border-[#e0d4c3] bg-[#fdfaf5] p-4 text-sm leading-6 text-[#665746]"><Sparkles className="h-5 w-5 shrink-0 text-[#ae6c36]" />Recommendations use clearly labelled demonstration vendors and indicative local pricing.</div><div className="mt-4 rounded-2xl bg-[#eee0c7] p-4"><p className="vb-kicker text-[#8f5528]">Your expression lens</p><p className="mt-2 text-sm leading-6 text-[#65472d]">{preferenceMix.join(" · ")}</p><p className="mt-2 text-xs leading-5 text-[#785b40]">Your active direction guides this brief first. Change it any time; the rest of your saved mix keeps the wider SURA experience personal.</p></div></aside>
+        <aside className="lg:sticky lg:top-28 lg:h-fit"><span className="vb-kicker text-[#9f5d2d]">Your build brief</span><h1 className="vb-serif mt-4 text-5xl leading-[0.94] tracking-[-0.045em] text-[#251f1a] sm:text-6xl">A plan that begins with <em className="font-normal text-[#aa6834]">what is real.</em></h1><p className="mt-5 max-w-md text-base leading-7 text-[#746656]">There is no ideal number here. Give us the spend, city, and feeling you want to create. We will show a transparent direction you can shape.</p><div className="mt-8 flex items-center gap-3 rounded-2xl border border-[#e0d4c3] bg-[#fdfaf5] p-4 text-sm leading-6 text-[#665746]"><Sparkles className="h-5 w-5 shrink-0 text-[#ae6c36]" />Recommendations use clearly labelled demonstration vendors and indicative local pricing.</div><div className="mt-4 rounded-2xl bg-[#eee0c7] p-4"><p className="vb-kicker text-[#8f5528]">Your expression lens</p><p className="mt-2 text-sm leading-6 text-[#65472d]">{expressionMix.join(" · ")}</p><p className="mt-2 text-xs leading-5 text-[#785b40]">Your active direction guides this brief first. Change it any time; the rest of your saved mix keeps the wider SURA experience personal.</p></div></aside>
         <div className="space-y-6">
           <section className="rounded-[1.75rem] border border-[#ddcfbd] bg-[#fbf8f2] p-5 shadow-[0_16px_40px_rgba(62,43,22,0.06)] sm:p-7">
             <div className="flex items-center justify-between border-b border-[#e6dccf] pb-5"><div><p className="vb-kicker text-[#9f5d2d]">Five clear inputs</p><h2 className="vb-serif mt-2 text-3xl text-[#211b16]">Shape your brief</h2></div><span className="rounded-full bg-[#eee0c7] px-3 py-1.5 text-xs font-bold text-[#775024]">01 / 01</span></div>
@@ -71,7 +76,7 @@ export default function BuildBrief() {
           {submitted && <section aria-live="polite">
             {recommendation.isLoading && <SuraProcessing eyebrow="SURA / BUILD DIRECTION" title="Shaping the right edit." copy="Balancing your budget, purpose, aesthetic, and selected local city." />}
             {recommendation.isError && <SuraErrorState title="Your build direction needs another moment." copy="Your brief is still here. Try the recommendation again when you are ready." onRetry={() => recommendation.refetch()} />}
-            {recommendation.data && <RecommendationResult data={recommendation.data as RecommendationData} />}
+            {recommendation.data && <><RecommendationResult data={recommendation.data as RecommendationData} /><div className="mt-4 rounded-2xl border border-[#ded1bf] bg-[#fbf8f2] p-4"><p className="vb-kicker text-[#9d5c2b]">Your expression lens</p><p className="mt-2 text-sm leading-6 text-[#6c5947]">{(recommendation.data as RecommendationData).personalisationNote}</p></div></>}
           </section>}
         </div>
       </div>

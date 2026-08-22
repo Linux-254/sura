@@ -7,7 +7,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { demoBuilds, demoVendors, filterDemoVendors, getBuildRecommendation, getVendorBySlug } from "./vibebuild-data";
 import { buildBoardSelectionInputSchema, inquiryInputSchema, saveVendorInputSchema, shareInputSchema } from "./vibebuild-validation";
-import { accountProfileInputSchema, aestheticPreferencesInputSchema, announcementInputSchema, assertCompanyPaymentOwnership, companyContactsInputSchema, companyCreateInputSchema, contactInputSchema, discountOfferInputSchema, legalConsentInputSchema, paymentCatalog, paymentOrderInputSchema } from "./sura-validation";
+import { accountProfileInputSchema, aestheticPreferencesInputSchema, announcementInputSchema, assertCompanyPaymentOwnership, companyContactsInputSchema, companyCreateInputSchema, contactInputSchema, discountOfferInputSchema, legalConsentInputSchema, paymentCatalog, paymentOrderInputSchema, selectableAesthetics } from "./sura-validation";
 import { aiAssistInputSchema, calculateCommissionBreakdown, calculateDeliveryEstimate, companyProductInputSchema, productQuoteInputSchema, verifiedReviewInputSchema } from "./sura-commerce";
 import { createAiAssistPlan, storeConsentImage } from "./sura-ai-service";
 
@@ -45,6 +45,7 @@ export const appRouter = router({
       city: z.string().min(1),
       lifestyle: z.string().min(1),
       aesthetic: z.string().min(1),
+      aestheticMix: z.array(z.enum(selectableAesthetics)).max(5).default([]).refine((aesthetics) => new Set(aesthetics).size === aesthetics.length, { message: "Each aesthetic can only appear once" }),
       priority: z.string().min(1),
     })).query(({ input }) => getBuildRecommendation(input)),
   }),

@@ -68,6 +68,7 @@ export type MatchBrief = {
   city: string;
   lifestyle: string;
   aesthetic: string;
+  aestheticMix?: string[];
   priority: string;
 };
 
@@ -356,10 +357,11 @@ function buildScore(build: DemoBuild, brief: MatchBrief) {
   const cityScore = build.city === brief.city ? 5 : 0;
   const lifestyleScore = build.lifestyle === brief.lifestyle ? 4 : 0;
   const aestheticScore = build.aesthetic === brief.aesthetic ? 4 : 0;
+  const mixScore = brief.aestheticMix?.includes(build.aesthetic) ? 1.5 : 0;
   const priorityScore = build.priority === brief.priority ? 2 : 0;
   const centre = (build.totalMinKes + build.totalMaxKes) / 2;
   const budgetDistance = Math.abs(centre - brief.budgetKes) / Math.max(brief.budgetKes, 1);
-  return cityScore + lifestyleScore + aestheticScore + priorityScore - budgetDistance;
+  return cityScore + lifestyleScore + aestheticScore + mixScore + priorityScore - budgetDistance;
 }
 
 export function getBuildRecommendation(brief: MatchBrief) {
@@ -370,6 +372,7 @@ export function getBuildRecommendation(brief: MatchBrief) {
     .map((vendorId) => demoVendors.find((vendor) => vendor.id === vendorId))
     .filter((vendor): vendor is DemoVendor => Boolean(vendor));
   const gap = Math.max(0, build.totalMinKes - brief.budgetKes);
+  const mix = Array.from(new Set((brief.aestheticMix ?? []).filter(Boolean))).slice(0, 5);
   return {
     build,
     selectedVendors,
@@ -378,5 +381,8 @@ export function getBuildRecommendation(brief: MatchBrief) {
     transparencyNote: gap === 0
       ? `This indicative plan begins at KES ${build.totalMinKes.toLocaleString()} and stays inside your stated spend.`
       : `This is the closest current demonstration plan. It begins KES ${gap.toLocaleString()} above your stated spend, so use it as a direction and trim the first layer before committing.`,
+    personalisationNote: mix.length
+      ? `Your active direction leads this plan, with ${mix.join(" · ")} held as a wider expression lens. This adjusts the order of relevance, not the demo vendors, prices, or availability.`
+      : "Your active direction leads this plan. Save an expression mix to add wider creative cues across future SURA planning.",
   };
 }

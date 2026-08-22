@@ -1,5 +1,5 @@
 import { Camera, Check, FileImage, ImagePlus, Loader2, LockKeyhole, MapPin, Sparkles, WandSparkles } from "lucide-react";
-import { ChangeEvent, useRef, useState } from "react";
+import React, { ChangeEvent, useRef, useState } from "react";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SuraErrorState, SuraProcessing } from "@/components/SuraStates";

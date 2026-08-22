@@ -64,7 +64,11 @@
 - [ ] Capture evidence that editorial state treatments keep primary actions available in every validated journey.
 - [x] Research and document varied SURA aesthetic directions, including popular and understated colour combinations appropriate to Kenyan local commerce.
 - [x] Add a signed-in onboarding and settings flow that lets each member select and persist up to five core aesthetics.
-- [ ] Personalise SURA artistic expressions, recommendations, and aesthetic presentation from each member’s selected preference mix without compromising contrast or dignity-first language.
+- [x] Personalise SURA artistic expressions, recommendations, and aesthetic presentation from each member’s selected preference mix without compromising contrast or dignity-first language.
+- [x] Integrate the persisted one-to-five aesthetic mix into local build recommendation logic or output framing rather than only displaying it in the brief.
+- [x] Add regression tests proving AI Studio and local build recommendation journeys use the saved aesthetic mix while preserving dignity-first copy and accessible contrast.
+- [x] Add an automated AI Studio test that proves saved account aesthetic preferences are submitted with a consented assist request.
+- [x] Add dignity-first copy assertions for AI Studio and mix-aware local recommendation framing alongside existing contrast coverage.
 - [x] Add validation and responsive tests for the five-aesthetic limit, preference persistence, and accessible palette rendering.
 - [x] Add automated client coverage for expression-board selection count, save-action visibility, and responsive mobile-relevant rendering behaviour.
 - [x] Research and document Kenya-relevant contemporary design palettes, packaging references, and ethical visual cues for SURA themes.
