@@ -1,0 +1,16 @@
+flowchart LR
+  V[Visitor] --> L[Public landing]
+  L --> B[Guided build brief]
+  B --> M[tRPC matching query]
+  M --> C[Curated build recommendation]
+  C --> D[Vendor directory]
+  D --> P[Vendor profile]
+  P --> I[Structured inquiry]
+  C --> A{Sign in to save?}
+  A -->|Yes| O[Personal build board]
+  O --> S[Public build share]
+  A -->|No| B
+  I --> Q[(Inquiry record)]
+  M --> T[(Curated builds and vendor data)]
+  D --> T
+  O --> T
