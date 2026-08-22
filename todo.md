@@ -62,6 +62,11 @@
 - [ ] Verify visual state hierarchy and motion across desktop and mobile without obscuring user actions.
 - [ ] Re-run and document desktop/mobile visual QA for intended routes and key loading, empty, error, and processing states, including authenticated AI Studio journeys.
 - [ ] Capture evidence that editorial state treatments keep primary actions available in every validated journey.
+- [x] Research and document varied SURA aesthetic directions, including popular and understated colour combinations appropriate to Kenyan local commerce.
+- [x] Add a signed-in onboarding and settings flow that lets each member select and persist up to five core aesthetics.
+- [ ] Personalise SURA artistic expressions, recommendations, and aesthetic presentation from each member’s selected preference mix without compromising contrast or dignity-first language.
+- [x] Add validation and responsive tests for the five-aesthetic limit, preference persistence, and accessible palette rendering.
+- [x] Add automated client coverage for expression-board selection count, save-action visibility, and responsive mobile-relevant rendering behaviour.
 - [x] Add server-enforced company-member access and role-aware client route guards.
 - [x] Add a public profile endpoint and view that filters private social links.
 - [x] Add tests for payment-order ownership and protected dashboard/public-profile behavior.

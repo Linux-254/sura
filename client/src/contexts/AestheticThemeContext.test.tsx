@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AestheticThemeProvider, useAestheticTheme } from "./AestheticThemeContext";
 
 function ThemeProbe() {
-  const { aesthetic, palette, resetAesthetic, setAesthetic } = useAestheticTheme();
-  return <div><output data-testid="aesthetic">{aesthetic}</output><output data-testid="primary">{palette.primary}</output><button onClick={() => setAesthetic("Coastal Ease")}>Choose coastal</button><button onClick={resetAesthetic}>Reset</button></div>;
+  const { aesthetic, palette, preferenceMix, resetAesthetic, setAesthetic, setPreferenceMix } = useAestheticTheme();
+  return <div><output data-testid="aesthetic">{aesthetic}</output><output data-testid="primary">{palette.primary}</output><output data-testid="mix">{preferenceMix.join("|")}</output><button onClick={() => setAesthetic("Coastal Ease")}>Choose coastal</button><button onClick={() => setPreferenceMix(["Moss & Marigold", "Cobalt Ritual", "Thermal Bloom", "Ink & Ivory", "Savanna Atelier", "Soft Power"])}>Choose five</button><button onClick={resetAesthetic}>Reset</button></div>;
 }
 
 beforeEach(() => {
@@ -32,5 +32,13 @@ describe("SURA aesthetic theme provider", () => {
     fireEvent.click(screen.getByText("Reset"));
     expect(screen.getByTestId("aesthetic").textContent).toBe("Soft Power");
     expect(window.localStorage.getItem("sura-aesthetic-theme")).toBe("Soft Power");
+  });
+
+  it("keeps a primary direction and persists no more than five expression preferences", () => {
+    render(<AestheticThemeProvider><ThemeProbe /></AestheticThemeProvider>);
+    fireEvent.click(screen.getByText("Choose five"));
+    expect(screen.getByTestId("aesthetic").textContent).toBe("Moss & Marigold");
+    expect(screen.getByTestId("mix").textContent).toBe("Moss & Marigold|Cobalt Ritual|Thermal Bloom|Ink & Ivory|Savanna Atelier");
+    expect(JSON.parse(window.localStorage.getItem("sura-aesthetic-preferences") ?? "[]")).toHaveLength(5);
   });
 });

@@ -6,30 +6,51 @@ export const AESTHETIC_THEMES = {
   "Heritage Modern": { page: "#f0e6d3", paper: "#fff9ef", primary: "#59371f", ink: "#332419", accent: "#a96f2c", soft: "#d6b17e", border: "#cfb592" },
   "Comfort Official": { page: "#eaf0e9", paper: "#fbfdf8", primary: "#294d42", ink: "#1e342e", accent: "#6e987a", soft: "#cbdcc8", border: "#bfd1bd" },
   "Coastal Ease": { page: "#e7f0ee", paper: "#f9fdfc", primary: "#205963", ink: "#17373d", accent: "#d28853", soft: "#bddbd5", border: "#b4cfca" },
+  "Savanna Atelier": { page: "#ece6dc", paper: "#fffaf2", primary: "#31271f", ink: "#2a2018", accent: "#8a5633", soft: "#dfc5a7", border: "#d5bea6" },
+  "Ink & Ivory": { page: "#efefeb", paper: "#fffefa", primary: "#151515", ink: "#23211f", accent: "#9e7540", soft: "#ddd7ca", border: "#c8c1b5" },
+  "Orchid After Dark": { page: "#eee5ed", paper: "#fffbff", primary: "#472a46", ink: "#342132", accent: "#9b5b7f", soft: "#e8cddd", border: "#d8bbce" },
+  "Tangerine Social": { page: "#f7ede0", paper: "#fffaf2", primary: "#3b2920", ink: "#372014", accent: "#c8602e", soft: "#f1d4b1", border: "#dfc3a1" },
+  "Moss & Marigold": { page: "#f0f0df", paper: "#fffdf0", primary: "#405030", ink: "#2e3b24", accent: "#9c7618", soft: "#e2d99f", border: "#d1c785" },
+  "Cobalt Ritual": { page: "#e7edf4", paper: "#fbfdff", primary: "#173d73", ink: "#172f55", accent: "#9b672d", soft: "#c9d7e9", border: "#b8c9dd" },
+  "Thermal Bloom": { page: "#f6e8ed", paper: "#fffafd", primary: "#35203d", ink: "#2e1e33", accent: "#cc4a39", soft: "#f0c4cb", border: "#deb5c0" },
 } as const;
 
 export type AestheticName = keyof typeof AESTHETIC_THEMES;
-const STORAGE_KEY = "sura-aesthetic-theme";
+const ACTIVE_STORAGE_KEY = "sura-aesthetic-theme";
+const PREFERENCES_STORAGE_KEY = "sura-aesthetic-preferences";
 const defaultAesthetic: AestheticName = "Soft Power";
 
-type AestheticThemeContextValue = { aesthetic: AestheticName; palette: (typeof AESTHETIC_THEMES)[AestheticName]; setAesthetic: (aesthetic: AestheticName) => void; resetAesthetic: () => void };
+type AestheticThemeContextValue = { aesthetic: AestheticName; palette: (typeof AESTHETIC_THEMES)[AestheticName]; preferenceMix: AestheticName[]; setAesthetic: (aesthetic: AestheticName) => void; setPreferenceMix: (aesthetics: AestheticName[]) => void; resetAesthetic: () => void };
 const AestheticThemeContext = createContext<AestheticThemeContextValue | null>(null);
+
+function normaliseMix(values: readonly string[]) {
+  const unique = Array.from(new Set(values.filter((value): value is AestheticName => value in AESTHETIC_THEMES))).slice(0, 5);
+  return unique.length ? unique : [defaultAesthetic];
+}
 
 export function AestheticThemeProvider({ children }: { children: ReactNode }) {
   const [aesthetic, setAestheticState] = useState<AestheticName>(defaultAesthetic);
-  const setAesthetic = (next: AestheticName) => setAestheticState(next);
-  const resetAesthetic = () => setAestheticState(defaultAesthetic);
+  const [preferenceMix, setPreferenceMixState] = useState<AestheticName[]>([defaultAesthetic]);
+  const setPreferenceMix = (values: AestheticName[]) => { const next = normaliseMix(values); setPreferenceMixState(next); setAestheticState(next[0]); };
+  const setAesthetic = (next: AestheticName) => setPreferenceMix([next, ...preferenceMix.filter((value) => value !== next)]);
+  const resetAesthetic = () => setPreferenceMix([defaultAesthetic]);
   useEffect(() => {
-    try { const saved = window.localStorage.getItem(STORAGE_KEY); if (saved && saved in AESTHETIC_THEMES) setAestheticState(saved as AestheticName); } catch { /* The default palette remains usable. */ }
+    try {
+      const rawMix = window.localStorage.getItem(PREFERENCES_STORAGE_KEY);
+      if (rawMix) setPreferenceMixState(normaliseMix(JSON.parse(rawMix)));
+      const saved = window.localStorage.getItem(ACTIVE_STORAGE_KEY);
+      if (saved && saved in AESTHETIC_THEMES) setAestheticState(saved as AestheticName);
+    } catch { /* The default palette remains usable. */ }
   }, []);
   useEffect(() => {
     const palette = AESTHETIC_THEMES[aesthetic];
     const root = document.documentElement;
-    root.dataset.aesthetic = aesthetic.toLowerCase().replace(/\s+/g, "-");
+    root.dataset.aesthetic = aesthetic.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
     Object.entries(palette).forEach(([key, value]) => root.style.setProperty(`--sura-${key}`, value));
-    try { window.localStorage.setItem(STORAGE_KEY, aesthetic); } catch { /* Theme remains available for this session. */ }
+    try { window.localStorage.setItem(ACTIVE_STORAGE_KEY, aesthetic); } catch { /* Theme remains available for this session. */ }
   }, [aesthetic]);
-  const value = useMemo(() => ({ aesthetic, palette: AESTHETIC_THEMES[aesthetic], setAesthetic, resetAesthetic }), [aesthetic]);
+  useEffect(() => { try { window.localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(preferenceMix)); } catch { /* Theme remains available for this session. */ } }, [preferenceMix]);
+  const value = useMemo(() => ({ aesthetic, palette: AESTHETIC_THEMES[aesthetic], preferenceMix, setAesthetic, setPreferenceMix, resetAesthetic }), [aesthetic, preferenceMix]);
   return <AestheticThemeContext.Provider value={value}>{children}</AestheticThemeContext.Provider>;
 }
 

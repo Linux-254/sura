@@ -3,6 +3,7 @@ import { z } from "zod";
 export const socialPlatforms = ["instagram", "tiktok", "linkedin", "youtube", "x", "website"] as const;
 export const paymentOrderTypes = ["company_membership", "vendor_feature", "build_consultation"] as const;
 export const contactTypes = ["email", "phone", "whatsapp", "address"] as const;
+export const selectableAesthetics = ["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier", "Ink & Ivory", "Orchid After Dark", "Tangerine Social", "Moss & Marigold", "Cobalt Ritual", "Thermal Bloom"] as const;
 
 const platformHosts: Record<Exclude<(typeof socialPlatforms)[number], "website">, string[]> = {
   instagram: ["instagram.com"],
@@ -40,6 +41,13 @@ export const accountProfileInputSchema = z.object({
   publicSlug: z.string().trim().toLowerCase().regex(/^[a-z0-9-]{3,96}$/).optional(),
   isPublic: z.boolean().default(false),
   socialLinks: z.array(socialLinkInputSchema).max(6).default([]),
+});
+
+export const aestheticPreferencesInputSchema = z.object({
+  aesthetics: z.array(z.enum(selectableAesthetics)).min(1, "Choose at least one aesthetic").max(5, "Choose no more than five aesthetics").refine((aesthetics) => new Set(aesthetics).size === aesthetics.length, {
+    message: "Each aesthetic can only appear once",
+    path: ["aesthetics"],
+  }),
 });
 
 export const companyCreateInputSchema = z.object({

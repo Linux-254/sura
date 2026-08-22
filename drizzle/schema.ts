@@ -33,6 +33,8 @@ export const userProfiles = mysqlTable(
     avatarUrl: text("avatarUrl"),
     publicSlug: varchar("publicSlug", { length: 96 }).unique(),
     isPublic: boolean("isPublic").default(false).notNull(),
+    aestheticPreferences: text("aestheticPreferences"),
+    aestheticOnboardingComplete: boolean("aestheticOnboardingComplete").default(false).notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
   (table) => [index("user_profiles_user_idx").on(table.userId)],

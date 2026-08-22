@@ -168,6 +168,33 @@ export async function getAccountProfile(userId: number) {
   return { profile, socialLinks: links };
 }
 
+const selectableAestheticNames = new Set(["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier", "Ink & Ivory", "Orchid After Dark", "Tangerine Social", "Moss & Marigold", "Cobalt Ritual", "Thermal Bloom"]);
+
+function parseAestheticPreferences(raw: string | null | undefined) {
+  try {
+    const values = JSON.parse(raw ?? "[]");
+    if (!Array.isArray(values)) return [];
+    return Array.from(new Set(values.filter((value): value is string => typeof value === "string" && selectableAestheticNames.has(value)))).slice(0, 5);
+  } catch {
+    return [];
+  }
+}
+
+export async function getAestheticPreferences(userId: number) {
+  const db = await getDb();
+  if (!db) return { aesthetics: [], onboardingComplete: false };
+  const [profile] = await db.select({ aestheticPreferences: userProfiles.aestheticPreferences, aestheticOnboardingComplete: userProfiles.aestheticOnboardingComplete }).from(userProfiles).where(eq(userProfiles.userId, userId)).limit(1);
+  return { aesthetics: parseAestheticPreferences(profile?.aestheticPreferences), onboardingComplete: Boolean(profile?.aestheticOnboardingComplete) };
+}
+
+export async function setAestheticPreferences(userId: number, aesthetics: string[]) {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  const stored = JSON.stringify(aesthetics);
+  await db.insert(userProfiles).values({ userId, aestheticPreferences: stored, aestheticOnboardingComplete: true }).onDuplicateKeyUpdate({ set: { aestheticPreferences: stored, aestheticOnboardingComplete: true } });
+  return { persisted: true };
+}
+
 export async function getPublicAccountProfile(publicSlug: string) {
   const db = await getDb();
   if (!db) return undefined;

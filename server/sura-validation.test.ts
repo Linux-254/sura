@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assertCompanyPaymentOwnership, filterPublicSocialLinks, isValidPaymentStatusTransition, paymentOrderInputSchema, socialLinkInputSchema } from "./sura-validation";
+import { aestheticPreferencesInputSchema, assertCompanyPaymentOwnership, filterPublicSocialLinks, isValidPaymentStatusTransition, paymentOrderInputSchema, socialLinkInputSchema } from "./sura-validation";
 
 describe("SURA security validation", () => {
   it("accepts only secure URLs that match the social platform selected", () => {
@@ -29,5 +29,12 @@ describe("SURA security validation", () => {
     expect(isValidPaymentStatusTransition("pending", "paid")).toBe(true);
     expect(isValidPaymentStatusTransition("paid", "pending")).toBe(false);
     expect(isValidPaymentStatusTransition("cancelled", "paid")).toBe(false);
+  });
+
+  it("accepts one to five unique researched aesthetic directions and rejects invalid mixes", () => {
+    expect(aestheticPreferencesInputSchema.safeParse({ aesthetics: ["Savanna Atelier", "Ink & Ivory", "Moss & Marigold", "Cobalt Ritual", "Thermal Bloom"] }).success).toBe(true);
+    expect(aestheticPreferencesInputSchema.safeParse({ aesthetics: ["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier"] }).success).toBe(false);
+    expect(aestheticPreferencesInputSchema.safeParse({ aesthetics: ["Soft Power", "Soft Power"] }).success).toBe(false);
+    expect(aestheticPreferencesInputSchema.safeParse({ aesthetics: ["Invented Aesthetic"] }).success).toBe(false);
   });
 });

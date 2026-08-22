@@ -43,6 +43,13 @@
       "when": 1787439184896,
       "tag": "0005_sudden_tigra",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1787440169495,
+      "tag": "0006_striped_hellcat",
+      "breakpoints": true
     }
   ]
 }

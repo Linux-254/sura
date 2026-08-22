@@ -1,13 +1,13 @@
 import { COOKIE_NAME } from "@shared/const";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { completeAiAssistRequest, createAiAssistRequest, createBuildShareRecord, createCommerceOrder, createCompanyForUser, createCompanyProduct, createDeliveryQuote, createDiscountOffer, createInquiryRecord, createPaymentOrder, createPlatformAnnouncement, createVerifiedReview, failAiAssistRequest, getAccountProfile, getAdminCompanyReviewQueue, getAdminDiscountReviewQueue, getAiAssistRequestForUser, getBoardSelections, getBuildShareRecord, getCompaniesForUser, getCompanyContacts, getCompanyMembership, getCompanyOwnedByUser, getCompanyProducts, getCommerceOrdersForUser, getDiscountOffersForCompany, getOrCreateFreeMembership, getPaymentOrdersForUser, getProductById, getPublicAccountProfile, getPublicCompanyProfile, getPublicDiscountOffers, getPublicPlatformContacts, getPublicProducts, getSavedVendorIds, getWebNotificationFeed, markWebNotificationRead, recordAiImageConsent, recordLegalConsent, replaceCompanyContacts, replacePlatformContacts, toggleBuildBoardSelection, toggleSavedVendor, updateCompanyReviewStatus, updateDiscountOfferReviewStatus, upsertAccountProfile } from "./db";
+import { completeAiAssistRequest, createAiAssistRequest, createBuildShareRecord, createCommerceOrder, createCompanyForUser, createCompanyProduct, createDeliveryQuote, createDiscountOffer, createInquiryRecord, createPaymentOrder, createPlatformAnnouncement, createVerifiedReview, failAiAssistRequest, getAccountProfile, getAdminCompanyReviewQueue, getAdminDiscountReviewQueue, getAestheticPreferences, getAiAssistRequestForUser, getBoardSelections, getBuildShareRecord, getCompaniesForUser, getCompanyContacts, getCompanyMembership, getCompanyOwnedByUser, getCompanyProducts, getCommerceOrdersForUser, getDiscountOffersForCompany, getOrCreateFreeMembership, getPaymentOrdersForUser, getProductById, getPublicAccountProfile, getPublicCompanyProfile, getPublicDiscountOffers, getPublicPlatformContacts, getPublicProducts, getSavedVendorIds, getWebNotificationFeed, markWebNotificationRead, recordAiImageConsent, recordLegalConsent, replaceCompanyContacts, replacePlatformContacts, setAestheticPreferences, toggleBuildBoardSelection, toggleSavedVendor, updateCompanyReviewStatus, updateDiscountOfferReviewStatus, upsertAccountProfile } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { demoBuilds, demoVendors, filterDemoVendors, getBuildRecommendation, getVendorBySlug } from "./vibebuild-data";
 import { buildBoardSelectionInputSchema, inquiryInputSchema, saveVendorInputSchema, shareInputSchema } from "./vibebuild-validation";
-import { accountProfileInputSchema, announcementInputSchema, assertCompanyPaymentOwnership, companyContactsInputSchema, companyCreateInputSchema, contactInputSchema, discountOfferInputSchema, legalConsentInputSchema, paymentCatalog, paymentOrderInputSchema } from "./sura-validation";
+import { accountProfileInputSchema, aestheticPreferencesInputSchema, announcementInputSchema, assertCompanyPaymentOwnership, companyContactsInputSchema, companyCreateInputSchema, contactInputSchema, discountOfferInputSchema, legalConsentInputSchema, paymentCatalog, paymentOrderInputSchema } from "./sura-validation";
 import { aiAssistInputSchema, calculateCommissionBreakdown, calculateDeliveryEstimate, companyProductInputSchema, productQuoteInputSchema, verifiedReviewInputSchema } from "./sura-commerce";
 import { createAiAssistPlan, storeConsentImage } from "./sura-ai-service";
 
@@ -90,6 +90,8 @@ export const appRouter = router({
   }),
   account: router({
     profile: protectedProcedure.query(({ ctx }) => getAccountProfile(ctx.user.id)),
+    aestheticPreferences: protectedProcedure.query(({ ctx }) => getAestheticPreferences(ctx.user.id)),
+    setAestheticPreferences: protectedProcedure.input(aestheticPreferencesInputSchema).mutation(({ ctx, input }) => setAestheticPreferences(ctx.user.id, input.aesthetics)),
     publicProfile: publicProcedure.input(z.object({ slug: z.string().regex(/^[a-z0-9-]{3,96}$/) })).query(async ({ input }) => {
       const profile = await getPublicAccountProfile(input.slug);
       if (!profile) throw new Error("This public profile is not available");
