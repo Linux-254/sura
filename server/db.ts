@@ -1,7 +1,8 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { aiAssistRequests, aiImageConsents, buildBoardSelections, buildShareItems, buildShares, commerceOrders, companies, companyContacts, companyMembers, companyProducts, deliveryQuotes, discountOffers, inquiries, InsertUser, legalConsents, paymentOrders, platformAnnouncements, platformContacts, savedVendors, socialLinks, userMemberships, userProfiles, users, verifiedReviews, webNotifications } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { assertVerifiedReviewEligibility } from "./sura-commerce";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -472,14 +473,19 @@ export async function createCommerceOrder(input: { userId: number; companyId: nu
 export async function getCommerceOrdersForUser(userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(commerceOrders).where(eq(commerceOrders.userId, userId)).limit(50);
+  const orders = await db.select().from(commerceOrders).where(eq(commerceOrders.userId, userId)).limit(50);
+  if (!orders.length) return [];
+  const reviews = await db.select().from(verifiedReviews).where(and(eq(verifiedReviews.userId, userId), inArray(verifiedReviews.orderId, orders.map((order) => order.id))));
+  return orders.map((order) => ({ ...order, review: reviews.find((review) => review.orderId === order.id) ?? null }));
 }
 
-export async function createVerifiedReview(input: { orderId: number; userId: number; rating: number; comment?: string }) {
-  const db = await getDb();
+export async function createVerifiedReview(input: { orderId: number; userId: number; rating: number; comment?: string }, databaseOverride?: any) {
+  const db = databaseOverride ?? await getDb();
   if (!db) return { id: 0, persisted: false };
-  const [order] = await db.select().from(commerceOrders).where(and(eq(commerceOrders.id, input.orderId), eq(commerceOrders.userId, input.userId), eq(commerceOrders.status, "delivered"))).limit(1);
-  if (!order) throw new Error("Reviews are available only after a delivered purchase");
+  const [order] = await db.select().from(commerceOrders).where(eq(commerceOrders.id, input.orderId)).limit(1);
+  if (!order) throw new Error("Reviews are available only after a delivered purchase belonging to this account");
+  const [existingReview] = await db.select().from(verifiedReviews).where(and(eq(verifiedReviews.orderId, order.id), eq(verifiedReviews.userId, input.userId))).limit(1);
+  assertVerifiedReviewEligibility({ order, reviewUserId: input.userId, existingReview });
   const result = await db.insert(verifiedReviews).values({ orderId: order.id, userId: input.userId, companyId: order.companyId, productId: order.productId, rating: input.rating, comment: input.comment ?? null, status: "pending" });
   return { id: Number(result[0]?.insertId ?? 0), persisted: true };
 }

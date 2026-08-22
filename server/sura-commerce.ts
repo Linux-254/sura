@@ -38,6 +38,11 @@ export const verifiedReviewInputSchema = z.object({
   comment: z.string().trim().min(12).max(1000).optional(),
 });
 
+export function assertVerifiedReviewEligibility(input: { order: { userId: number; status: string } | undefined; reviewUserId: number; existingReview: unknown }) {
+  if (!input.order || input.order.userId !== input.reviewUserId || input.order.status !== "delivered") throw new Error("Reviews are available only after a delivered purchase belonging to this account");
+  if (input.existingReview) throw new Error("A verified review has already been submitted for this order");
+}
+
 export type DeliveryBand = "same_neighbourhood" | "same_city" | "national";
 
 export function calculateDeliveryEstimate(originCity: string | null, destinationCity: string): { distanceBand: DeliveryBand; deliveryKes: number; providerLabel: string } {

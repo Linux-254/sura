@@ -54,7 +54,14 @@
 - [ ] Add permission-aware camera, location, and image-file acquisition with clear user explanation, browser-only capture, and secure storage references.
 - [ ] Build AI-assisted home and personal-style brief flows that return transparent inspiration, product recommendations, price estimates, delivery, and commission lines.
 - [ ] Build company product, delivery, contact, discount, and commission controls with order-specific seller settlement visibility.
-- [ ] Add verified post-purchase reviews without fabricated user-generated content.
+- [x] Add verified post-purchase reviews without fabricated user-generated content.
+- [x] Prevent duplicate verified reviews per delivered order and account, with server-side regression coverage.
+- [x] Add server regression coverage for second-review rejection, non-delivered orders, and wrong-user review attempts.
+- [x] Guard missing commerce orders before review lookup and exercise the concrete review-creation helper or mutation path for all eligibility rejections.
+- [x] Show persisted verified-review status in private orders and replace the review form after submission.
+- [ ] Add end-to-end tests for delivered-only review eligibility, ownership enforcement, and duplicate-submission prevention.
+- [ ] Add a private-orders submission-journey test that transitions a delivered order from eligible form to persisted review status.
+- [ ] Add review-journey regression coverage that surfaces duplicate rejection and blocks wrong-user or non-delivered attempts through the creation path.
 - [ ] Add security, permission, commission, delivery, and review validation tests for the AI commerce flows.
 - [x] Add admin-only company commission controls that enforce and display the 20%–50% platform range.
 - [x] Create reusable SURA editorial loading, skeleton, empty, processing, and error-state components.
