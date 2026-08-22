@@ -9,6 +9,10 @@ import Home from "@/pages/Home";
 import LegalPage from "@/pages/LegalPage";
 import PublicProfilePage from "@/pages/PublicProfilePage";
 import CompanyDetailPage from "@/pages/CompanyDetailPage";
+import { AdminEngagementPage, MembershipPage, OffersPage } from "@/pages/EngagementPages";
+import AiStudioPage from "@/pages/AiStudioPage";
+import { CommerceOrdersPage, ShopPage } from "@/pages/CommercePages";
+import CompanyCatalogPage from "@/pages/CompanyCatalogPage";
 import NotFound from "@/pages/NotFound";
 import SharedBuild from "@/pages/SharedBuild";
 import VendorProfile from "@/pages/VendorProfile";
@@ -28,11 +32,18 @@ function Router() {
       <Route path="/people/:slug"><PublicProfilePage kind="person" /></Route>
       <Route path="/studios/:slug"><PublicProfilePage kind="company" /></Route>
       <Route path="/board" component={BuildBoard} />
+      <Route path="/membership" component={MembershipPage} />
+      <Route path="/ai-studio" component={AiStudioPage} />
+      <Route path="/shop" component={ShopPage} />
+      <Route path="/orders" component={CommerceOrdersPage} />
+      <Route path="/offers" component={OffersPage} />
       <Route path="/account" component={AccountPage} />
       <Route path="/company" component={CompanyPage} />
+      <Route path="/company/:id/catalog" component={CompanyCatalogPage} />
       <Route path="/company/:id" component={CompanyDetailPage} />
       <Route path="/checkout" component={CheckoutPage} />
       <Route path="/admin" component={AdminPage} />
+      <Route path="/admin/engagement" component={AdminEngagementPage} />
       <Route path="/share/:token" component={SharedBuild} />
       <Route path="/vendors/:slug" component={VendorProfile} />
       <Route path="/404" component={NotFound} />

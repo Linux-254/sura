@@ -1,0 +1,58 @@
+import { Check, CircleAlert, Loader2, PackageCheck, ShoppingBag, Star, Truck } from "lucide-react";
+import { useState } from "react";
+import { Link } from "wouter";
+import DashboardLayout from "@/components/DashboardLayout";
+import { SuraEmptyState, SuraErrorState, SuraPageSkeleton, SuraProcessing } from "@/components/SuraStates";
+import { VibeLayout, formatKes } from "@/components/VibeLayout";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { useKenyaLocation } from "@/contexts/KenyaLocationContext";
+import { trpc } from "@/lib/trpc";
+
+const categories = ["all", "apparel", "footwear", "home", "accessory"] as const;
+type Category = (typeof categories)[number];
+type CommerceProduct = {
+  id: number; name: string; description: string; imageUrl: string | null; priceKes: number; category: string; sizeOptions: string | null;
+  company: { name: string; city: string | null; commissionRatePct: number };
+};
+
+export function ShopPage() {
+  const { city } = useKenyaLocation();
+  const { isAuthenticated } = useAuth();
+  const [category, setCategory] = useState<Category>("all");
+  const products = trpc.commerce.products.useQuery({ city: city ?? undefined, category: category === "all" ? undefined : category });
+  return <VibeLayout><main className="container pb-20 pt-10 sm:pt-14">
+    <div className="max-w-2xl"><span className="vb-kicker text-[var(--sura-accent)]">SURA / CONNECTED SHOPS</span><h1 className="vb-serif mt-4 text-5xl leading-[0.94] tracking-[-0.045em] sm:text-6xl">The edit, ready to <em className="font-normal text-[var(--sura-accent)]">take form.</em></h1><p className="mt-5 text-base leading-7 text-[#746656]">SURA shows active catalog items from verified local companies. Every quote separates merchandise, delivery, and the platform’s approved commission allocation.</p></div>
+    <div className="mt-8 flex flex-wrap gap-2">{categories.map((item) => <button key={item} onClick={() => setCategory(item)} className={`vb-focus rounded-full border px-4 py-2 text-xs font-bold capitalize ${category === item ? "border-[var(--sura-primary)] bg-[var(--sura-primary)] text-[var(--sura-paper)]" : "border-[var(--sura-border)] bg-[var(--sura-paper)]"}`}>{item}</button>)}</div>
+    {products.isLoading && <LoadingGrid />}{products.isError && <ErrorState onRetry={() => products.refetch()} />}{!products.isLoading && !products.isError && products.data?.length === 0 && <EmptyShop />}{products.data && products.data.length > 0 && <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{products.data.map((item) => <ProductCard key={item.id} product={item} isAuthenticated={isAuthenticated} city={city ?? "Nairobi"} />)}</div>}
+  </main></VibeLayout>;
+}
+
+function LoadingGrid() { return <div className="mt-8"><SuraPageSkeleton cards={6} /></div>; }
+function ErrorState({ onRetry }: { onRetry: () => void }) { return <div className="mt-8"><SuraErrorState title="The connected shop needs a moment." copy="Your filters and city are still in place. Try the catalog again when you are ready." onRetry={onRetry} /></div>; }
+function EmptyShop() { return <div className="mt-8"><SuraEmptyState eyebrow="SURA / CONNECTED SHOPS" title="No connected items here yet." copy="SURA does not invent product stock. Verified companies appear here after they publish an active product and delivery path." icon={<ShoppingBag className="h-6 w-6" />} action={<Link href="/ai-studio" className="vb-button vb-focus inline-flex rounded-full bg-[var(--sura-primary)] px-5 py-3 text-sm font-bold text-[var(--sura-paper)]">Create an AI direction</Link>} /></div>; }
+
+function ProductCard({ product, city, isAuthenticated }: { product: CommerceProduct; city: string; isAuthenticated: boolean }) {
+  const [open, setOpen] = useState(false);
+  return <article className="overflow-hidden rounded-[1.5rem] border border-[var(--sura-border)] bg-[var(--sura-paper)] shadow-[0_12px_30px_rgba(56,39,22,0.06)]">
+    {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="h-48 w-full object-cover" /> : <div className="grid h-48 place-items-center bg-[var(--sura-muted)]"><ShoppingBag className="h-8 w-8 text-[var(--sura-accent)]" /></div>}
+    <div className="p-5"><p className="vb-kicker text-[var(--sura-accent)]">{product.category} · {product.company.city ?? "Kenya"}</p><h2 className="vb-serif mt-3 text-3xl">{product.name}</h2><p className="mt-2 line-clamp-2 text-sm leading-6 text-[#756655]">{product.description}</p><div className="mt-5 flex items-end justify-between gap-3"><div><p className="text-xs text-[#756655]">Company price</p><p className="vb-serif text-2xl">{formatKes(product.priceKes)}</p></div><button onClick={() => setOpen(!open)} className="vb-button vb-focus rounded-full bg-[var(--sura-primary)] px-4 py-2.5 text-xs font-bold text-[var(--sura-paper)]">{open ? "Close" : "Quote delivery"}</button></div>{open && <QuoteCard productId={product.id} city={city} isAuthenticated={isAuthenticated} />}</div>
+  </article>;
+}
+
+function QuoteCard({ productId, city, isAuthenticated }: { productId: number; city: string; isAuthenticated: boolean }) {
+  const [quote, setQuote] = useState<ReturnType<typeof trpc.commerce.quote.useMutation>["data"]>();
+  const quoteMutation = trpc.commerce.quote.useMutation({ onSuccess: setQuote });
+  const orderMutation = trpc.commerce.createOrder.useMutation();
+  const quoteInput = { productId, destinationCity: city, quantity: 1 };
+  return <div className="mt-5 rounded-2xl bg-[var(--sura-muted)] p-4"><div className="flex items-center justify-between"><p className="text-sm font-bold">Delivery to {city}</p><button onClick={() => quoteMutation.mutate(quoteInput)} disabled={quoteMutation.isPending} className="text-xs font-bold text-[var(--sura-accent)]">{quoteMutation.isPending ? "Calculating…" : "Refresh quote"}</button></div>{!quote && <button onClick={() => quoteMutation.mutate(quoteInput)} className="mt-3 inline-flex items-center gap-2 text-sm font-bold"><Truck className="h-4 w-4 text-[var(--sura-accent)]" />Show price split</button>}{quote && <div className="mt-4 space-y-2 text-sm"><Row label="Merchandise" value={formatKes(quote.merchandiseSubtotalKes)} /><Row label="Delivery estimate" value={formatKes(quote.deliveryKes)} /><Row label={`SURA commission (${quote.commissionRatePct}%)`} value={formatKes(quote.commissionKes)} /><Row label="Seller settlement" value={formatKes(quote.sellerSettlementKes)} /><div className="mt-3 flex items-center justify-between border-t border-[var(--sura-border)] pt-3"><strong>Member total</strong><strong>{formatKes(quote.customerTotalKes)}</strong></div><p className="text-xs leading-5 text-[#756655]">Delivery is an estimate and M-Pesa checkout remains sandbox-only until merchant callback verification is configured.</p>{isAuthenticated ? <button onClick={() => orderMutation.mutate(quoteInput)} disabled={orderMutation.isPending} className="vb-button vb-focus mt-2 w-full rounded-full bg-[var(--sura-primary)] px-4 py-3 text-sm font-bold text-[var(--sura-paper)]">{orderMutation.isPending ? "Saving request…" : "Request this order"}</button> : <Link href="/join" className="vb-button vb-focus mt-2 block rounded-full bg-[var(--sura-primary)] px-4 py-3 text-center text-sm font-bold text-[var(--sura-paper)]">Sign in to request</Link>}{orderMutation.isSuccess && <p className="mt-3 flex gap-2 text-xs leading-5 text-[#41623f]"><Check className="h-4 w-4 shrink-0" />Order request saved. Payment is not collected until M-Pesa is activated.</p>}</div>}</div>;
+}
+function Row({ label, value }: { label: string; value: string }) { return <div className="flex justify-between gap-3 text-[#5e5143]"><span>{label}</span><span>{value}</span></div>; }
+
+export function CommerceOrdersPage() {
+  const { isAuthenticated } = useAuth();
+  const orders = trpc.commerce.orders.useQuery(undefined, { enabled: isAuthenticated });
+  const [review, setReview] = useState({ orderId: 0, rating: 5, comment: "" });
+  const submitReview = trpc.commerce.createReview.useMutation({ onSuccess: () => orders.refetch() });
+  if (!isAuthenticated) return <DashboardLayout eyebrow="SURA / ORDERS" title="Your orders belong to you." description="Sign in to view private commerce history and leave a verified review after delivery."><Link href="/join" className="rounded-full bg-[var(--sura-primary)] px-5 py-3 text-sm font-bold text-[var(--sura-paper)]">Sign in</Link></DashboardLayout>;
+  return <DashboardLayout eyebrow="SURA / ORDERS" title="Every purchase, kept in view." description="Order status, delivery, and review eligibility live here. SURA does not publish a review until a delivered purchase creates a verified link.">{orders.isLoading ? <SuraProcessing eyebrow="SURA / ORDER HISTORY" title="Gathering your order story." copy="We are opening only the private purchases linked to your account." /> : orders.isError ? <SuraErrorState title="Your order history needs another moment." onRetry={() => orders.refetch()} /> : orders.data?.length === 0 ? <SuraEmptyState eyebrow="SURA / ORDER HISTORY" title="No orders to track yet." copy="A requested order appears here with transparent delivery, seller settlement, and review eligibility." icon={<PackageCheck className="h-6 w-6" />} action={<Link href="/shop" className="text-sm font-bold text-[var(--sura-accent)]">Explore connected shops</Link>} /> : <div className="grid gap-5 lg:grid-cols-2">{orders.data?.map((order) => <article key={order.id} className="rounded-[1.5rem] border border-[var(--sura-border)] bg-[var(--sura-paper)] p-6"><p className="vb-kicker text-[var(--sura-accent)]">Order #{order.id} · {order.status.replace(/_/g, " ")}</p><p className="vb-serif mt-3 text-3xl">{formatKes(order.customerTotalKes)}</p><div className="mt-4 grid grid-cols-2 gap-3 text-sm text-[#756655]"><p>Delivery {formatKes(order.deliveryKes)}</p><p>Seller {formatKes(order.sellerSettlementKes)}</p><p>Platform {formatKes(order.commissionKes)}</p><p>Commission {order.commissionRatePct}%</p></div>{order.status === "delivered" && <div className="mt-5 border-t border-[var(--sura-border)] pt-4"><p className="text-sm font-bold">Leave a verified review</p><div className="mt-3 flex gap-2">{[1, 2, 3, 4, 5].map((rating) => <button key={rating} onClick={() => setReview({ ...review, orderId: order.id, rating })} className={review.orderId === order.id && review.rating >= rating ? "text-[var(--sura-accent)]" : "text-[#b9a998]"}><Star className="h-5 w-5 fill-current" /></button>)}</div><textarea value={review.orderId === order.id ? review.comment : ""} onChange={(event) => setReview({ ...review, orderId: order.id, comment: event.target.value })} className="vb-focus mt-3 min-h-20 w-full rounded-xl border border-[var(--sura-border)] p-3 text-sm" placeholder="Optional verified purchase review" /><button onClick={() => submitReview.mutate({ orderId: order.id, rating: review.rating, comment: review.comment || undefined })} className="mt-3 rounded-full bg-[var(--sura-primary)] px-4 py-2.5 text-xs font-bold text-[var(--sura-paper)]">Submit for review</button></div>}</article>)}</div>}</DashboardLayout>;
+}

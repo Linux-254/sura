@@ -36,11 +36,32 @@
 - [x] Add social-link editing with input validation and public-safe display rules.
 - [x] Prepare a protected checkout/payment flow with explicit order states, non-sensitive UI handling, and a gateway integration boundary.
 - [x] Add security-focused tests for protected roles, social-link validation, payment states, authentication controls, and responsive journeys.
-- [ ] Choose and connect a live payment gateway (for example, M-Pesa or Stripe) before collecting any funds.
+- [ ] Connect an M-Pesa-compatible gateway before collecting any funds.
+- [ ] Define M-Pesa checkout, callback, reconciliation, and failure-state contracts without handling a customer’s PIN or payment credential.
+- [ ] Add protected M-Pesa order initiation and payment-status handling with test coverage.
+- [ ] Document the required M-Pesa provider credentials and live-verification steps.
 - [x] Define accessible colour tokens for each SURA aesthetic direction.
 - [x] Add a persistent user-controlled aesthetic theme preference with a clear reset option.
 - [x] Apply the selected aesthetic palette to public navigation, the planning brief, and private dashboards.
-- [x] Add theme persistence and accessibility contrast tests and verify desktop/mobile theme rendering.
+- [ ] Add theme persistence and accessibility contrast tests and verify desktop/mobile theme rendering.
+- [ ] Add an aesthetic-branded SURA Free membership tier with no live payment collection.
+- [ ] Add web-app popup notifications for member activity, offers, company status, and platform announcements.
+- [ ] Add secure company contact information and discount-offer management with public-safe display rules.
+- [ ] Add admin controls for platform contact information, announcements, and discount review/visibility.
+- [ ] Add tests for membership tier, notifications, contacts, discounts, and role-based management paths.
+- [ ] Define a practical AI-assisted home, outfit, footwear, and inspiration commerce brief with user-consented visual analysis boundaries.
+- [ ] Model shoppable seller listings, stock/size details, delivery quotes, commission allocation from 20% to 50%, purchase records, and verified reviews.
+- [ ] Add permission-aware camera, location, and image-file acquisition with clear user explanation, browser-only capture, and secure storage references.
+- [ ] Build AI-assisted home and personal-style brief flows that return transparent inspiration, product recommendations, price estimates, delivery, and commission lines.
+- [ ] Build company product, delivery, contact, discount, and commission controls with order-specific seller settlement visibility.
+- [ ] Add verified post-purchase reviews without fabricated user-generated content.
+- [ ] Add security, permission, commission, delivery, and review validation tests for the AI commerce flows.
+- [ ] Add admin-only company commission controls that enforce and display the 20%–50% platform range.
+- [x] Create reusable SURA editorial loading, skeleton, empty, processing, and error-state components.
+- [ ] Apply refined state treatments to AI studio, commerce, account/company/admin dashboards, and public discovery routes.
+- [ ] Verify visual state hierarchy and motion across desktop and mobile without obscuring user actions.
+- [ ] Re-run and document desktop/mobile visual QA for intended routes and key loading, empty, error, and processing states, including authenticated AI Studio journeys.
+- [ ] Capture evidence that editorial state treatments keep primary actions available in every validated journey.
 - [x] Add server-enforced company-member access and role-aware client route guards.
 - [x] Add a public profile endpoint and view that filters private social links.
 - [x] Add tests for payment-order ownership and protected dashboard/public-profile behavior.

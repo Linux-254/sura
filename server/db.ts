@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { buildBoardSelections, buildShareItems, buildShares, companies, companyMembers, inquiries, InsertUser, legalConsents, paymentOrders, savedVendors, socialLinks, userProfiles, users } from "../drizzle/schema";
+import { aiAssistRequests, aiImageConsents, buildBoardSelections, buildShareItems, buildShares, commerceOrders, companies, companyContacts, companyMembers, companyProducts, deliveryQuotes, discountOffers, inquiries, InsertUser, legalConsents, paymentOrders, platformAnnouncements, platformContacts, savedVendors, socialLinks, userMemberships, userProfiles, users, verifiedReviews, webNotifications } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -224,7 +224,8 @@ export async function getPublicCompanyProfile(slug: string) {
   const [company] = await db.select().from(companies).where(and(eq(companies.slug, slug), eq(companies.verificationStatus, "verified"))).limit(1);
   if (!company) return undefined;
   const links = await db.select().from(socialLinks).where(and(eq(socialLinks.companyId, company.id), eq(socialLinks.isPublic, true)));
-  return { company, socialLinks: links };
+  const contacts = await getCompanyContacts(company.id, true);
+  return { company, socialLinks: links, contacts };
 }
 
 export async function getPaymentOrdersForUser(userId: number) {
@@ -258,4 +259,193 @@ export async function updateCompanyReviewStatus(companyId: number, verificationS
   if (!db) return { persisted: false };
   await db.update(companies).set({ verificationStatus }).where(eq(companies.id, companyId));
   return { persisted: true };
+}
+
+export async function getOrCreateFreeMembership(userId: number) {
+  const db = await getDb();
+  if (!db) return { planKey: "sura_free" as const, status: "active" as const, persisted: false };
+  await db.insert(userMemberships).values({ userId, planKey: "sura_free", status: "active" }).onDuplicateKeyUpdate({ set: { updatedAt: new Date() } });
+  const [membership] = await db.select().from(userMemberships).where(eq(userMemberships.userId, userId)).limit(1);
+  return { ...membership, persisted: true };
+}
+
+export async function getWebNotificationFeed(userId: number) {
+  const db = await getDb();
+  if (!db) return { notifications: [], announcements: [] };
+  const notifications = await db.select().from(webNotifications).where(and(eq(webNotifications.userId, userId), eq(webNotifications.isDismissed, false))).limit(30);
+  const announcements = await db.select().from(platformAnnouncements).where(eq(platformAnnouncements.isActive, true)).limit(10);
+  return { notifications, announcements };
+}
+
+export async function markWebNotificationRead(userId: number, notificationId: number, dismissed: boolean) {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  await db.update(webNotifications).set({ isRead: true, isDismissed: dismissed }).where(and(eq(webNotifications.id, notificationId), eq(webNotifications.userId, userId)));
+  return { persisted: true };
+}
+
+export async function replaceCompanyContacts(companyId: number, contacts: Array<{ label: string; contactType: "email" | "phone" | "whatsapp" | "address"; value: string; isPublic: boolean; sortOrder: number }>) {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  await db.delete(companyContacts).where(eq(companyContacts.companyId, companyId));
+  if (contacts.length) await db.insert(companyContacts).values(contacts.map((contact) => ({ companyId, ...contact })));
+  return { persisted: true };
+}
+
+export async function getCompanyContacts(companyId: number, publicOnly = false) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(companyContacts).where(publicOnly ? and(eq(companyContacts.companyId, companyId), eq(companyContacts.isPublic, true)) : eq(companyContacts.companyId, companyId));
+}
+
+export async function createDiscountOffer(input: { companyId?: number; createdByUserId: number; code: string; title: string; description?: string; discountType: "percentage" | "fixed_kes"; discountValue: number; minimumSpendKes?: number; validUntil?: Date }) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  const result = await db.insert(discountOffers).values({ ...input, companyId: input.companyId ?? null, description: input.description ?? null, minimumSpendKes: input.minimumSpendKes ?? null, validUntil: input.validUntil ?? null, status: "pending", isPublic: false });
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
+}
+
+export async function getDiscountOffersForCompany(companyId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(discountOffers).where(eq(discountOffers.companyId, companyId)).limit(30);
+}
+
+export async function getPublicDiscountOffers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(discountOffers).where(and(eq(discountOffers.status, "approved"), eq(discountOffers.isPublic, true))).limit(30);
+}
+
+export async function getAdminDiscountReviewQueue() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(discountOffers).where(eq(discountOffers.status, "pending")).limit(50);
+}
+
+export async function updateDiscountOfferReviewStatus(offerId: number, status: "approved" | "rejected") {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  await db.update(discountOffers).set({ status, isPublic: status === "approved" }).where(eq(discountOffers.id, offerId));
+  return { persisted: true };
+}
+
+export async function createPlatformAnnouncement(input: { createdByUserId: number; title: string; body: string; linkUrl?: string; isActive: boolean }) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  const result = await db.insert(platformAnnouncements).values({ ...input, linkUrl: input.linkUrl ?? null });
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
+}
+
+export async function replacePlatformContacts(createdByUserId: number, contacts: Array<{ label: string; contactType: "email" | "phone" | "whatsapp" | "address"; value: string; isPublic: boolean; sortOrder: number }>) {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  await db.delete(platformContacts);
+  if (contacts.length) await db.insert(platformContacts).values(contacts.map((contact) => ({ createdByUserId, ...contact })));
+  return { persisted: true };
+}
+
+export async function getPublicPlatformContacts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(platformContacts).where(eq(platformContacts.isPublic, true)).limit(10);
+}
+
+export async function getCompanyProducts(companyId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(companyProducts).where(eq(companyProducts.companyId, companyId)).limit(100);
+}
+
+export async function getPublicProducts(input: { category?: "apparel" | "footwear" | "home" | "accessory"; city?: string }) {
+  const db = await getDb();
+  if (!db) return [];
+  const products = await db.select().from(companyProducts).where(eq(companyProducts.isActive, true)).limit(100);
+  const companyIds = Array.from(new Set(products.map((product) => product.companyId)));
+  const verifiedCompanies = await Promise.all(companyIds.map(async (companyId) => (await db.select().from(companies).where(and(eq(companies.id, companyId), eq(companies.verificationStatus, "verified"))).limit(1))[0]));
+  const allowedCompanies = new Map(verifiedCompanies.filter(Boolean).map((company) => [company!.id, company!]));
+  return products.filter((product) => {
+    const company = allowedCompanies.get(product.companyId);
+    return Boolean(company) && (!input.category || product.category === input.category) && (!input.city || company?.city === input.city);
+  }).map((product) => ({ ...product, company: allowedCompanies.get(product.companyId)! }));
+}
+
+export async function getProductById(productId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [product] = await db.select().from(companyProducts).where(and(eq(companyProducts.id, productId), eq(companyProducts.isActive, true))).limit(1);
+  if (!product) return undefined;
+  const [company] = await db.select().from(companies).where(and(eq(companies.id, product.companyId), eq(companies.verificationStatus, "verified"))).limit(1);
+  return company ? { product, company } : undefined;
+}
+
+export async function createCompanyProduct(input: { companyId: number; name: string; category: "apparel" | "footwear" | "home" | "accessory"; description: string; priceKes: number; imageUrl?: string; sizeOptions: string[]; stockQuantity: number }) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  const result = await db.insert(companyProducts).values({ ...input, imageUrl: input.imageUrl ?? null, sizeOptions: JSON.stringify(input.sizeOptions) });
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
+}
+
+export async function recordAiImageConsent(userId: number, purpose: "home_refresh" | "personal_style" | "footwear_fit" | "inspiration") {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  const result = await db.insert(aiImageConsents).values({ userId, purpose });
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
+}
+
+export async function createAiAssistRequest(input: { userId: number; consentId: number; kind: "home_refresh" | "personal_style" | "footwear_fit" | "inspiration"; inputImageKey?: string; inputImageUrl?: string; brief: string; city: string; budgetKes: number; sizeProfile?: string }) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  const result = await db.insert(aiAssistRequests).values({ ...input, inputImageKey: input.inputImageKey ?? null, inputImageUrl: input.inputImageUrl ?? null, sizeProfile: input.sizeProfile ?? null, status: "processing" });
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
+}
+
+export async function completeAiAssistRequest(input: { requestId: number; outputJson: string; generatedImageUrl?: string }) {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  await db.update(aiAssistRequests).set({ outputJson: input.outputJson, generatedImageUrl: input.generatedImageUrl ?? null, status: "complete" }).where(eq(aiAssistRequests.id, input.requestId));
+  return { persisted: true };
+}
+
+export async function failAiAssistRequest(requestId: number) {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  await db.update(aiAssistRequests).set({ status: "failed" }).where(eq(aiAssistRequests.id, requestId));
+  return { persisted: true };
+}
+
+export async function getAiAssistRequestForUser(requestId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [request] = await db.select().from(aiAssistRequests).where(and(eq(aiAssistRequests.id, requestId), eq(aiAssistRequests.userId, userId))).limit(1);
+  return request;
+}
+
+export async function createDeliveryQuote(input: { productId: number; destinationCity: string; distanceBand: "same_neighbourhood" | "same_city" | "national"; deliveryKes: number; providerLabel: string; expiresAt: Date }) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  const result = await db.insert(deliveryQuotes).values(input);
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
+}
+
+export async function createCommerceOrder(input: { userId: number; companyId: number; productId: number; deliveryQuoteId: number; quantity: number; merchandiseSubtotalKes: number; commissionRatePct: number; commissionKes: number; sellerSettlementKes: number; deliveryKes: number; customerTotalKes: number }) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  const result = await db.insert(commerceOrders).values({ ...input, status: "awaiting_payment" });
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
+}
+
+export async function getCommerceOrdersForUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(commerceOrders).where(eq(commerceOrders.userId, userId)).limit(50);
+}
+
+export async function createVerifiedReview(input: { orderId: number; userId: number; rating: number; comment?: string }) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  const [order] = await db.select().from(commerceOrders).where(and(eq(commerceOrders.id, input.orderId), eq(commerceOrders.userId, input.userId), eq(commerceOrders.status, "delivered"))).limit(1);
+  if (!order) throw new Error("Reviews are available only after a delivered purchase");
+  const result = await db.insert(verifiedReviews).values({ orderId: order.id, userId: input.userId, companyId: order.companyId, productId: order.productId, rating: input.rating, comment: input.comment ?? null, status: "pending" });
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
 }

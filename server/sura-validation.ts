@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const socialPlatforms = ["instagram", "tiktok", "linkedin", "youtube", "x", "website"] as const;
 export const paymentOrderTypes = ["company_membership", "vendor_feature", "build_consultation"] as const;
+export const contactTypes = ["email", "phone", "whatsapp", "address"] as const;
 
 const platformHosts: Record<Exclude<(typeof socialPlatforms)[number], "website">, string[]> = {
   instagram: ["instagram.com"],
@@ -59,6 +60,42 @@ export const paymentOrderInputSchema = z.object({
   orderType: z.enum(paymentOrderTypes),
   companyId: z.number().int().positive().optional(),
 });
+
+export const contactInputSchema = z.object({
+  label: z.string().trim().min(2).max(80),
+  contactType: z.enum(contactTypes),
+  value: z.string().trim().min(3).max(320),
+  isPublic: z.boolean().default(true),
+  sortOrder: z.number().int().min(0).max(50).default(0),
+});
+
+export const companyContactsInputSchema = z.object({
+  companyId: z.number().int().positive(),
+  contacts: z.array(contactInputSchema).max(6),
+});
+
+export const discountOfferInputSchema = z.object({
+  companyId: z.number().int().positive().optional(),
+  code: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{3,48}$/),
+  title: z.string().trim().min(3).max(140),
+  description: z.string().trim().max(500).optional(),
+  discountType: z.enum(["percentage", "fixed_kes"]),
+  discountValue: z.number().int().positive().max(100000),
+  minimumSpendKes: z.number().int().min(0).max(10000000).optional(),
+  validUntil: z.date().optional(),
+}).refine((input) => input.discountType !== "percentage" || input.discountValue <= 100, {
+  message: "Percentage discounts cannot exceed 100%",
+  path: ["discountValue"],
+});
+
+export const announcementInputSchema = z.object({
+  title: z.string().trim().min(3).max(160),
+  body: z.string().trim().min(5).max(500),
+  linkUrl: z.string().trim().url().max(300).optional(),
+  isActive: z.boolean().default(true),
+});
+
+export const platformContactInputSchema = contactInputSchema;
 
 export const paymentCatalog = {
   company_membership: { amountKes: 2500, label: "Company launch membership" },

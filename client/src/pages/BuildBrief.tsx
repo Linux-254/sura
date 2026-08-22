@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { VibeLayout, formatKes } from "@/components/VibeLayout";
 import { InquiryPanel } from "@/components/InquiryPanel";
+import { SuraErrorState, SuraProcessing } from "@/components/SuraStates";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { useKenyaLocation } from "@/contexts/KenyaLocationContext";
@@ -68,8 +69,8 @@ export default function BuildBrief() {
           </section>
 
           {submitted && <section aria-live="polite">
-            {recommendation.isLoading && <div className="grid min-h-72 place-items-center rounded-[1.75rem] border border-[#ddcfbd] bg-[#fbf8f2] p-8 text-center"><div><Loader2 className="mx-auto h-7 w-7 animate-spin text-[#a76531]" /><p className="vb-serif mt-4 text-2xl text-[#33281e]">Shaping the right edit…</p><p className="mt-2 text-sm text-[#756755]">Balancing spend, purpose, and local sources.</p></div></div>}
-            {recommendation.isError && <div className="rounded-[1.75rem] border border-[#d99b88] bg-[#fff5f1] p-7"><CircleAlert className="h-6 w-6 text-[#a94732]" /><h2 className="vb-serif mt-3 text-2xl text-[#54261d]">We could not shape that plan just yet.</h2><p className="mt-2 text-sm leading-6 text-[#7a4132]">Please try again. Your brief has not been lost.</p><button onClick={() => recommendation.refetch()} className="vb-button vb-focus mt-5 rounded-full bg-[#54261d] px-5 py-2.5 text-sm font-bold text-white">Try again</button></div>}
+            {recommendation.isLoading && <SuraProcessing eyebrow="SURA / BUILD DIRECTION" title="Shaping the right edit." copy="Balancing your budget, purpose, aesthetic, and selected local city." />}
+            {recommendation.isError && <SuraErrorState title="Your build direction needs another moment." copy="Your brief is still here. Try the recommendation again when you are ready." onRetry={() => recommendation.refetch()} />}
             {recommendation.data && <RecommendationResult data={recommendation.data as RecommendationData} />}
           </section>}
         </div>

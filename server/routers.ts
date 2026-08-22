@@ -1,13 +1,15 @@
 import { COOKIE_NAME } from "@shared/const";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { createBuildShareRecord, createCompanyForUser, createInquiryRecord, createPaymentOrder, getAccountProfile, getAdminCompanyReviewQueue, getBoardSelections, getBuildShareRecord, getCompaniesForUser, getCompanyMembership, getCompanyOwnedByUser, getPaymentOrdersForUser, getPublicAccountProfile, getPublicCompanyProfile, getSavedVendorIds, recordLegalConsent, toggleBuildBoardSelection, toggleSavedVendor, updateCompanyReviewStatus, upsertAccountProfile } from "./db";
+import { completeAiAssistRequest, createAiAssistRequest, createBuildShareRecord, createCommerceOrder, createCompanyForUser, createCompanyProduct, createDeliveryQuote, createDiscountOffer, createInquiryRecord, createPaymentOrder, createPlatformAnnouncement, createVerifiedReview, failAiAssistRequest, getAccountProfile, getAdminCompanyReviewQueue, getAdminDiscountReviewQueue, getAiAssistRequestForUser, getBoardSelections, getBuildShareRecord, getCompaniesForUser, getCompanyContacts, getCompanyMembership, getCompanyOwnedByUser, getCompanyProducts, getCommerceOrdersForUser, getDiscountOffersForCompany, getOrCreateFreeMembership, getPaymentOrdersForUser, getProductById, getPublicAccountProfile, getPublicCompanyProfile, getPublicDiscountOffers, getPublicPlatformContacts, getPublicProducts, getSavedVendorIds, getWebNotificationFeed, markWebNotificationRead, recordAiImageConsent, recordLegalConsent, replaceCompanyContacts, replacePlatformContacts, toggleBuildBoardSelection, toggleSavedVendor, updateCompanyReviewStatus, updateDiscountOfferReviewStatus, upsertAccountProfile } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { demoBuilds, demoVendors, filterDemoVendors, getBuildRecommendation, getVendorBySlug } from "./vibebuild-data";
 import { buildBoardSelectionInputSchema, inquiryInputSchema, saveVendorInputSchema, shareInputSchema } from "./vibebuild-validation";
-import { accountProfileInputSchema, assertCompanyPaymentOwnership, companyCreateInputSchema, legalConsentInputSchema, paymentCatalog, paymentOrderInputSchema } from "./sura-validation";
+import { accountProfileInputSchema, announcementInputSchema, assertCompanyPaymentOwnership, companyContactsInputSchema, companyCreateInputSchema, contactInputSchema, discountOfferInputSchema, legalConsentInputSchema, paymentCatalog, paymentOrderInputSchema } from "./sura-validation";
+import { aiAssistInputSchema, calculateCommissionBreakdown, calculateDeliveryEstimate, companyProductInputSchema, productQuoteInputSchema, verifiedReviewInputSchema } from "./sura-commerce";
+import { createAiAssistPlan, storeConsentImage } from "./sura-ai-service";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -96,6 +98,67 @@ export const appRouter = router({
     updateProfile: protectedProcedure.input(accountProfileInputSchema).mutation(({ ctx, input }) => upsertAccountProfile({ userId: ctx.user.id, ...input })),
     acceptLegal: protectedProcedure.input(legalConsentInputSchema).mutation(({ ctx, input }) => recordLegalConsent(ctx.user.id, input.documentType, input.version)),
   }),
+  membership: router({
+    mine: protectedProcedure.query(({ ctx }) => getOrCreateFreeMembership(ctx.user.id)),
+  }),
+  notifications: router({
+    feed: protectedProcedure.query(({ ctx }) => getWebNotificationFeed(ctx.user.id)),
+    markRead: protectedProcedure.input(z.object({ notificationId: z.number().int().positive(), dismissed: z.boolean().default(false) })).mutation(({ ctx, input }) => markWebNotificationRead(ctx.user.id, input.notificationId, input.dismissed)),
+  }),
+  contacts: router({
+    platform: publicProcedure.query(() => getPublicPlatformContacts()),
+  }),
+  offers: router({
+    public: publicProcedure.query(() => getPublicDiscountOffers()),
+  }),
+  commerce: router({
+    products: publicProcedure.input(z.object({ category: z.enum(["apparel", "footwear", "home", "accessory"]).optional(), city: z.string().optional() }).optional()).query(({ input }) => getPublicProducts(input ?? {})),
+    aiAssist: protectedProcedure.input(aiAssistInputSchema).mutation(async ({ ctx, input }) => {
+      const consent = await recordAiImageConsent(ctx.user.id, input.kind);
+      if (!consent.persisted || !consent.id) throw new Error("Unable to record your image consent");
+      let imageKey: string | undefined;
+      let imageUrl: string | undefined;
+      try {
+        if (input.imageDataUrl) {
+          const stored = await storeConsentImage(ctx.user.id, input.imageDataUrl);
+          imageKey = stored.key;
+          imageUrl = stored.url;
+        }
+        const request = await createAiAssistRequest({ userId: ctx.user.id, consentId: consent.id, kind: input.kind, inputImageKey: imageKey, inputImageUrl: imageUrl, brief: input.brief, city: input.city, budgetKes: input.budgetKes, sizeProfile: input.sizeProfile });
+        if (!request.persisted || !request.id) throw new Error("Unable to start your private assistance request");
+        const result = await createAiAssistPlan({ kind: input.kind, brief: input.brief, city: input.city, budgetKes: input.budgetKes, sizeProfile: input.sizeProfile, imageKey });
+        await completeAiAssistRequest({ requestId: request.id, outputJson: JSON.stringify(result.plan), generatedImageUrl: result.generatedImageUrl });
+        return { requestId: request.id, imageUrl, ...result };
+      } catch (error) {
+        throw error;
+      }
+    }),
+    aiRequest: protectedProcedure.input(z.object({ requestId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+      const request = await getAiAssistRequestForUser(input.requestId, ctx.user.id);
+      if (!request) throw new Error("This private AI request is not available");
+      return request;
+    }),
+    quote: protectedProcedure.input(productQuoteInputSchema).mutation(async ({ input }) => {
+      const productResult = await getProductById(input.productId);
+      if (!productResult) throw new Error("This product is not available");
+      const delivery = calculateDeliveryEstimate(productResult.company.city, input.destinationCity);
+      const breakdown = calculateCommissionBreakdown({ unitPriceKes: productResult.product.priceKes, quantity: input.quantity, commissionRatePct: productResult.company.commissionRatePct, deliveryKes: delivery.deliveryKes });
+      const quote = await createDeliveryQuote({ productId: productResult.product.id, destinationCity: input.destinationCity, ...delivery, expiresAt: new Date(Date.now() + 30 * 60 * 1000) });
+      return { product: productResult.product, company: productResult.company, deliveryQuoteId: quote.id, delivery, ...breakdown };
+    }),
+    createOrder: protectedProcedure.input(productQuoteInputSchema).mutation(async ({ ctx, input }) => {
+      const productResult = await getProductById(input.productId);
+      if (!productResult) throw new Error("This product is not available");
+      if (productResult.product.stockQuantity < input.quantity) throw new Error("The requested quantity is not currently available");
+      const delivery = calculateDeliveryEstimate(productResult.company.city, input.destinationCity);
+      const breakdown = calculateCommissionBreakdown({ unitPriceKes: productResult.product.priceKes, quantity: input.quantity, commissionRatePct: productResult.company.commissionRatePct, deliveryKes: delivery.deliveryKes });
+      const quote = await createDeliveryQuote({ productId: productResult.product.id, destinationCity: input.destinationCity, ...delivery, expiresAt: new Date(Date.now() + 30 * 60 * 1000) });
+      const order = await createCommerceOrder({ userId: ctx.user.id, companyId: productResult.company.id, productId: productResult.product.id, deliveryQuoteId: quote.id, quantity: input.quantity, ...breakdown });
+      return { ...order, delivery, ...breakdown, sellerName: productResult.company.name };
+    }),
+    orders: protectedProcedure.query(({ ctx }) => getCommerceOrdersForUser(ctx.user.id)),
+    createReview: protectedProcedure.input(verifiedReviewInputSchema).mutation(({ ctx, input }) => createVerifiedReview({ userId: ctx.user.id, ...input })),
+  }),
   companies: router({
     mine: protectedProcedure.query(({ ctx }) => getCompaniesForUser(ctx.user.id)),
     publicProfile: publicProcedure.input(z.object({ slug: z.string().regex(/^[a-z0-9-]{3,96}$/) })).query(async ({ input }) => {
@@ -109,6 +172,36 @@ export const appRouter = router({
       return membership;
     }),
     create: protectedProcedure.input(companyCreateInputSchema).mutation(({ ctx, input }) => createCompanyForUser({ ownerUserId: ctx.user.id, ...input })),
+    products: protectedProcedure.input(z.object({ companyId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+      const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
+      if (!company) throw new Error("You can only manage products for a company you own");
+      return getCompanyProducts(input.companyId);
+    }),
+    createProduct: protectedProcedure.input(companyProductInputSchema).mutation(async ({ ctx, input }) => {
+      const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
+      if (!company) throw new Error("You can only add products for a company you own");
+      return createCompanyProduct(input);
+    }),
+    contacts: protectedProcedure.input(z.object({ companyId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+      const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
+      if (!company) throw new Error("You can only manage contacts for a company you own");
+      return getCompanyContacts(input.companyId);
+    }),
+    replaceContacts: protectedProcedure.input(companyContactsInputSchema).mutation(async ({ ctx, input }) => {
+      const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
+      if (!company) throw new Error("You can only manage contacts for a company you own");
+      return replaceCompanyContacts(input.companyId, input.contacts);
+    }),
+    offers: protectedProcedure.input(z.object({ companyId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+      const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
+      if (!company) throw new Error("You can only manage offers for a company you own");
+      return getDiscountOffersForCompany(input.companyId);
+    }),
+    createOffer: protectedProcedure.input(discountOfferInputSchema.safeExtend({ companyId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
+      if (!company) throw new Error("You can only create offers for a company you own");
+      return createDiscountOffer({ ...input, createdByUserId: ctx.user.id });
+    }),
   }),
   payments: router({
     catalog: protectedProcedure.query(() => paymentCatalog),
@@ -126,6 +219,10 @@ export const appRouter = router({
   admin: router({
     companyReviewQueue: adminProcedure.query(() => getAdminCompanyReviewQueue()),
     setCompanyReviewStatus: adminProcedure.input(z.object({ companyId: z.number().int().positive(), verificationStatus: z.enum(["draft", "pending", "verified", "rejected"]) })).mutation(({ input }) => updateCompanyReviewStatus(input.companyId, input.verificationStatus)),
+    discountReviewQueue: adminProcedure.query(() => getAdminDiscountReviewQueue()),
+    setDiscountReviewStatus: adminProcedure.input(z.object({ offerId: z.number().int().positive(), status: z.enum(["approved", "rejected"]) })).mutation(({ input }) => updateDiscountOfferReviewStatus(input.offerId, input.status)),
+    createAnnouncement: adminProcedure.input(announcementInputSchema).mutation(({ ctx, input }) => createPlatformAnnouncement({ createdByUserId: ctx.user.id, ...input })),
+    replacePlatformContacts: adminProcedure.input(z.object({ contacts: z.array(contactInputSchema).max(6) })).mutation(({ ctx, input }) => replacePlatformContacts(ctx.user.id, input.contacts)),
   }),
 });
 
