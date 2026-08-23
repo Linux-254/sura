@@ -1,5 +1,5 @@
 import { Bell, CheckCheck, Info, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useAestheticTheme } from "@/contexts/AestheticThemeContext";

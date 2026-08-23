@@ -26,4 +26,11 @@ describe("SURA admin controls", () => {
     await expect(caller.admin.setCompanyCommissionRate({ companyId: 1, commissionRatePct: 19 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
     await expect(caller.admin.setCompanyCommissionRate({ companyId: 1, commissionRatePct: 51 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
+
+  it("keeps platform announcements, public-contact replacement, and offer moderation behind administrator access", async () => {
+    const caller = appRouter.createCaller(createUserContext("user"));
+    await expect(caller.admin.createAnnouncement({ title: "A clear update", body: "Members have a concise update to review.", isActive: true })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.admin.replacePlatformContacts({ contacts: [{ label: "Support", contactType: "email", value: "support@example.com", isPublic: true, sortOrder: 0 }] })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.admin.setDiscountReviewStatus({ offerId: 1, status: "approved" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
 });

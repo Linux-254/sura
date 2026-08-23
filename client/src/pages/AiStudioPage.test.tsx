@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AiStudioPage from "./AiStudioPage";
 
-const mutation = vi.hoisted(() => ({ mutate: vi.fn(), isPending: false, isError: false, reset: vi.fn() }));
+const mutation = vi.hoisted(() => ({ mutate: vi.fn(), isPending: false, isError: false, reset: vi.fn(), data: undefined as any }));
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ isAuthenticated: true, user: { role: "user" } }) }));
 vi.mock("@/contexts/KenyaLocationContext", () => ({ useKenyaLocation: () => ({ city: "Nairobi" }) }));
@@ -20,7 +20,7 @@ vi.mock("@/lib/trpc", () => ({
   },
 }));
 
-afterEach(() => mutation.mutate.mockReset());
+afterEach(() => { mutation.mutate.mockReset(); mutation.data = undefined; });
 
 describe("SURA AI Studio preference-aware assist", () => {
   it("submits saved account aesthetics as a bounded creative lens only after user consent", () => {
@@ -35,5 +35,16 @@ describe("SURA AI Studio preference-aware assist", () => {
       purposeConsent: true,
       aestheticMix: ["Tangerine Social", "Comfort Official"],
     }));
+  });
+
+  it("shows transparent connected price, delivery, commission, and seller-settlement lines only for returned verified listings", () => {
+    mutation.data = { generatedImageUrl: "https://images.example/concept.jpg", plan: { title: "Quiet room edit", designDirection: "A composed, warm direction.", priorities: ["Light"], recommendedCategories: ["Accent light"], shoppingLens: "Use one focal glow.", safetyNote: "Consult qualified professionals for electrical work." }, connectedProducts: [{ product: { id: 1, name: "Table lamp" }, company: { name: "SURA Studio", city: "Nairobi" }, merchandiseSubtotalKes: 5000, deliveryKes: 450, commissionKes: 1500, commissionRatePct: 30, sellerSettlementKes: 3500, customerTotalKes: 5450 }] };
+    render(<AiStudioPage />);
+    expect(screen.getByText(/Connected product signals/i)).toBeTruthy();
+    expect(screen.getByText("Table lamp")).toBeTruthy();
+    expect(screen.getByText("KES 5,000")).toBeTruthy();
+    expect(screen.getByText("KES 450")).toBeTruthy();
+    expect(screen.getByText(/KES 1,500 · 30%/i)).toBeTruthy();
+    expect(screen.getByText("KES 3,500")).toBeTruthy();
   });
 });

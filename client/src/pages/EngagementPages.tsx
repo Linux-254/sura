@@ -1,5 +1,5 @@
 import { BellRing, Check, Gift, Loader2, Megaphone, Plus, ShieldCheck, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { VibeLayout } from "@/components/VibeLayout";

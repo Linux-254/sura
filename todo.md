@@ -43,16 +43,16 @@
 - [x] Define accessible colour tokens for each SURA aesthetic direction.
 - [x] Add a persistent user-controlled aesthetic theme preference with a clear reset option.
 - [x] Apply the selected aesthetic palette to public navigation, the planning brief, and private dashboards.
-- [ ] Add theme persistence and accessibility contrast tests and verify desktop/mobile theme rendering.
-- [ ] Add an aesthetic-branded SURA Free membership tier with no live payment collection.
-- [ ] Add web-app popup notifications for member activity, offers, company status, and platform announcements.
-- [ ] Add secure company contact information and discount-offer management with public-safe display rules.
-- [ ] Add admin controls for platform contact information, announcements, and discount review/visibility.
-- [ ] Add tests for membership tier, notifications, contacts, discounts, and role-based management paths.
-- [ ] Define a practical AI-assisted home, outfit, footwear, and inspiration commerce brief with user-consented visual analysis boundaries.
-- [ ] Model shoppable seller listings, stock/size details, delivery quotes, commission allocation from 20% to 50%, purchase records, and verified reviews.
-- [ ] Add permission-aware camera, location, and image-file acquisition with clear user explanation, browser-only capture, and secure storage references.
-- [ ] Build AI-assisted home and personal-style brief flows that return transparent inspiration, product recommendations, price estimates, delivery, and commission lines.
+- [x] Add theme persistence and accessibility contrast tests and verify desktop/mobile theme rendering.
+- [x] Add an aesthetic-branded SURA Free membership tier with no live payment collection.
+- [x] Add web-app popup notifications for member activity, offers, company status, and platform announcements.
+- [x] Add secure company contact information and discount-offer management with public-safe display rules.
+- [x] Add admin controls for platform contact information, announcements, and discount review/visibility.
+- [x] Add tests for membership tier, notifications, contacts, discounts, and role-based management paths.
+- [x] Define a practical AI-assisted home, outfit, footwear, and inspiration commerce brief with user-consented visual analysis boundaries.
+- [x] Model shoppable seller listings, stock/size details, delivery quotes, commission allocation from 20% to 50%, purchase records, and verified reviews.
+- [x] Add permission-aware camera, location, and image-file acquisition with clear user explanation, browser-only capture, and secure storage references.
+- [x] Build AI-assisted home and personal-style brief flows that return transparent inspiration, product recommendations, price estimates, delivery, and commission lines.
 - [ ] Build company product, delivery, contact, discount, and commission controls with order-specific seller settlement visibility.
 - [x] Add verified post-purchase reviews without fabricated user-generated content.
 - [x] Prevent duplicate verified reviews per delivered order and account, with server-side regression coverage.
@@ -62,7 +62,7 @@
 - [ ] Add end-to-end tests for delivered-only review eligibility, ownership enforcement, and duplicate-submission prevention.
 - [ ] Add a private-orders submission-journey test that transitions a delivered order from eligible form to persisted review status.
 - [ ] Add review-journey regression coverage that surfaces duplicate rejection and blocks wrong-user or non-delivered attempts through the creation path.
-- [ ] Add security, permission, commission, delivery, and review validation tests for the AI commerce flows.
+- [x] Add security, permission, commission, delivery, and review validation tests for the AI commerce flows.
 - [x] Add admin-only company commission controls that enforce and display the 20%–50% platform range.
 - [x] Create reusable SURA editorial loading, skeleton, empty, processing, and error-state components.
 - [ ] Apply refined state treatments to AI studio, commerce, account/company/admin dashboards, and public discovery routes.
@@ -103,3 +103,9 @@
 - [x] Add explicit mobile browser-style coverage for Personal Edit Studio controls and action visibility.
 - [x] Persist only non-sensitive Personal Edit Studio presentation preferences, such as active edit category, in local storage.
 - [x] Add regression coverage proving Personal Edit Studio restores non-sensitive presentation preferences without placing private collection content in local storage.
+- [x] Add automated membership-tier and notification-feed/UI regression coverage alongside existing contact, discount, and administrator access tests.
+- [x] Extend AI assist results with transparent connected-product price, delivery, and commission lines where applicable.
+- [ ] Verify or complete company-facing product and delivery management plus order-specific seller-settlement visibility with tests.
+- [ ] Create or connect a private GitHub repository for SURA and push the validated project history.
+- [ ] Establish `main` as production, `staging` as pre-production, `dev` as the integration branch, and named feature branches for individual changes.
+- [ ] Verify repository ignore rules, remotes, branch tracking, and branch protections or documented protection steps.

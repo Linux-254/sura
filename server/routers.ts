@@ -153,8 +153,14 @@ export const appRouter = router({
         const request = await createAiAssistRequest({ userId: ctx.user.id, consentId: consent.id, kind: input.kind, inputImageKey: imageKey, inputImageUrl: imageUrl, brief: input.brief, city: input.city, budgetKes: input.budgetKes, sizeProfile: input.sizeProfile });
         if (!request.persisted || !request.id) throw new Error("Unable to start your private assistance request");
         const result = await createAiAssistPlan({ kind: input.kind, brief: input.brief, city: input.city, budgetKes: input.budgetKes, sizeProfile: input.sizeProfile, aestheticMix: input.aestheticMix, imageKey });
+        const category = input.kind === "home_refresh" ? "home" : input.kind === "footwear_fit" ? "footwear" : input.kind === "personal_style" ? "apparel" : undefined;
+        const connectedProducts = category ? (await getPublicProducts({ city: input.city, category })).slice(0, 3).map(({ company, ...product }) => {
+          const delivery = calculateDeliveryEstimate(company.city, input.city);
+          const breakdown = calculateCommissionBreakdown({ unitPriceKes: product.priceKes, quantity: 1, commissionRatePct: company.commissionRatePct, deliveryKes: delivery.deliveryKes });
+          return { product, company: { id: company.id, name: company.name, city: company.city }, delivery, ...breakdown };
+        }) : [];
         await completeAiAssistRequest({ requestId: request.id, outputJson: JSON.stringify(result.plan), generatedImageUrl: result.generatedImageUrl });
-        return { requestId: request.id, imageUrl, ...result };
+        return { requestId: request.id, imageUrl, connectedProducts, ...result };
       } catch (error) {
         throw error;
       }
