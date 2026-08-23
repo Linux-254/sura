@@ -36,6 +36,12 @@ describe("Supabase email-auth server contracts", () => {
     await expect(signInWithSupabaseEmail("member@example.com", "wrong-password")).rejects.toThrow("Invalid login credentials");
   });
 
+  it("keeps a non-JSON provider outage bounded instead of surfacing a parsing error", async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response("<!doctype html><title>Temporary gateway page</title>", { status: 503, headers: { "Content-Type": "text/html" } }));
+
+    await expect(signInWithSupabaseEmail("member@example.com", "safe-password")).rejects.toThrow("Secure email service is temporarily unavailable. Please wait before trying again.");
+  });
+
   it("requests password recovery through Supabase without exposing a session token", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
     global.fetch = fetchMock;

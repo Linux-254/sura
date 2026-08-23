@@ -155,3 +155,4 @@
 - [x] Re-run and document responsive public-discovery state QA alongside existing landing, shop, account, administrator, company, and AI Studio evidence.
 - [x] Diagnose and fix the `/discover` tRPC response parsing failure that returns HTML instead of JSON, with regression coverage and browser verification.
 - [x] Fix the mobile navigation theme-control overflow so the compact selector remains within the open menu and does not overlap page or footer content.
+- [x] Audit Supabase JWT discovery and configured redirect policy without sending any confirmation or recovery email, and add regression coverage for safe provider-unavailable handling.

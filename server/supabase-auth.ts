@@ -36,8 +36,12 @@ async function verifySupabaseJwt(accessToken: string): Promise<SupabaseUser> {
 async function authRequest<T>(path: string, init: RequestInit): Promise<T> {
   const { url, publishableKey } = credentials();
   const response = await fetch(`${url}/auth/v1${path}`, { ...init, headers: { apikey: publishableKey, "Content-Type": "application/json", ...(init.headers ?? {}) } });
-  const body = await response.json().catch(() => ({})) as T & { msg?: string; message?: string };
-  if (!response.ok) throw new Error(body.message ?? body.msg ?? "The email request could not be completed");
+  const contentType = response.headers.get("content-type") ?? "";
+  const rawBody = await response.text();
+  const body = contentType.includes("text/html") || rawBody.trimStart().startsWith("<")
+    ? {} as T & { msg?: string; message?: string }
+    : JSON.parse(rawBody || "{}") as T & { msg?: string; message?: string };
+  if (!response.ok) throw new Error(body.message ?? body.msg ?? "Secure email service is temporarily unavailable. Please wait before trying again.");
   return body;
 }
 
