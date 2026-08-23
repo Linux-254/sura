@@ -24,8 +24,8 @@ describe("SURA editorial navigation", () => {
     expect(screen.getByTestId("sura-wordmark").tagName).toBe("svg");
     expect(screen.getByTestId("sura-wordmark").getAttribute("data-sura-story")).toBe("place-identity-possibility");
     expect(screen.getByTestId("sura-wordmark").getAttribute("data-sura-waves")).toBe("3");
-    expect(screen.getByText(/place/i).textContent).toMatch(/Place/);
-    expect(screen.getByText(/a local edit, in motion/i)).toBeTruthy();
+    expect(screen.getAllByText(/place/i).some((element) => element.textContent?.includes("Place"))).toBe(true);
+    expect(screen.getAllByText(/a local edit, in motion/i).length).toBeGreaterThan(0);
     expect(screen.queryByTestId("sura-monogram")).toBeNull();
     const dock = screen.getByRole("navigation", { name: /mobile bottom navigation/i });
     expect(dock.textContent).toMatch(/Home/);

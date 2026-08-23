@@ -69,20 +69,23 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
             </span>
           </Link>
 
-          <nav className="relative hidden items-center justify-self-center rounded-full border border-[#ded1bf] bg-[#fbf8f2]/92 p-1 shadow-[0_10px_24px_rgba(69,47,26,0.09)] min-[900px]:flex" aria-label="Primary navigation">
+          <nav className="relative hidden items-center justify-self-center rounded-full border border-[#ded1bf] bg-[#fbf8f2]/92 p-1 shadow-[0_10px_24px_rgba(69,47,26,0.09)] min-[1100px]:flex" aria-label="Primary navigation">
             {publicLinks.map((item) => <NavLink key={item.href} href={item.href}>{item.label}</NavLink>)}
             <NavLink href={accountHref}>{accountLabel}</NavLink>
           </nav>
+          <div className="hidden justify-self-center min-[900px]:flex min-[1100px]:hidden" aria-label="SURA story rhythm">
+            <span className="rounded-full border border-[#ded1bf] bg-[#fbf8f2]/86 px-4 py-2 text-[0.58rem] font-extrabold uppercase tracking-[0.18em] text-[#8b664a] shadow-[0_8px_20px_rgba(69,47,26,0.06)]">Place <span className="mx-1.5 text-[#d6814a]">·</span> Identity <span className="mx-1.5 text-[#5d6da0]">·</span> Possibility</span>
+          </div>
 
           <div className="flex items-center justify-end gap-1.5">
-            <div className="hidden min-[900px]:block"><LocationPicker /></div>
-            <div className="hidden min-[1220px]:block"><AestheticPicker compact /></div>
-            <div className="hidden min-[1120px]:flex items-center rounded-full border border-[#ded1bf] bg-[#fbf8f2]/90 p-1 shadow-[0_7px_20px_rgba(69,47,26,0.06)]"><NotificationCenter /></div>
-            <div className="min-[900px]:hidden"><LocationPicker compact /></div>
+            <div className="hidden min-[1100px]:block"><LocationPicker /></div>
+            <div className="hidden min-[1300px]:block"><AestheticPicker compact /></div>
+            <div className="hidden min-[1200px]:flex items-center rounded-full border border-[#ded1bf] bg-[#fbf8f2]/90 p-1 shadow-[0_7px_20px_rgba(69,47,26,0.06)]"><NotificationCenter /></div>
+            <div className="min-[1100px]:hidden"><LocationPicker compact /></div>
             <Link
               href="/brief"
               style={{ backgroundColor: palette.primary, color: palette.paper }}
-              className="vb-button vb-focus inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-bold shadow-[0_8px_18px_rgba(43,30,18,0.16)] min-[900px]:px-3.5 sm:px-4"
+              className="vb-button vb-focus inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-bold shadow-[0_8px_18px_rgba(43,30,18,0.16)] min-[1100px]:px-3.5 sm:px-4"
             >
               <Compass className="h-3.5 w-3.5 text-[#e5b77a]" />
               <span className="hidden min-[540px]:inline">Build an edit</span>
@@ -93,7 +96,7 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
               type="button"
               onClick={() => setMobileOpen((open) => !open)}
               style={{ backgroundColor: palette.paper, borderColor: palette.border, color: palette.ink }}
-              className="vb-focus grid h-10 w-10 place-items-center rounded-full border shadow-sm min-[900px]:hidden"
+              className="vb-focus grid h-10 w-10 place-items-center rounded-full border shadow-sm min-[1100px]:hidden"
               aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
               aria-expanded={mobileOpen}
             >
@@ -101,13 +104,13 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
             </button>
           </div>
         </div>
-        <div className="container hidden min-[900px]:flex items-center justify-between border-t border-[#e9dfd1]/70 py-1.5 text-[0.56rem] font-extrabold uppercase tracking-[0.19em] text-[#8b664a]">
+        <div className="container hidden min-[1100px]:flex items-center justify-between border-t border-[#e9dfd1]/70 py-1.5 text-[0.56rem] font-extrabold uppercase tracking-[0.19em] text-[#8b664a]">
           <span className="inline-flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[#d6814a]" /> Place <span className="h-px w-5 bg-[#c7ad91]" /> Identity <span className="h-px w-5 bg-[#c7ad91]" /> Possibility</span>
           <span className="text-[#a17a59]">A local edit, in motion</span>
         </div>
 
         {mobileOpen && (
-          <div style={{ backgroundColor: palette.page, borderColor: palette.border }} className="border-t px-4 py-4 shadow-[0_18px_34px_rgba(59,41,22,0.10)] min-[900px]:hidden">
+          <div style={{ backgroundColor: palette.page, borderColor: palette.border }} className="border-t px-4 py-4 shadow-[0_18px_34px_rgba(59,41,22,0.10)] min-[1100px]:hidden">
             <nav className="container" aria-label="Mobile navigation">
               <div className="rounded-[1.4rem] border border-[#ded1bf] bg-[#fbf8f2] p-3 shadow-[0_8px_20px_rgba(69,47,26,0.05)]">
                 <div className="flex items-center justify-between gap-3 border-b border-[#eadfce] pb-3">
