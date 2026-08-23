@@ -34,6 +34,14 @@ describe("SURA checkout states", () => {
     expect(screen.getByRole("button", { name: /Create payment order/i })).toBeTruthy();
   });
 
+  it("makes the M-Pesa collection boundary explicit while retaining protected order creation", () => {
+    render(<CheckoutPage />);
+    expect(screen.getByRole("region", { name: /M-Pesa availability/i }).textContent).toMatch(/not available for payment collection yet/i);
+    expect(screen.getByText(/Provider activation pending/i)).toBeTruthy();
+    expect(screen.queryByLabelText(/M-Pesa PIN/i)).toBeNull();
+    expect(screen.getByRole("button", { name: /Create payment order/i })).toBeTruthy();
+  });
+
   it("preserves private records context and recovery when service catalog loading fails", () => {
     state.catalogError = true;
     render(<CheckoutPage />);

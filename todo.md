@@ -157,3 +157,4 @@
 - [x] Fix the mobile navigation theme-control overflow so the compact selector remains within the open menu and does not overlap page or footer content.
 - [x] Audit Supabase JWT discovery and configured redirect policy without sending any confirmation or recovery email, and add regression coverage for safe provider-unavailable handling.
 - [x] Map safe Supabase provider-unavailable responses to mode-aware sign-in, sign-up, and recovery guidance without sending any email.
+- [x] Make the M-Pesa-unavailable checkout state explicit and actionable without collecting credentials, initiating payments, or handling customer PINs.
