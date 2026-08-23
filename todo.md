@@ -105,10 +105,10 @@
 - [x] Add regression coverage proving Personal Edit Studio restores non-sensitive presentation preferences without placing private collection content in local storage.
 - [x] Add automated membership-tier and notification-feed/UI regression coverage alongside existing contact, discount, and administrator access tests.
 - [x] Extend AI assist results with transparent connected-product price, delivery, and commission lines where applicable.
-- [ ] Verify or complete company-facing product and delivery management plus order-specific seller-settlement visibility with tests.
+- [x] Verify or complete company-facing product and delivery management plus order-specific seller-settlement visibility with tests.
 - [x] Create or connect a private GitHub repository for SURA and push the validated project history.
 - [x] Establish `main` as production, `staging` as pre-production, `dev` as the integration branch, and named feature branches for individual changes.
 - [x] Verify repository ignore rules, remotes, branch tracking, and branch protections or documented protection steps.
 - [x] Add explicit company delivery configuration UI and protected procedures, or narrow scope to delivery-visibility-only behavior.
-- [ ] Add regression tests for company product management, owner-only settlement records, and any company delivery configuration path.
-- [ ] Add browser-like coverage for CompanyDetailPage settlement visibility and CompanyCatalogPage owner flows, including loading, error, and empty states.
+- [x] Add regression tests for company product management, owner-only settlement records, and any company delivery configuration path.
+- [x] Add browser-like coverage for CompanyDetailPage settlement visibility and CompanyCatalogPage owner flows, including loading, error, and empty states.
