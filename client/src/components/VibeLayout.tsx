@@ -3,7 +3,6 @@ import {
   Bookmark,
   Compass,
   Home,
-  LogIn,
   MapPin,
   Menu,
   PanelLeftClose,
@@ -18,7 +17,6 @@ import {
 import { type ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { startLogin } from "@/const";
 import { useAestheticTheme } from "@/contexts/AestheticThemeContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useKenyaLocation } from "@/contexts/KenyaLocationContext";
@@ -107,19 +105,15 @@ export function VibeLayout({ children, dark: forcedDark = false }: VibeLayoutPro
         <div className="mt-7"><PlatformNav dark={dark} location={location} collapsed={railCollapsed} /></div>
 
         <div className="mt-auto space-y-4">
-          <div className={`rounded-2xl border p-4 ${dark ? "border-white/[0.09] bg-white/[0.045]" : "border-[#ded1bf] bg-[#f8f3eb]"}`}>
-            <div className="flex items-center gap-2 text-xs font-semibold">
-              <MapPin className={`h-3.5 w-3.5 ${dark ? "text-[#d7ff4d]" : "text-[#a66231]"}`} />
-              <span className={muted}>{city || "Nairobi"} · Kenya</span>
-            </div>
-            <p className={`mt-3 text-xs leading-5 ${muted}`}>Your local lens keeps recommendations close to where life is happening.</p>
+          <div className={`rounded-2xl border ${railCollapsed ? "grid h-12 place-items-center p-2" : "p-4"} ${dark ? "border-white/[0.09] bg-white/[0.045]" : "border-[#ded1bf] bg-[#f8f3eb]"}`} title={railCollapsed ? `${city || "Nairobi"} · Kenya` : undefined}>
+            {railCollapsed ? <MapPin className={`h-4 w-4 ${dark ? "text-[#d7ff4d]" : "text-[#a66231]"}`} aria-label={`${city || "Nairobi"} · Kenya`} /> : <><div className="flex items-center gap-2 text-xs font-semibold"><MapPin className={`h-3.5 w-3.5 ${dark ? "text-[#d7ff4d]" : "text-[#a66231]"}`} /><span className={muted}>{city || "Nairobi"} · Kenya</span></div><p className={`mt-3 text-xs leading-5 ${muted}`}>Your local lens keeps recommendations close to where life is happening.</p></>}
           </div>
           <div className="flex items-center gap-2">
-            <Link href={isAuthenticated ? "/account" : "/join"} className={`vb-focus flex min-w-0 flex-1 items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-bold ${dark ? "text-[#d8d5ca] hover:bg-white/[0.07]" : "text-[#695b4d] hover:bg-[#e5dacb]"}`}>
+            <Link href={isAuthenticated ? "/account" : "/join"} className={`vb-focus flex min-w-0 flex-1 items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-bold ${railCollapsed ? "justify-center" : ""} ${dark ? "text-[#d8d5ca] hover:bg-white/[0.07]" : "text-[#695b4d] hover:bg-[#e5dacb]"}`}>
               <UserRound className="h-4 w-4 shrink-0" />
-              <span className="truncate">{isAuthenticated ? user?.name || "Your account" : "Sign in to Sura"}</span>
+              <span className={railCollapsed ? "sr-only" : "truncate"}>{isAuthenticated ? user?.name || "Your account" : "Sign in to Sura"}</span>
             </Link>
-            <Link href="/account" aria-label="Account settings" className={`vb-focus rounded-xl p-2 ${dark ? "text-[#8c8d83] hover:bg-white/[0.07] hover:text-white" : "text-[#7c6d5d] hover:bg-[#e5dacb]"}`}><Settings2 className="h-4 w-4" /></Link>
+            {!railCollapsed && <Link href="/account" aria-label="Account settings" className={`vb-focus rounded-xl p-2 ${dark ? "text-[#8c8d83] hover:bg-white/[0.07] hover:text-white" : "text-[#7c6d5d] hover:bg-[#e5dacb]"}`}><Settings2 className="h-4 w-4" /></Link>}
           </div>
         </div>
       </aside>
@@ -150,7 +144,7 @@ export function VibeLayout({ children, dark: forcedDark = false }: VibeLayoutPro
                   <button onClick={() => logout()} className={`vb-focus rounded-xl px-2 py-2 text-xs font-bold ${dark ? "text-[#8f9088] hover:bg-white/[0.06] hover:text-[#ff8a75]" : "text-[#806f5f] hover:bg-[#e9dfd1] hover:text-[#8b3d2d]"}`}>Sign out</button>
                 </div>
               ) : (
-                <button onClick={() => startLogin()} className={`vb-button vb-focus inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-bold ${dark ? "bg-[#f4efe6] text-[#151613] hover:bg-[#d7ff4d]" : "bg-[#1f1b17] text-[#fbf8f2] hover:bg-[#4b4034]"}`}><LogIn className="h-3.5 w-3.5" /> <span className="hidden min-[420px]:inline">Sign in</span></button>
+                <Link href="/join" className={`vb-button vb-focus inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-bold ${dark ? "bg-[#f4efe6] text-[#151613] hover:bg-[#d7ff4d]" : "bg-[#1f1b17] text-[#fbf8f2] hover:bg-[#4b4034]"}`}><span className="hidden min-[420px]:inline">Sign in</span></Link>
               )}
             </div>
           </div>

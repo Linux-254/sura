@@ -2,12 +2,13 @@ import { ArrowUpRight, MapPin } from "lucide-react";
 import { Link } from "wouter";
 import type { DemoVendor } from "../../../server/vibebuild-data";
 import { formatKes, labelize } from "./VibeLayout";
+import { SuraImage } from "./SuraImage";
 
 export function VendorCard({ vendor, compact = false }: { vendor: DemoVendor; compact?: boolean }) {
   return (
     <article className="group overflow-hidden rounded-[1.4rem] border border-[#d9cebd] bg-[#fbf8f2] shadow-[0_12px_32px_rgba(53,39,22,0.06)]">
       <Link href={`/vendors/${vendor.slug}`} className="block overflow-hidden">
-        <img src={vendor.portfolio[0]} alt={`${vendor.name} demonstration portfolio`} className={`vb-image w-full object-cover ${compact ? "h-44" : "h-60"}`} />
+        <SuraImage src={vendor.portfolio[0]} fallbackSrc="/assets/sura-auth-street.jpg" alt={`${vendor.name} demonstration portfolio`} className={`vb-image w-full object-cover ${compact ? "h-44" : "h-60"}`} />
       </Link>
       <div className="p-5">
         <div className="flex items-center justify-between gap-3">
