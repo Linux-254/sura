@@ -1,5 +1,6 @@
 import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
+import { supabase } from "@/lib/supabase";
 import { TRPCClientError } from "@trpc/client";
 import { useCallback, useEffect, useMemo } from "react";
 
@@ -45,6 +46,12 @@ export function useAuth(options?: UseAuthOptions) {
       try {
         sessionStorage.removeItem("manus-cookie");
       } catch {}
+      try {
+        if (supabase) await supabase.auth.signOut();
+      } catch {
+        // The Sura session has already been cleared; a local Supabase cleanup
+        // failure should not leave the user stuck in the protected shell.
+      }
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
     }

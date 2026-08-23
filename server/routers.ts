@@ -16,6 +16,9 @@ import { storePrivatePersonalEditImage } from "./personal-edit";
 import { storeCompanyPostImage } from "./post-media";
 import { storeCompanyProductImage } from "./product-media";
 import { storeAuthVisualImage } from "./auth-visuals";
+import { getUserByOpenId, upsertUser } from "./db";
+import { sdk } from "./_core/sdk";
+import { verifySupabaseAccessToken } from "./supabase-auth";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -25,6 +28,39 @@ export const appRouter = router({
   }),
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+    exchangeSupabaseSession: publicProcedure
+      .input(z.object({ accessToken: z.string().trim().min(20).max(8192) }))
+      .mutation(async ({ ctx, input }) => {
+        const identity = await verifySupabaseAccessToken(input.accessToken);
+        const openId = `supabase:${identity.id}`;
+        const signedInAt = new Date();
+
+        await upsertUser({
+          openId,
+          email: identity.email,
+          name: identity.name,
+          loginMethod: "supabase_email",
+          lastSignedIn: signedInAt,
+        });
+
+        const user = await getUserByOpenId(openId);
+        if (!user) throw new Error("Unable to create your Sura account");
+
+        const sessionToken = await sdk.createSessionToken(openId, {
+          name: user.name ?? identity.name ?? "",
+        });
+        ctx.res.cookie(COOKIE_NAME, sessionToken, getSessionCookieOptions(ctx.req));
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+        } as const;
+      }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
