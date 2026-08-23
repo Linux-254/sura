@@ -16,3 +16,5 @@ Create each body of work from `dev`, for example `feature/personal-edit-studio` 
 ## Safeguards
 
 Do not force-push shared branches. Keep secrets, local environment files, logs, transient test output, and direct runtime uploads outside Git; managed storage holds private image bytes. Use GitHub branch protection for `main` and `staging` so release promotions occur through reviewed pull requests.
+
+> **Current GitHub limitation:** The connected account’s private repository settings do not permit native branch-protection rules without a GitHub plan upgrade or a decision to make the repository public. Until that changes, `main` remains the default production branch and must be treated as manually protected: no direct commits, no force-pushes, and no merges except a reviewed promotion from `staging`. `staging` is similarly promoted only from reviewed `dev` work. The failed protection configuration must be revisited if the repository plan or visibility changes.
