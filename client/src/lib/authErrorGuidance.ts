@@ -10,6 +10,24 @@ export type AuthErrorGuidance = {
 export function getAuthErrorGuidance(errorMessage?: string, mode: AuthRecoveryMode = "sign-in"): AuthErrorGuidance | null {
   if (!errorMessage) return null;
   const message = errorMessage.toLowerCase();
+  if (message.includes("secure email service is temporarily unavailable") || message.includes("provider unavailable")) {
+    if (mode === "sign-up") {
+      return {
+        title: "Account email service is temporarily unavailable.",
+        copy: "SURA could not reach the email service to create or confirm this account. Wait before trying again, and do not create a second account while the provider recovers.",
+      };
+    }
+    if (mode === "recovery") {
+      return {
+        title: "Recovery email service is temporarily unavailable.",
+        copy: "SURA could not reach the email service to send a recovery link. Wait before trying again, and use only the newest recovery email when delivery resumes.",
+      };
+    }
+    return {
+      title: "Email sign-in is temporarily unavailable.",
+      copy: "SURA could not reach the email service to complete sign-in. Your account and password have not changed. Wait before trying again.",
+    };
+  }
   if (message.includes("rate limit")) {
     if (mode === "sign-up") {
       return {

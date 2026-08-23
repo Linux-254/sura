@@ -23,6 +23,18 @@ describe("SURA email-auth error guidance", () => {
     });
   });
 
+  it("keeps a provider outage mode-aware without exposing a non-JSON parsing failure", () => {
+    expect(getAuthErrorGuidance("Secure email service is temporarily unavailable. Please wait before trying again.")).toMatchObject({
+      title: "Email sign-in is temporarily unavailable.",
+    });
+    expect(getAuthErrorGuidance("provider unavailable", "sign-up")).toMatchObject({
+      title: "Account email service is temporarily unavailable.",
+    });
+    expect(getAuthErrorGuidance("provider unavailable", "recovery")).toMatchObject({
+      title: "Recovery email service is temporarily unavailable.",
+    });
+  });
+
   it("explains email confirmation without revealing internal authentication details", () => {
     expect(getAuthErrorGuidance("Verify your email before signing in to SURA.")).toMatchObject({
       title: "Confirm your email before signing in.",
