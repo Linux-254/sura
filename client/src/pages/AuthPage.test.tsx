@@ -83,6 +83,24 @@ describe("SURA email authentication page", () => {
     expect(screen.getByRole("tab", { name: "Sign in" }).getAttribute("aria-selected")).toBe("true");
   });
 
+  it("keeps account creation selected when confirmation email delivery is rate-limited", () => {
+    signUp.error = { message: "email rate limit exceeded" };
+    render(<AuthPage />);
+    fireEvent.click(screen.getByRole("tab", { name: "Create account" }));
+    expect(screen.getByText("Confirmation email delivery is temporarily paused.")).toBeTruthy();
+    expect(screen.getByText(/do not sign in until you have confirmed the email link/i)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /return to sign in/i })).toBeNull();
+    expect(screen.getByRole("tab", { name: "Create account" }).getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("keeps recovery selected when recovery email delivery is rate-limited", () => {
+    recovery.error = { message: "email rate limit exceeded" };
+    render(<AuthPage />);
+    fireEvent.click(screen.getByRole("tab", { name: "Recover" }));
+    expect(screen.getByText("Recovery email delivery is temporarily paused.")).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Recover" }).getAttribute("aria-selected")).toBe("true");
+  });
+
   it("explains that an email must be confirmed before a SURA sign-in can proceed", () => {
     signIn.error = { message: "Verify your email before signing in to SURA." };
     render(<AuthPage />);

@@ -7,10 +7,22 @@ export type AuthErrorGuidance = {
   nextMode?: AuthRecoveryMode;
 };
 
-export function getAuthErrorGuidance(errorMessage?: string): AuthErrorGuidance | null {
+export function getAuthErrorGuidance(errorMessage?: string, mode: AuthRecoveryMode = "sign-in"): AuthErrorGuidance | null {
   if (!errorMessage) return null;
   const message = errorMessage.toLowerCase();
   if (message.includes("rate limit")) {
+    if (mode === "sign-up") {
+      return {
+        title: "Confirmation email delivery is temporarily paused.",
+        copy: "SURA cannot send the verification email until the provider’s email limit clears. Keep this account-creation page open if you need it, wait before trying again, and do not sign in until you have confirmed the email link.",
+      };
+    }
+    if (mode === "recovery") {
+      return {
+        title: "Recovery email delivery is temporarily paused.",
+        copy: "SURA cannot send another recovery email until the provider’s email limit clears. Wait before trying again, and use the newest recovery email only when it arrives.",
+      };
+    }
     return {
       title: "Email sending is temporarily paused.",
       copy: "SURA’s email provider has temporarily limited new messages. Please wait before trying again, and avoid repeated requests so the limit can clear. Your account and password have not changed.",

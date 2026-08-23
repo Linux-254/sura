@@ -24,7 +24,7 @@ export default function AuthPage() {
   const link = trpc.auth.emailLinkExistingAccount.useMutation();
   const busy = signUp.isPending || signIn.isPending || recovery.isPending || link.isPending;
   const error = signUp.error?.message ?? signIn.error?.message ?? recovery.error?.message ?? link.error?.message;
-  const errorGuidance = getAuthErrorGuidance(error);
+  const errorGuidance = getAuthErrorGuidance(error, mode === "link" ? "sign-in" : mode);
   const redirectTo = getSupabaseEmailRedirect();
 
   async function submit(event: React.FormEvent) {
