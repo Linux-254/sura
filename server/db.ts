@@ -1,6 +1,6 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { aiAssistRequests, aiImageConsents, buildBoardSelections, buildShareItems, buildShares, commerceOrders, companies, companyContacts, companyMembers, companyProducts, deliveryQuotes, discountOffers, inquiries, InsertUser, legalConsents, paymentOrders, personalEditCollections, personalEditItems, platformAnnouncements, platformContacts, savedVendors, socialLinks, userMemberships, userProfiles, users, verifiedReviews, webNotifications } from "../drizzle/schema";
+import { aiAssistRequests, aiImageConsents, authVisualSets, buildBoardSelections, buildShareItems, buildShares, commerceOrders, companies, companyContacts, companyMembers, companyProducts, deliveryQuotes, discountOffers, inquiries, InsertUser, legalConsents, paymentOrders, personalEditCollections, personalEditItems, platformAnnouncements, platformContacts, savedVendors, socialLinks, userMemberships, userProfiles, users, verifiedReviews, webNotifications } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { assertVerifiedReviewEligibility } from "./sura-commerce";
 
@@ -380,6 +380,31 @@ export async function replacePlatformContacts(createdByUserId: number, contacts:
   await db.delete(platformContacts);
   if (contacts.length) await db.insert(platformContacts).values(contacts.map((contact) => ({ createdByUserId, ...contact })));
   return { persisted: true };
+}
+
+function parseAuthVisualUrls(value: string | null | undefined) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string" && item.length > 0).slice(0, 8) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getActiveAuthVisualSet() {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [visualSet] = await db.select().from(authVisualSets).where(eq(authVisualSets.isActive, true)).orderBy(desc(authVisualSets.createdAt)).limit(1);
+  return visualSet ? { ...visualSet, imageUrls: parseAuthVisualUrls(visualSet.imageUrls) } : undefined;
+}
+
+export async function publishAuthVisualSet(input: { createdByUserId: number; title: string; imageUrls: string[] }) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  await db.update(authVisualSets).set({ isActive: false }).where(eq(authVisualSets.isActive, true));
+  const result = await db.insert(authVisualSets).values({ createdByUserId: input.createdByUserId, title: input.title, imageUrls: JSON.stringify(input.imageUrls.slice(0, 8)), isActive: true });
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
 }
 
 export async function getPublicPlatformContacts() {

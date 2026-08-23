@@ -8,6 +8,7 @@ import App from "./App";
 import { startLogin } from "./const";
 import { KenyaLocationProvider } from "./contexts/KenyaLocationContext";
 import { AestheticThemeProvider } from "./contexts/AestheticThemeContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -77,11 +78,13 @@ const trpcClient = trpc.createClient({
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
-      <AestheticThemeProvider>
-        <KenyaLocationProvider>
-          <App />
-        </KenyaLocationProvider>
-      </AestheticThemeProvider>
+      <ThemeProvider defaultTheme="system" switchable>
+        <AestheticThemeProvider>
+          <KenyaLocationProvider>
+            <App />
+          </KenyaLocationProvider>
+        </AestheticThemeProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </trpc.Provider>
 );

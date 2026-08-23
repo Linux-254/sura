@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/lib/utils";
+import { writePreferenceCookie } from "@/lib/privacy";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
@@ -82,7 +83,7 @@ function SidebarProvider({
       }
 
       // This sets the cookie to keep the sidebar state.
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+      writePreferenceCookie(SIDEBAR_COOKIE_NAME, String(openState));
     },
     [setOpenProp, open]
   );

@@ -91,3 +91,30 @@
   @media (min-width: 640px) { .container { padding-left: 1.5rem; padding-right: 1.5rem; } }
   @media (min-width: 1024px) { .container { padding-left: 2rem; padding-right: 2rem; max-width: 1280px; } }
 }
+
+@layer components {
+  .dark body { background-color: #0f100e; color: #f4efe6; }
+  .dark [class*="bg-[#fbf8f2]"],
+  .dark [class*="bg-[#fffdf9]"],
+  .dark [class*="bg-[#f4f0e9]"],
+  .dark [class*="bg-[#eee7dc]"],
+  .dark [class*="bg-[#f4eee6]"],
+  .dark [class*="bg-white"] { background-color: #1a1d17 !important; }
+  .dark [class*="text-[#211d18]"],
+  .dark [class*="text-[#31281f]"],
+  .dark [class*="text-[#282019]"],
+  .dark [class*="text-[#2a221b]"],
+  .dark [class*="text-[#382f26]"],
+  .dark [class*="text-[#3d2f23]"],
+  .dark [class*="text-[#4d4034]"],
+  .dark [class*="text-[#553e28]"],
+  .dark [class*="text-[#756655]"],
+  .dark [class*="text-[#75695b]"],
+  .dark [class*="text-[#796c5c]"] { color: #ece8de !important; }
+  .dark [class*="border-[#ded1bf]"],
+  .dark [class*="border-[#ded5c9]"],
+  .dark [class*="border-[#e2d7c9]"],
+  .dark [class*="border-[#e5ddd2]"],
+  .dark [class*="border-[#eee7dd]"] { border-color: #3c4535 !important; }
+  .dark input, .dark textarea, .dark select { background-color: #151913 !important; color: #f4efe6 !important; border-color: #3c4535 !important; }
+}

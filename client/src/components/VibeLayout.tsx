@@ -6,6 +6,8 @@ import {
   LogIn,
   MapPin,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plus,
   Search,
   Settings2,
@@ -18,6 +20,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { useAestheticTheme } from "@/contexts/AestheticThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useKenyaLocation } from "@/contexts/KenyaLocationContext";
 import { AestheticPicker } from "./AestheticPicker";
 import { NotificationCenter } from "./NotificationCenter";
@@ -43,7 +46,7 @@ function isNavActive(location: string, item: AppNavItem) {
   return item.exact ? location === item.href : location === item.href || location.startsWith(`${item.href}/`);
 }
 
-function PlatformNav({ dark, location, onNavigate }: { dark: boolean; location: string; onNavigate?: () => void }) {
+function PlatformNav({ dark, location, onNavigate, collapsed = false }: { dark: boolean; location: string; onNavigate?: () => void; collapsed?: boolean }) {
   return (
     <nav className="space-y-1.5" aria-label="Primary navigation">
       {appNav.map(({ href, label, icon: Icon, exact }) => {
@@ -53,7 +56,7 @@ function PlatformNav({ dark, location, onNavigate }: { dark: boolean; location: 
             key={href}
             href={href}
             onClick={onNavigate}
-            className={`vb-focus group flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[0.98] ${
+            className={`vb-focus group flex items-center gap-3 rounded-2xl py-3 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[0.98] ${collapsed ? "justify-center px-2" : "px-3.5"} ${
               active
                 ? dark
                   ? "bg-[#d7ff4d] text-[#12130f]"
@@ -64,8 +67,8 @@ function PlatformNav({ dark, location, onNavigate }: { dark: boolean; location: 
             }`}
           >
             <Icon className="h-[1.05rem] w-[1.05rem]" strokeWidth={active ? 2.4 : 1.9} />
-            <span>{label}</span>
-            {label === "Create" && <span className="ml-auto rounded-full bg-[#ff765d] px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-[0.08em] text-[#210f0b]">New</span>}
+            <span className={collapsed ? "sr-only" : ""}>{label}</span>
+            {label === "Create" && !collapsed && <span className="ml-auto rounded-full bg-[#ff765d] px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-[0.08em] text-[#210f0b]">New</span>}
           </Link>
         );
       })}
@@ -73,12 +76,15 @@ function PlatformNav({ dark, location, onNavigate }: { dark: boolean; location: 
   );
 }
 
-export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
+export function VibeLayout({ children, dark: forcedDark = false }: VibeLayoutProps) {
   const [location] = useLocation();
   const { city } = useKenyaLocation();
   const { isAuthenticated, user, logout } = useAuth();
   const { palette } = useAestheticTheme();
+  const { resolvedTheme } = useTheme();
+  const dark = forcedDark || resolvedTheme === "dark";
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [railCollapsed, setRailCollapsed] = useState(false);
   const surface = dark ? "bg-[#151613]" : "bg-[#fbf8f2]";
   const border = dark ? "border-white/[0.09]" : "border-[#ded1bf]";
   const muted = dark ? "text-[#9e9d94]" : "text-[#75695b]";
@@ -88,16 +94,17 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
       style={!dark ? { backgroundColor: palette.page, color: palette.ink } : undefined}
       className={`min-h-screen ${dark ? "bg-[#0f100e] text-[#f4efe6]" : "bg-[#f4f0e9]"}`}
     >
-      <aside className={`fixed inset-y-0 left-0 z-50 hidden w-[15rem] flex-col border-r px-5 py-6 lg:flex ${dark ? "border-white/[0.09] bg-[#12130f]" : "border-[#ded1bf] bg-[#eee7dc]"}`}>
-        <Link href="/" className={`vb-focus flex items-center gap-3 rounded-2xl px-2 py-1.5 ${dark ? "text-[#f6f0e6]" : "text-[#231e18]"}`} aria-label="SURA home">
-          <span className="relative grid h-10 w-10 overflow-hidden rounded-xl bg-[#d7ff4d] shadow-sm"><img src="/assets/sura-auth-hero.jpg" alt="" className="h-full w-full object-cover" /><span className="absolute inset-0 grid place-items-center bg-[#11130f]/35 text-sm font-black text-white">S</span></span>
-          <span className="flex flex-col leading-none">
+      <aside className={`fixed inset-y-0 left-0 z-50 hidden flex-col border-r py-6 lg:flex ${railCollapsed ? "w-[4.75rem] px-3" : "w-[15rem] px-5"} ${dark ? "border-white/[0.09] bg-[#12130f]" : "border-[#ded1bf] bg-[#eee7dc]"}`}>
+        <Link href="/" className={`vb-focus flex items-center gap-3 rounded-2xl px-2 py-1.5 ${railCollapsed ? "justify-center" : ""} ${dark ? "text-[#f6f0e6]" : "text-[#231e18]"}`} aria-label="SURA home">
+          <span className="relative grid h-10 w-10 overflow-hidden rounded-xl bg-[#11130f] shadow-sm"><img src="/sura-mark.svg" alt="" className="h-full w-full object-cover" /></span>
+          <span className={`${railCollapsed ? "sr-only" : "flex"} flex-col leading-none`}>
             <span className="text-[0.92rem] font-black tracking-[0.2em]">SURA</span>
             <span className={`mt-1 text-[0.51rem] font-bold tracking-[0.17em] ${dark ? "text-[#d7ff4d]" : "text-[#a66231]"}`}>LOCAL NETWORK</span>
           </span>
         </Link>
+        <button onClick={() => setRailCollapsed((collapsed) => !collapsed)} className={`vb-focus mt-7 grid h-9 w-full place-items-center rounded-xl border ${dark ? "border-white/[0.1] text-[#aaa89f] hover:bg-white/[0.07]" : "border-[#ded1bf] text-[#75695b] hover:bg-[#e9dfd1]"}`} aria-label={railCollapsed ? "Expand Sura navigation" : "Minimize Sura navigation"} title={railCollapsed ? "Expand navigation" : "Minimize navigation"}>{railCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}</button>
 
-        <div className="mt-10"><PlatformNav dark={dark} location={location} /></div>
+        <div className="mt-7"><PlatformNav dark={dark} location={location} collapsed={railCollapsed} /></div>
 
         <div className="mt-auto space-y-4">
           <div className={`rounded-2xl border p-4 ${dark ? "border-white/[0.09] bg-white/[0.045]" : "border-[#ded1bf] bg-[#f8f3eb]"}`}>
@@ -117,7 +124,7 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
         </div>
       </aside>
 
-      <div className="lg:pl-[15rem]">
+      <div className={railCollapsed ? "lg:pl-[4.75rem]" : "lg:pl-[15rem]"}>
         <header className={`sticky top-0 z-40 border-b backdrop-blur-xl ${dark ? "border-white/[0.09] bg-[#0f100e]/88" : "border-[#ded1bf] bg-[#f4f0e9]/88"}`}>
           <div className="mx-auto flex h-[4.55rem] max-w-[1100px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
@@ -147,7 +154,7 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
               )}
             </div>
           </div>
-          {mobileOpen && <div className={`border-t px-4 py-3 lg:hidden ${dark ? "border-white/[0.09] bg-[#12130f]" : "border-[#ded1bf] bg-[#eee7dc]"}`}><PlatformNav dark={dark} location={location} onNavigate={() => setMobileOpen(false)} /></div>}
+          {mobileOpen && <div className={`border-t px-4 py-3 lg:hidden ${dark ? "border-white/[0.09] bg-[#12130f]" : "border-[#ded1bf] bg-[#eee7dc]"}`}><div className="mb-3 flex justify-end"><AestheticPicker compact /></div><PlatformNav dark={dark} location={location} onNavigate={() => setMobileOpen(false)} /></div>}
         </header>
 
         <div className={`mx-auto min-h-[calc(100vh-4.55rem)] max-w-[1100px] ${surface}`}>

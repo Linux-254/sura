@@ -22,7 +22,8 @@ import SharedBuild from "@/pages/SharedBuild";
 import VendorProfile from "@/pages/VendorProfile";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { ThemeProvider } from "./contexts/ThemeContext";
+import { CookieConsentBanner } from "./components/CookieConsentBanner";
+import { InstallSuraPrompt } from "./components/InstallSuraPrompt";
 
 function Router() {
   return (
@@ -63,12 +64,12 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Router />
+        <CookieConsentBanner />
+        <InstallSuraPrompt />
+      </TooltipProvider>
     </ErrorBoundary>
   );
 }

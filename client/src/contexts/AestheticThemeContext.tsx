@@ -1,5 +1,7 @@
 import React, { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
 
+import { canUseOptionalPreferences, COOKIE_CONSENT_EVENT, readPreferenceCookie, AESTHETIC_MIX_COOKIE, AESTHETIC_THEME_COOKIE, writePreferenceCookie } from "@/lib/privacy";
+
 export const AESTHETIC_THEMES = {
   "Soft Power": { page: "#f4f0e9", paper: "#fbf8f2", primary: "#1d1b18", ink: "#2a2119", accent: "#a96834", soft: "#eee0c7", border: "#dccfbe", "font-display": '"Playfair Display", Georgia, serif', "font-body": '"DM Sans", sans-serif', "font-kicker": '"DM Sans", sans-serif' },
   "Thrift Remix": { page: "#f7ece3", paper: "#fff8f2", primary: "#285a58", ink: "#173a38", accent: "#d05b3c", soft: "#ebc8a5", border: "#d8b9a0", "font-display": '"Space Grotesk", sans-serif', "font-body": '"DM Sans", sans-serif', "font-kicker": '"Space Grotesk", sans-serif' },
@@ -35,10 +37,11 @@ export function AestheticThemeProvider({ children }: { children: ReactNode }) {
   const setAesthetic = (next: AestheticName) => setPreferenceMix([next, ...preferenceMix.filter((value) => value !== next)]);
   const resetAesthetic = () => setPreferenceMix([defaultAesthetic]);
   useEffect(() => {
+    if (!canUseOptionalPreferences()) return;
     try {
-      const rawMix = window.localStorage.getItem(PREFERENCES_STORAGE_KEY);
+      const rawMix = readPreferenceCookie(AESTHETIC_MIX_COOKIE) ?? window.localStorage.getItem(PREFERENCES_STORAGE_KEY);
       if (rawMix) setPreferenceMixState(normaliseMix(JSON.parse(rawMix)));
-      const saved = window.localStorage.getItem(ACTIVE_STORAGE_KEY);
+      const saved = readPreferenceCookie(AESTHETIC_THEME_COOKIE) ?? window.localStorage.getItem(ACTIVE_STORAGE_KEY);
       if (saved && saved in AESTHETIC_THEMES) setAestheticState(saved as AestheticName);
     } catch { /* The default palette remains usable. */ }
   }, []);
@@ -47,9 +50,21 @@ export function AestheticThemeProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     root.dataset.aesthetic = aesthetic.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
     Object.entries(palette).forEach(([key, value]) => root.style.setProperty(`--sura-${key}`, value));
-    try { window.localStorage.setItem(ACTIVE_STORAGE_KEY, aesthetic); } catch { /* Theme remains available for this session. */ }
+    if (canUseOptionalPreferences()) {
+      try { window.localStorage.setItem(ACTIVE_STORAGE_KEY, aesthetic); } catch { /* Theme remains available for this session. */ }
+      writePreferenceCookie(AESTHETIC_THEME_COOKIE, aesthetic);
+    }
   }, [aesthetic]);
-  useEffect(() => { try { window.localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(preferenceMix)); } catch { /* Theme remains available for this session. */ } }, [preferenceMix]);
+  useEffect(() => {
+    const persist = () => {
+      if (!canUseOptionalPreferences()) return;
+      try { window.localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(preferenceMix)); } catch { /* Theme remains available for this session. */ }
+      writePreferenceCookie(AESTHETIC_MIX_COOKIE, JSON.stringify(preferenceMix));
+    };
+    persist();
+    window.addEventListener(COOKIE_CONSENT_EVENT, persist);
+    return () => window.removeEventListener(COOKIE_CONSENT_EVENT, persist);
+  }, [preferenceMix]);
   const value = useMemo(() => ({ aesthetic, palette: AESTHETIC_THEMES[aesthetic], preferenceMix, setAesthetic, setPreferenceMix, resetAesthetic }), [aesthetic, preferenceMix]);
   return <AestheticThemeContext.Provider value={value}>{children}</AestheticThemeContext.Provider>;
 }

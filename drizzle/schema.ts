@@ -191,6 +191,20 @@ export const platformContacts = mysqlTable(
   (table) => [index("platform_contacts_public_idx").on(table.isPublic)],
 );
 
+export const authVisualSets = mysqlTable(
+  "auth_visual_sets",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    createdByUserId: int("createdByUserId").notNull(),
+    title: varchar("title", { length: 120 }).notNull(),
+    imageUrls: text("imageUrls").notNull(),
+    isActive: boolean("isActive").default(true).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("auth_visual_sets_active_idx").on(table.isActive)],
+);
+
 export const discountOffers = mysqlTable(
   "discount_offers",
   {

@@ -3,6 +3,7 @@ import React from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AestheticThemeProvider, useAestheticTheme } from "./AestheticThemeContext";
+import { setCookieConsent } from "@/lib/privacy";
 
 function ThemeProbe() {
   const { aesthetic, palette, preferenceMix, resetAesthetic, setAesthetic, setPreferenceMix } = useAestheticTheme();
@@ -10,7 +11,9 @@ function ThemeProbe() {
 }
 
 beforeEach(() => {
+  document.cookie = "sura_cookie_consent=; Max-Age=0; Path=/";
   window.localStorage.clear();
+  setCookieConsent("accepted");
   document.documentElement.removeAttribute("data-aesthetic");
 });
 afterEach(cleanup);

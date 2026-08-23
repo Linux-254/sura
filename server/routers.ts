@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { completeAiAssistRequest, createAiAssistRequest, createBuildShareRecord, createCommerceOrder, createCompanyForUser, createCompanyProduct, createDeliveryQuote, createDiscountOffer, createInquiryRecord, createPaymentOrder, createPlatformAnnouncement, createVerifiedReview, failAiAssistRequest, getAccountProfile, getAdminCompanyReviewQueue, getAdminDiscountReviewQueue, getAestheticPreferences, getAiAssistRequestForUser, getBoardSelections, getBuildShareRecord, getCompaniesForUser, getCompanyContacts, getCompanyMembership, getCompanyOwnedByUser, getCompanyProduct, getCompanyProducts, getCommerceOrdersForUser, getDiscountOffersForCompany, getOrCreateFreeMembership, getPaymentOrdersForUser, getProductById, getPublicAccountProfile, getPublicCompanyProfile, getPublicDiscountOffers, getPublicPlatformContacts, getPublicProducts, getSavedVendorIds, getWebNotificationFeed, markWebNotificationRead, recordAiImageConsent, recordLegalConsent, replaceCompanyContacts, replacePlatformContacts, setAestheticPreferences, toggleBuildBoardSelection, toggleSavedVendor, updateCompanyCommissionRate, updateCompanyReviewStatus, updateDiscountOfferReviewStatus, upsertAccountProfile } from "./db";
+import { completeAiAssistRequest, createAiAssistRequest, createBuildShareRecord, createCommerceOrder, createCompanyForUser, createCompanyProduct, createDeliveryQuote, createDiscountOffer, createInquiryRecord, createPaymentOrder, createPlatformAnnouncement, createVerifiedReview, failAiAssistRequest, getAccountProfile, getActiveAuthVisualSet, getAdminCompanyReviewQueue, getAdminDiscountReviewQueue, getAestheticPreferences, getAiAssistRequestForUser, getBoardSelections, getBuildShareRecord, getCompaniesForUser, getCompanyContacts, getCompanyMembership, getCompanyOwnedByUser, getCompanyProduct, getCompanyProducts, getCommerceOrdersForUser, getDiscountOffersForCompany, getOrCreateFreeMembership, getPaymentOrdersForUser, getProductById, getPublicAccountProfile, getPublicCompanyProfile, getPublicDiscountOffers, getPublicPlatformContacts, getPublicProducts, getSavedVendorIds, getWebNotificationFeed, markWebNotificationRead, recordAiImageConsent, recordLegalConsent, publishAuthVisualSet, replaceCompanyContacts, replacePlatformContacts, setAestheticPreferences, toggleBuildBoardSelection, toggleSavedVendor, updateCompanyCommissionRate, updateCompanyReviewStatus, updateDiscountOfferReviewStatus, upsertAccountProfile } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
@@ -14,10 +14,14 @@ import { assertPersonalEditCollectionOwnership, createPersonalEditCollection, cr
 import { personalEditCollectionInputSchema, personalEditItemInputSchema } from "./sura-validation";
 import { storePrivatePersonalEditImage } from "./personal-edit";
 import { storeCompanyProductImage } from "./product-media";
+import { storeAuthVisualImage } from "./auth-visuals";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
+  public: router({
+    authVisuals: publicProcedure.query(() => getActiveAuthVisualSet()),
+  }),
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -262,6 +266,10 @@ export const appRouter = router({
     setDiscountReviewStatus: adminProcedure.input(z.object({ offerId: z.number().int().positive(), status: z.enum(["approved", "rejected"]) })).mutation(({ input }) => updateDiscountOfferReviewStatus(input.offerId, input.status)),
     createAnnouncement: adminProcedure.input(announcementInputSchema).mutation(({ ctx, input }) => createPlatformAnnouncement({ createdByUserId: ctx.user.id, ...input })),
     replacePlatformContacts: adminProcedure.input(z.object({ contacts: z.array(contactInputSchema).max(6) })).mutation(({ ctx, input }) => replacePlatformContacts(ctx.user.id, input.contacts)),
+    publishAuthVisuals: adminProcedure.input(z.object({ title: z.string().trim().min(3).max(120), imageDataUrls: z.array(z.string().regex(/^data:image\/(jpeg|png|webp);base64,/).max(7_000_000)).min(1).max(8) })).mutation(async ({ ctx, input }) => {
+      const uploaded = await Promise.all(input.imageDataUrls.map((dataUrl, position) => storeAuthVisualImage({ dataUrl, uploadedByUserId: ctx.user.id, position })));
+      return publishAuthVisualSet({ createdByUserId: ctx.user.id, title: input.title, imageUrls: uploaded.map((image) => image.url) });
+    }),
   }),
 });
 

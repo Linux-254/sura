@@ -18,6 +18,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { VibeLayout, formatKes, labelize } from "@/components/VibeLayout";
+import { SuraSignalRail } from "@/components/SuraSignalRail";
 import { trpc } from "@/lib/trpc";
 
 const pulseItems = [
@@ -50,6 +51,10 @@ export default function Home() {
               <button onClick={() => setLocation("/discover")} className="pb-3 text-[#938475] hover:text-[#201c17]">Nearby</button>
             </div>
           </section>
+
+          <SuraSignalRail vendors={featured} onOpen={(vendor) => vendor?.slug ? setLocation(`/vendors/${vendor.slug}`) : setLocation("/discover")} />
+
+          <section className="flex gap-2 overflow-x-auto pb-1 lg:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><button onClick={() => setLocation("/brief")} className="vb-focus inline-flex shrink-0 items-center gap-2 rounded-full bg-[#1f1b17] px-4 py-2.5 text-xs font-bold text-[#fbf8f2]"><Plus className="h-3.5 w-3.5" />Make a signal</button><button onClick={() => setLocation("/ai-studio")} className="vb-focus inline-flex shrink-0 items-center gap-2 rounded-full border border-[#d8cdbf] bg-[#f4eee6] px-4 py-2.5 text-xs font-bold text-[#382f26]"><Sparkles className="h-3.5 w-3.5 text-[#a66231]" />AI lens</button><button onClick={() => setLocation("/board")} className="vb-focus inline-flex shrink-0 items-center gap-2 rounded-full border border-[#d8cdbf] bg-[#fffdf9] px-4 py-2.5 text-xs font-bold text-[#382f26]"><Bookmark className="h-3.5 w-3.5 text-[#a66231]" />Saved shelf</button></section>
 
           <section className="rounded-2xl border border-[#dfd5c7] bg-[#fffdf9] p-4 shadow-[0_8px_24px_rgba(49,34,18,0.04)] sm:flex sm:items-center sm:justify-between sm:gap-5">
             <div className="min-w-0"><p className="vb-kicker text-[#a66231]">Quick launch</p><p className="mt-1 text-sm font-black text-[#31281f]">Shape something new</p><p className="mt-0.5 truncate text-xs text-[#918271]">Start with a budget, a mood, or a moment.</p></div>
