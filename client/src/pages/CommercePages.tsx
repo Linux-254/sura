@@ -1,16 +1,18 @@
-import { Check, PackageCheck, ShoppingBag, Star, Truck } from "lucide-react";
+import { ArrowUpRight, Check, PackageCheck, ShoppingBag, Star, Truck } from "lucide-react";
 import React, { useState } from "react";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SuraEmptyState, SuraErrorState, SuraPageSkeleton, SuraProcessing } from "@/components/SuraStates";
 import { VibeLayout, formatKes } from "@/components/VibeLayout";
+import { ProductGallery, parseProductImages } from "@/components/ProductGallery";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useKenyaLocation } from "@/contexts/KenyaLocationContext";
 import { trpc } from "@/lib/trpc";
 
 const categories = ["all", "apparel", "footwear", "home", "accessory"] as const;
 type Category = (typeof categories)[number];
-type CommerceProduct = { id: number; name: string; description: string; imageUrl: string | null; priceKes: number; category: string; sizeOptions: string | null; company: { name: string; city: string | null; commissionRatePct: number } };
+type PublicDiscount = { id: number; code: string; title: string; description: string | null; discountType: "percentage" | "fixed_kes"; discountValue: number; minimumSpendKes: number | null; validUntil: Date | string | null; savingsKes: number; salePriceKes: number; label: string };
+type CommerceProduct = { id: number; name: string; description: string; imageUrl: string | null; imageUrls?: string[] | string | null; priceKes: number; category: string; sizeOptions: string | null; stockQuantity: number; discounts?: PublicDiscount[]; company: { name: string; city: string | null; commissionRatePct: number } };
 type ReviewRecord = { id: number; status: "pending" | "published" | "rejected"; rating: number; comment: string | null } | null;
 type PrivateOrder = { id: number; status: string; deliveryKes: number; sellerSettlementKes: number; commissionKes: number; commissionRatePct: number; customerTotalKes: number; review: ReviewRecord };
 
@@ -28,10 +30,15 @@ function EmptyShop() { return <div className="mt-8"><SuraEmptyState eyebrow="SUR
 
 function ProductCard({ product, city, isAuthenticated }: { product: CommerceProduct; city: string; isAuthenticated: boolean }) {
   const [open, setOpen] = useState(false);
-  return <article className="overflow-hidden rounded-[1.5rem] border border-[var(--sura-border)] bg-[var(--sura-paper)] shadow-[0_12px_30px_rgba(56,39,22,0.06)]">{product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="h-48 w-full object-cover" /> : <div className="grid h-48 place-items-center bg-[var(--sura-muted)]"><ShoppingBag className="h-8 w-8 text-[var(--sura-accent)]" /></div>}<div className="p-5"><p className="vb-kicker text-[var(--sura-accent)]">{product.category} · {product.company.city ?? "Kenya"}</p><h2 className="vb-serif mt-3 text-3xl">{product.name}</h2><p className="mt-2 line-clamp-2 text-sm leading-6 text-[#756655]">{product.description}</p><div className="mt-5 flex items-end justify-between gap-3"><div><p className="text-xs text-[#756655]">Company price</p><p className="vb-serif text-2xl">{formatKes(product.priceKes)}</p></div><button onClick={() => setOpen(!open)} className="vb-button vb-focus rounded-full bg-[var(--sura-primary)] px-4 py-2.5 text-xs font-bold text-[var(--sura-paper)]">{open ? "Close" : "Quote delivery"}</button></div>{open && <QuoteCard productId={product.id} city={city} isAuthenticated={isAuthenticated} />}</div></article>;
+  const images = parseProductImages(product);
+  const discount = product.discounts?.[0];
+  return <article className="group overflow-hidden rounded-[1.5rem] border border-[var(--sura-border)] bg-[var(--sura-paper)] shadow-[0_12px_30px_rgba(56,39,22,0.06)] transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(56,39,22,0.1)]">
+    <div className="relative p-3 pb-0"><ProductGallery images={images} name={product.name} compact />{discount && <span className="absolute left-5 top-5 rounded-full bg-[#d7ff4d] px-2.5 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.08em] text-[#1a220e]">{discount.label}</span>}</div>
+    <div className="p-5"><p className="vb-kicker text-[var(--sura-accent)]">{product.category} · {product.company.city ?? "Kenya"}</p><Link href={`/shop/${product.id}`} className="vb-focus mt-3 flex items-start justify-between gap-3"><h2 className="text-2xl font-black tracking-[-0.04em] text-[#2c241d]">{product.name}</h2><ArrowUpRight className="mt-1 h-4 w-4 shrink-0 text-[var(--sura-accent)]" /></Link><p className="mt-2 line-clamp-3 text-sm leading-6 text-[#756655]">{product.description}</p><div className="mt-5 flex items-end justify-between gap-3"><div><p className="text-xs text-[#756655]">{discount ? "Member price" : "Company price"}</p><div className="flex items-baseline gap-2"><p className="text-2xl font-black tracking-[-0.04em] text-[#211b16]">{formatKes(discount?.salePriceKes ?? product.priceKes)}</p>{discount && <del className="text-xs text-[#927f6c]">{formatKes(product.priceKes)}</del>}</div></div><Link href={`/shop/${product.id}`} className="vb-button vb-focus rounded-full bg-[var(--sura-primary)] px-4 py-2.5 text-xs font-bold text-[var(--sura-paper)]">View product</Link></div>{discount && <p className="mt-4 rounded-xl bg-[#f0f6dc] px-3 py-2 text-xs leading-5 text-[#526128]">{discount.title}{discount.minimumSpendKes ? ` · min. spend ${formatKes(discount.minimumSpendKes)}` : ""}</p>}<button onClick={() => setOpen(!open)} className="vb-focus mt-4 text-xs font-bold text-[#8d5b32] underline underline-offset-4">{open ? "Hide delivery quote" : "See delivery and order estimate"}</button>{open && <QuoteCard productId={product.id} city={city} isAuthenticated={isAuthenticated} />}</div>
+  </article>;
 }
 
-function QuoteCard({ productId, city, isAuthenticated }: { productId: number; city: string; isAuthenticated: boolean }) {
+export function QuoteCard({ productId, city, isAuthenticated }: { productId: number; city: string; isAuthenticated: boolean }) {
   const [quote, setQuote] = useState<ReturnType<typeof trpc.commerce.quote.useMutation>["data"]>();
   const quoteMutation = trpc.commerce.quote.useMutation({ onSuccess: setQuote });
   const orderMutation = trpc.commerce.createOrder.useMutation();

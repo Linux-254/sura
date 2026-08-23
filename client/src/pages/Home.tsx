@@ -51,12 +51,9 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="py-4">
-            <button onClick={() => setLocation("/brief")} className="vb-focus flex w-full items-center gap-3 rounded-2xl border border-[#dfd5c7] bg-[#fffdf9] p-3.5 text-left shadow-[0_8px_24px_rgba(49,34,18,0.04)] transition-[border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-[#b6a48f]">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#d7ff4d] text-[#18200c]"><Plus className="h-4 w-4" /></span>
-              <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-[#31281f]">Shape something new</span><span className="mt-0.5 block truncate text-xs text-[#918271]">Start with a budget, a mood, or a moment.</span></span>
-              <ArrowUpRight className="h-4 w-4 text-[#a66231]" />
-            </button>
+          <section className="rounded-2xl border border-[#dfd5c7] bg-[#fffdf9] p-4 shadow-[0_8px_24px_rgba(49,34,18,0.04)] sm:flex sm:items-center sm:justify-between sm:gap-5">
+            <div className="min-w-0"><p className="vb-kicker text-[#a66231]">Quick launch</p><p className="mt-1 text-sm font-black text-[#31281f]">Shape something new</p><p className="mt-0.5 truncate text-xs text-[#918271]">Start with a budget, a mood, or a moment.</p></div>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-0 sm:w-[19rem]"><button onClick={() => setLocation("/brief")} className="vb-button vb-focus inline-flex items-center justify-center gap-2 rounded-xl bg-[#1f1b17] px-3 py-2.5 text-xs font-bold text-[#fbf8f2]"><Plus className="h-3.5 w-3.5" />Create</button><button onClick={() => setLocation("/ai-studio")} className="vb-button vb-focus inline-flex items-center justify-center gap-2 rounded-xl border border-[#d8cdbf] bg-[#f4eee6] px-3 py-2.5 text-xs font-bold text-[#382f26] hover:border-[#a66231]"><Sparkles className="h-3.5 w-3.5 text-[#a66231]" />AI Studio</button></div>
           </section>
 
           <section className="relative isolate overflow-hidden rounded-[1.7rem] bg-[#1b1e16] p-6 text-[#f7f4ed] shadow-[0_18px_42px_rgba(31,26,16,0.16)] sm:p-8">

@@ -34,7 +34,7 @@ type AppNavItem = {
 const appNav: AppNavItem[] = [
   { href: "/", label: "Home", icon: Home, exact: true },
   { href: "/discover", label: "Explore", icon: Compass },
-  { href: "/brief", label: "Create brief", icon: Plus },
+  { href: "/brief", label: "Create", icon: Plus },
   { href: "/board", label: "Saved board", icon: Bookmark },
   { href: "/ai-studio", label: "AI studio", icon: Sparkles },
 ];
@@ -65,7 +65,7 @@ function PlatformNav({ dark, location, onNavigate }: { dark: boolean; location: 
           >
             <Icon className="h-[1.05rem] w-[1.05rem]" strokeWidth={active ? 2.4 : 1.9} />
             <span>{label}</span>
-            {label === "Create brief" && <span className="ml-auto rounded-full bg-[#ff765d] px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-[0.08em] text-[#210f0b]">New</span>}
+            {label === "Create" && <span className="ml-auto rounded-full bg-[#ff765d] px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-[0.08em] text-[#210f0b]">New</span>}
           </Link>
         );
       })}
@@ -158,7 +158,7 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
           <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
             {appNav.map(({ href, label, icon: Icon, exact }) => {
               const active = isNavActive(location, { href, label, icon: Icon, exact });
-              return <Link key={href} href={href} className={`vb-focus flex flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[0.62rem] font-semibold ${active ? (dark ? "text-[#d7ff4d]" : "text-[#211c17]") : muted}`}><Icon className="h-4 w-4" strokeWidth={active ? 2.4 : 1.8} /><span>{label === "Create brief" ? "Create" : label.replace("Saved board", "Saved").replace("AI studio", "AI")}</span></Link>;
+              return <Link key={href} href={href} className={`vb-focus flex flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[0.62rem] font-semibold ${active ? (dark ? "text-[#d7ff4d]" : "text-[#211c17]") : muted}`}><Icon className="h-4 w-4" strokeWidth={active ? 2.4 : 1.8} /><span>{label === "Create" ? "Create" : label.replace("Saved board", "Saved").replace("AI studio", "AI")}</span></Link>;
             })}
           </div>
         </nav>

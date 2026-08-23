@@ -22,6 +22,8 @@ export const companyProductInputSchema = z.object({
   description: z.string().trim().min(12).max(3000),
   priceKes: z.number().int().min(50).max(10_000_000),
   imageUrl: z.string().trim().url().max(1000).optional(),
+  imageUrls: z.array(z.string().trim().url().max(1000)).max(8).default([]),
+  imageDataUrls: z.array(z.string().regex(/^data:image\/(jpeg|png|webp);base64,/).max(7_000_000)).max(8).default([]),
   sizeOptions: z.array(z.string().trim().min(1).max(40)).max(30).default([]),
   stockQuantity: z.number().int().min(0).max(100_000),
 });

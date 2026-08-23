@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { completeAiAssistRequest, createAiAssistRequest, createBuildShareRecord, createCommerceOrder, createCompanyForUser, createCompanyProduct, createDeliveryQuote, createDiscountOffer, createInquiryRecord, createPaymentOrder, createPlatformAnnouncement, createVerifiedReview, failAiAssistRequest, getAccountProfile, getAdminCompanyReviewQueue, getAdminDiscountReviewQueue, getAestheticPreferences, getAiAssistRequestForUser, getBoardSelections, getBuildShareRecord, getCompaniesForUser, getCompanyContacts, getCompanyMembership, getCompanyOwnedByUser, getCompanyProducts, getCommerceOrdersForUser, getDiscountOffersForCompany, getOrCreateFreeMembership, getPaymentOrdersForUser, getProductById, getPublicAccountProfile, getPublicCompanyProfile, getPublicDiscountOffers, getPublicPlatformContacts, getPublicProducts, getSavedVendorIds, getWebNotificationFeed, markWebNotificationRead, recordAiImageConsent, recordLegalConsent, replaceCompanyContacts, replacePlatformContacts, setAestheticPreferences, toggleBuildBoardSelection, toggleSavedVendor, updateCompanyCommissionRate, updateCompanyReviewStatus, updateDiscountOfferReviewStatus, upsertAccountProfile } from "./db";
+import { completeAiAssistRequest, createAiAssistRequest, createBuildShareRecord, createCommerceOrder, createCompanyForUser, createCompanyProduct, createDeliveryQuote, createDiscountOffer, createInquiryRecord, createPaymentOrder, createPlatformAnnouncement, createVerifiedReview, failAiAssistRequest, getAccountProfile, getAdminCompanyReviewQueue, getAdminDiscountReviewQueue, getAestheticPreferences, getAiAssistRequestForUser, getBoardSelections, getBuildShareRecord, getCompaniesForUser, getCompanyContacts, getCompanyMembership, getCompanyOwnedByUser, getCompanyProduct, getCompanyProducts, getCommerceOrdersForUser, getDiscountOffersForCompany, getOrCreateFreeMembership, getPaymentOrdersForUser, getProductById, getPublicAccountProfile, getPublicCompanyProfile, getPublicDiscountOffers, getPublicPlatformContacts, getPublicProducts, getSavedVendorIds, getWebNotificationFeed, markWebNotificationRead, recordAiImageConsent, recordLegalConsent, replaceCompanyContacts, replacePlatformContacts, setAestheticPreferences, toggleBuildBoardSelection, toggleSavedVendor, updateCompanyCommissionRate, updateCompanyReviewStatus, updateDiscountOfferReviewStatus, upsertAccountProfile } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
@@ -13,6 +13,7 @@ import { createAiAssistPlan, storeConsentImage } from "./sura-ai-service";
 import { assertPersonalEditCollectionOwnership, createPersonalEditCollection, createPersonalEditItem, getPersonalEditCollectionsForUser, getPersonalEditItemsForUser } from "./db";
 import { personalEditCollectionInputSchema, personalEditItemInputSchema } from "./sura-validation";
 import { storePrivatePersonalEditImage } from "./personal-edit";
+import { storeCompanyProductImage } from "./product-media";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -139,6 +140,7 @@ export const appRouter = router({
   }),
   commerce: router({
     products: publicProcedure.input(z.object({ category: z.enum(["apparel", "footwear", "home", "accessory"]).optional(), city: z.string().optional() }).optional()).query(({ input }) => getPublicProducts(input ?? {})),
+    product: publicProcedure.input(z.object({ productId: z.number().int().positive() })).query(({ input }) => getProductById(input.productId)),
     aiAssist: protectedProcedure.input(aiAssistInputSchema).mutation(async ({ ctx, input }) => {
       const consent = await recordAiImageConsent(ctx.user.id, input.kind);
       if (!consent.persisted || !consent.id) throw new Error("Unable to record your image consent");
@@ -174,7 +176,7 @@ export const appRouter = router({
       const productResult = await getProductById(input.productId);
       if (!productResult) throw new Error("This product is not available");
       const delivery = calculateDeliveryEstimate(productResult.company.city, input.destinationCity);
-      const breakdown = calculateCommissionBreakdown({ unitPriceKes: productResult.product.priceKes, quantity: input.quantity, commissionRatePct: productResult.company.commissionRatePct, deliveryKes: delivery.deliveryKes });
+      const breakdown = calculateCommissionBreakdown({ unitPriceKes: productResult.product.salePriceKes ?? productResult.product.priceKes, quantity: input.quantity, commissionRatePct: productResult.company.commissionRatePct, deliveryKes: delivery.deliveryKes });
       const quote = await createDeliveryQuote({ productId: productResult.product.id, destinationCity: input.destinationCity, ...delivery, expiresAt: new Date(Date.now() + 30 * 60 * 1000) });
       return { product: productResult.product, company: productResult.company, deliveryQuoteId: quote.id, delivery, ...breakdown };
     }),
@@ -183,7 +185,7 @@ export const appRouter = router({
       if (!productResult) throw new Error("This product is not available");
       if (productResult.product.stockQuantity < input.quantity) throw new Error("The requested quantity is not currently available");
       const delivery = calculateDeliveryEstimate(productResult.company.city, input.destinationCity);
-      const breakdown = calculateCommissionBreakdown({ unitPriceKes: productResult.product.priceKes, quantity: input.quantity, commissionRatePct: productResult.company.commissionRatePct, deliveryKes: delivery.deliveryKes });
+      const breakdown = calculateCommissionBreakdown({ unitPriceKes: productResult.product.salePriceKes ?? productResult.product.priceKes, quantity: input.quantity, commissionRatePct: productResult.company.commissionRatePct, deliveryKes: delivery.deliveryKes });
       const quote = await createDeliveryQuote({ productId: productResult.product.id, destinationCity: input.destinationCity, ...delivery, expiresAt: new Date(Date.now() + 30 * 60 * 1000) });
       const order = await createCommerceOrder({ userId: ctx.user.id, companyId: productResult.company.id, productId: productResult.product.id, deliveryQuoteId: quote.id, quantity: input.quantity, ...breakdown });
       return { ...order, delivery, ...breakdown, sellerName: productResult.company.name };
@@ -212,7 +214,10 @@ export const appRouter = router({
     createProduct: protectedProcedure.input(companyProductInputSchema).mutation(async ({ ctx, input }) => {
       const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
       if (!company) throw new Error("You can only add products for a company you own");
-      return createCompanyProduct(input);
+      const { imageDataUrls, imageUrls: submittedImageUrls, ...productInput } = input;
+      const uploaded = await Promise.all(imageDataUrls.map((dataUrl, position) => storeCompanyProductImage({ dataUrl, companyId: input.companyId, uploadedByUserId: ctx.user.id, position })));
+      const imageUrls = Array.from(new Set([...submittedImageUrls, ...uploaded.map((image) => image.url)])).slice(0, 8);
+      return createCompanyProduct({ ...productInput, imageUrls, imageUrl: imageUrls[0] });
     }),
     contacts: protectedProcedure.input(z.object({ companyId: z.number().int().positive() })).query(async ({ ctx, input }) => {
       const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
@@ -232,6 +237,7 @@ export const appRouter = router({
     createOffer: protectedProcedure.input(discountOfferInputSchema.safeExtend({ companyId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
       if (!company) throw new Error("You can only create offers for a company you own");
+      if (input.productId && !(await getCompanyProduct(input.companyId, input.productId))) throw new Error("That product does not belong to this company");
       return createDiscountOffer({ ...input, createdByUserId: ctx.user.id });
     }),
   }),

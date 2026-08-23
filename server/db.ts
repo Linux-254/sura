@@ -333,10 +333,10 @@ export async function getCompanyContacts(companyId: number, publicOnly = false) 
   return db.select().from(companyContacts).where(publicOnly ? and(eq(companyContacts.companyId, companyId), eq(companyContacts.isPublic, true)) : eq(companyContacts.companyId, companyId));
 }
 
-export async function createDiscountOffer(input: { companyId?: number; createdByUserId: number; code: string; title: string; description?: string; discountType: "percentage" | "fixed_kes"; discountValue: number; minimumSpendKes?: number; validUntil?: Date }) {
+export async function createDiscountOffer(input: { companyId?: number; productId?: number; createdByUserId: number; code: string; title: string; description?: string; discountType: "percentage" | "fixed_kes"; discountValue: number; minimumSpendKes?: number; validUntil?: Date }) {
   const db = await getDb();
   if (!db) return { id: 0, persisted: false };
-  const result = await db.insert(discountOffers).values({ ...input, companyId: input.companyId ?? null, description: input.description ?? null, minimumSpendKes: input.minimumSpendKes ?? null, validUntil: input.validUntil ?? null, status: "pending", isPublic: false });
+  const result = await db.insert(discountOffers).values({ ...input, companyId: input.companyId ?? null, productId: input.productId ?? null, description: input.description ?? null, minimumSpendKes: input.minimumSpendKes ?? null, validUntil: input.validUntil ?? null, status: "pending", isPublic: false });
   return { id: Number(result[0]?.insertId ?? 0), persisted: true };
 }
 
@@ -349,7 +349,9 @@ export async function getDiscountOffersForCompany(companyId: number) {
 export async function getPublicDiscountOffers() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(discountOffers).where(and(eq(discountOffers.status, "approved"), eq(discountOffers.isPublic, true))).limit(30);
+  const now = new Date();
+  const offers = await db.select().from(discountOffers).where(and(eq(discountOffers.status, "approved"), eq(discountOffers.isPublic, true))).limit(30);
+  return offers.filter((offer) => offer.validFrom <= now && (!offer.validUntil || offer.validUntil >= now));
 }
 
 export async function getAdminDiscountReviewQueue() {
@@ -389,7 +391,39 @@ export async function getPublicPlatformContacts() {
 export async function getCompanyProducts(companyId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(companyProducts).where(eq(companyProducts.companyId, companyId)).limit(100);
+  const products = await db.select().from(companyProducts).where(eq(companyProducts.companyId, companyId)).limit(100);
+  return Promise.all(products.map(async (product) => ({ ...product, imageUrls: productImageUrls(product), discounts: await getLiveProductDiscounts(db, companyId, product.id, product.priceKes) })));
+}
+
+function parseJsonArray(value: string | null | undefined): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string" && item.length > 0) : [];
+  } catch {
+    return [];
+  }
+}
+
+function productImageUrls(product: { imageUrl: string | null; imageUrls: string | null }) {
+  return Array.from(new Set([product.imageUrl, ...parseJsonArray(product.imageUrls)].filter((url): url is string => Boolean(url)))).slice(0, 8);
+}
+
+function formatPublicDiscount(offer: typeof discountOffers.$inferSelect, priceKes: number) {
+  const savingsKes = offer.discountType === "percentage" ? Math.round(priceKes * offer.discountValue / 100) : offer.discountValue;
+  const salePriceKes = Math.max(0, priceKes - savingsKes);
+  return { id: offer.id, code: offer.code, title: offer.title, description: offer.description, discountType: offer.discountType, discountValue: offer.discountValue, minimumSpendKes: offer.minimumSpendKes, validUntil: offer.validUntil, savingsKes, salePriceKes, label: offer.discountType === "percentage" ? `${offer.discountValue}% off` : `Save ${formatKesValue(offer.discountValue)}` };
+}
+
+function formatKesValue(amount: number) {
+  return `KES ${amount.toLocaleString("en-KE")}`;
+}
+
+async function getLiveProductDiscounts(db: Awaited<ReturnType<typeof getDb>>, companyId: number, productId: number, priceKes: number) {
+  if (!db) return [];
+  const now = new Date();
+  const offers = await db.select().from(discountOffers).where(and(eq(discountOffers.companyId, companyId), eq(discountOffers.status, "approved"), eq(discountOffers.isPublic, true))).limit(50);
+  return offers.filter((offer) => (!offer.productId || offer.productId === productId) && (!offer.minimumSpendKes || priceKes >= offer.minimumSpendKes) && offer.validFrom <= now && (!offer.validUntil || offer.validUntil >= now)).map((offer) => formatPublicDiscount(offer, priceKes)).sort((a, b) => b.savingsKes - a.savingsKes);
 }
 
 export async function getPublicProducts(input: { category?: "apparel" | "footwear" | "home" | "accessory"; city?: string }) {
@@ -399,10 +433,14 @@ export async function getPublicProducts(input: { category?: "apparel" | "footwea
   const companyIds = Array.from(new Set(products.map((product) => product.companyId)));
   const verifiedCompanies = await Promise.all(companyIds.map(async (companyId) => (await db.select().from(companies).where(and(eq(companies.id, companyId), eq(companies.verificationStatus, "verified"))).limit(1))[0]));
   const allowedCompanies = new Map(verifiedCompanies.filter(Boolean).map((company) => [company!.id, company!]));
-  return products.filter((product) => {
+  const visibleProducts = products.filter((product) => {
     const company = allowedCompanies.get(product.companyId);
     return Boolean(company) && (!input.category || product.category === input.category) && (!input.city || company?.city === input.city);
-  }).map((product) => ({ ...product, company: allowedCompanies.get(product.companyId)! }));
+  });
+  return Promise.all(visibleProducts.map(async (product) => {
+    const discounts = await getLiveProductDiscounts(db, product.companyId, product.id, product.priceKes);
+    return { ...product, imageUrls: productImageUrls(product), salePriceKes: discounts[0]?.salePriceKes ?? product.priceKes, discounts, company: allowedCompanies.get(product.companyId)! };
+  }));
 }
 
 export async function getProductById(productId: number) {
@@ -411,13 +449,24 @@ export async function getProductById(productId: number) {
   const [product] = await db.select().from(companyProducts).where(and(eq(companyProducts.id, productId), eq(companyProducts.isActive, true))).limit(1);
   if (!product) return undefined;
   const [company] = await db.select().from(companies).where(and(eq(companies.id, product.companyId), eq(companies.verificationStatus, "verified"))).limit(1);
-  return company ? { product, company } : undefined;
+  if (!company) return undefined;
+  const discounts = await getLiveProductDiscounts(db, company.id, product.id, product.priceKes);
+  return { product: { ...product, imageUrls: productImageUrls(product), salePriceKes: discounts[0]?.salePriceKes ?? product.priceKes }, company, discounts };
+
 }
 
-export async function createCompanyProduct(input: { companyId: number; name: string; category: "apparel" | "footwear" | "home" | "accessory"; description: string; priceKes: number; imageUrl?: string; sizeOptions: string[]; stockQuantity: number }) {
+export async function getCompanyProduct(companyId: number, productId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [product] = await db.select().from(companyProducts).where(and(eq(companyProducts.id, productId), eq(companyProducts.companyId, companyId))).limit(1);
+  return product;
+}
+
+export async function createCompanyProduct(input: { companyId: number; name: string; category: "apparel" | "footwear" | "home" | "accessory"; description: string; priceKes: number; imageUrl?: string; imageUrls: string[]; sizeOptions: string[]; stockQuantity: number }) {
   const db = await getDb();
   if (!db) return { id: 0, persisted: false };
-  const result = await db.insert(companyProducts).values({ ...input, imageUrl: input.imageUrl ?? null, sizeOptions: JSON.stringify(input.sizeOptions) });
+  const imageUrls = Array.from(new Set([input.imageUrl, ...input.imageUrls].filter((url): url is string => Boolean(url)))).slice(0, 8);
+  const result = await db.insert(companyProducts).values({ ...input, imageUrl: imageUrls[0] ?? null, imageUrls: JSON.stringify(imageUrls), sizeOptions: JSON.stringify(input.sizeOptions) });
   return { id: Number(result[0]?.insertId ?? 0), persisted: true };
 }
 

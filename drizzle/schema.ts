@@ -196,6 +196,7 @@ export const discountOffers = mysqlTable(
   {
     id: int("id").autoincrement().primaryKey(),
     companyId: int("companyId"),
+    productId: int("productId"),
     createdByUserId: int("createdByUserId").notNull(),
     code: varchar("code", { length: 48 }).notNull().unique(),
     title: varchar("title", { length: 140 }).notNull(),
@@ -210,7 +211,7 @@ export const discountOffers = mysqlTable(
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [index("discount_offers_company_idx").on(table.companyId), index("discount_offers_status_idx").on(table.status)],
+  (table) => [index("discount_offers_company_idx").on(table.companyId), index("discount_offers_product_idx").on(table.productId), index("discount_offers_status_idx").on(table.status)],
 );
 
 export const companyProducts = mysqlTable(
@@ -223,6 +224,7 @@ export const companyProducts = mysqlTable(
     description: text("description").notNull(),
     priceKes: int("priceKes").notNull(),
     imageUrl: text("imageUrl"),
+    imageUrls: text("imageUrls"),
     sizeOptions: text("sizeOptions"),
     stockQuantity: int("stockQuantity").default(0).notNull(),
     isActive: boolean("isActive").default(true).notNull(),

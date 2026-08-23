@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aiAssistInputSchema, assertVerifiedReviewEligibility, calculateCommissionBreakdown, calculateDeliveryEstimate, productQuoteInputSchema, verifiedReviewInputSchema } from "./sura-commerce";
+import { aiAssistInputSchema, assertVerifiedReviewEligibility, calculateCommissionBreakdown, calculateDeliveryEstimate, companyProductInputSchema, productQuoteInputSchema, verifiedReviewInputSchema } from "./sura-commerce";
 import { createVerifiedReview } from "./db";
 
 function reviewDatabase(order?: { id: number; userId: number; status: string; companyId: number; productId: number }, existingReview?: { id: number }) {
@@ -44,6 +44,17 @@ describe("SURA AI-commerce safeguards", () => {
   it("keeps delivery estimates transparent when origin and destination differ", () => {
     expect(calculateDeliveryEstimate("Nairobi", "Nairobi")).toMatchObject({ distanceBand: "same_city", deliveryKes: 450 });
     expect(calculateDeliveryEstimate("Nairobi", "Mombasa")).toMatchObject({ distanceBand: "national", deliveryKes: 950 });
+  });
+
+  it("accepts a bounded product gallery and rejects oversized image batches", () => {
+    const base = { companyId: 1, name: "Handwoven weekend tote", category: "accessory", description: "A durable handwoven tote with enough room for a full day around town.", priceKes: 2500, stockQuantity: 4 };
+    expect(companyProductInputSchema.safeParse({ ...base, imageUrls: ["https://example.com/hero.jpg", "https://example.com/detail.jpg"], imageDataUrls: [] }).success).toBe(true);
+    expect(companyProductInputSchema.safeParse({ ...base, imageUrls: Array.from({ length: 9 }, (_, index) => `https://example.com/${index}.jpg`) }).success).toBe(false);
+  });
+
+  it("accepts a product-specific discount target", async () => {
+    const { discountOfferInputSchema } = await import("./sura-validation");
+    expect(discountOfferInputSchema.safeParse({ companyId: 1, productId: 9, code: "TOTE10", title: "Tote week", discountType: "percentage", discountValue: 10 }).success).toBe(true);
   });
 
   it("accepts only bounded verified-review content; delivered-order ownership remains server-enforced", () => {

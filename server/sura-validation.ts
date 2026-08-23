@@ -109,6 +109,7 @@ export const discountOfferInputSchema = z.object({
   title: z.string().trim().min(3).max(140),
   description: z.string().trim().max(500).optional(),
   discountType: z.enum(["percentage", "fixed_kes"]),
+  productId: z.number().int().positive().optional(),
   discountValue: z.number().int().positive().max(100000),
   minimumSpendKes: z.number().int().min(0).max(10000000).optional(),
   validUntil: z.date().optional(),
