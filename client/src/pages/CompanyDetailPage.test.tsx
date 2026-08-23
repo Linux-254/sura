@@ -33,7 +33,7 @@ vi.mock("@/lib/trpc", () => ({
   },
 }));
 
-afterEach(() => { cleanup(); state.contacts = "empty"; state.offers = "empty"; updateDeliverySettings.mutate.mockReset(); contactRefetch.mockReset(); offerRefetch.mockReset(); });
+afterEach(() => { cleanup(); state.contacts = "empty"; state.offers = "empty"; updateDeliverySettings.mutate.mockReset(); updateDeliverySettings.isPending = false; contactRefetch.mockReset(); offerRefetch.mockReset(); });
 
 describe("SURA company owner detail states", () => {
   it("keeps contact and offer management actions available alongside honest empty states", () => {
@@ -71,5 +71,12 @@ describe("SURA company owner detail states", () => {
     fireEvent.change(screen.getByDisplayValue("Studio delivery"), { target: { value: "Trusted courier estimate" } });
     fireEvent.click(screen.getByRole("button", { name: /save delivery estimates/i }));
     expect(updateDeliverySettings.mutate).toHaveBeenCalledWith({ companyId: 5, sameCityDeliveryKes: 300, nationalDeliveryKes: 1200, providerLabel: "Trusted courier estimate" });
+  });
+
+  it("keeps the delivery action visible and disabled while owner settings are saving", () => {
+    updateDeliverySettings.isPending = true;
+    render(<CompanyDetailPage />);
+    const savingAction = screen.getByRole("button", { name: /saving/i });
+    expect(savingAction).toHaveProperty("disabled", true);
   });
 });

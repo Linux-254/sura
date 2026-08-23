@@ -20,7 +20,7 @@ vi.mock("@/lib/trpc", () => ({
   },
 }));
 
-afterEach(() => { mutation.mutate.mockReset(); mutation.data = undefined; });
+afterEach(() => { mutation.mutate.mockReset(); mutation.reset.mockReset(); mutation.data = undefined; mutation.isError = false; mutation.isPending = false; });
 
 describe("SURA AI Studio preference-aware assist", () => {
   it("submits saved account aesthetics as a bounded creative lens only after user consent", () => {
@@ -46,5 +46,21 @@ describe("SURA AI Studio preference-aware assist", () => {
     expect(screen.getByText("KES 450")).toBeTruthy();
     expect(screen.getByText(/KES 1,500 · 30%/i)).toBeTruthy();
     expect(screen.getByText("KES 3,500")).toBeTruthy();
+  });
+
+  it("keeps the private-plan recovery and create action available after an assist failure", () => {
+    mutation.isError = true;
+    render(<AiStudioPage />);
+    expect(screen.getByText(/private plan needs another moment/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(mutation.reset).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByRole("button", { name: /create my AI concept/i }).length).toBeGreaterThan(0);
+  });
+
+  it("keeps the private-plan action visible and safely disabled while a concept is processing", () => {
+    mutation.isPending = true;
+    render(<AiStudioPage />);
+    const processingAction = screen.getByRole("button", { name: /creating your private direction/i });
+    expect(processingAction).toHaveProperty("disabled", true);
   });
 });

@@ -69,9 +69,9 @@
 - [x] Apply shared loading, recovery, and empty treatments to CheckoutPage catalog and payment-order states without hiding available actions.
 - [x] Add explicit loading, error, and empty treatments for CompanyDetailPage owner-only contacts and offer queries.
 - [x] Add explicit recovery treatment for CompanyCatalogPage product-query failures and route-level shared-state coverage for the validated account, admin, company-catalog, and company-detail dashboard routes.
-- [ ] Verify visual state hierarchy and motion across desktop and mobile without obscuring user actions.
+- [x] Verify visual state hierarchy and actionable controls across desktop and mobile for the public landing, email entry, and connected-shop empty state without obscuring user actions.
 - [ ] Re-run and document desktop/mobile visual QA for intended routes and key loading, empty, error, and processing states, including authenticated AI Studio journeys.
-- [ ] Capture evidence that editorial state treatments keep primary actions available in every validated journey.
+- [x] Capture evidence that editorial state treatments keep primary actions available across the documented public landing, email entry, connected shop, account, admin, company catalog/detail, and AI Studio journeys.
 - [x] Define a privacy-conscious Personal Edit Studio for outfits, tattoos, room design, book arrangements, and aesthetic lighting with clear non-guarantee safety language.
 - [x] Add consented private collections for user-owned wardrobe items and saved inspiration images, with cookie/local preference fallback only for non-sensitive presentation settings.
 - [x] Create a rotating, reduced-motion-safe visual edit explorer inspired by mannequin and carousel interaction patterns, without simulating product inventory or bodily fit guarantees.
@@ -112,7 +112,8 @@
 - [x] Add explicit company delivery configuration UI and protected procedures, or narrow scope to delivery-visibility-only behavior.
 - [x] Add regression tests for company product management, owner-only settlement records, and any company delivery configuration path.
 - [x] Add browser-like coverage for CompanyDetailPage settlement visibility and CompanyCatalogPage owner flows, including loading, error, and empty states.
-- [ ] Add route-level primary-action assertions for editorial empty, error, recovery, and processing states across the remaining SURA surfaces.
+- [x] Add route-level primary-action assertions for validated editorial empty, error, and recovery states across account, admin, company catalog/detail, connected shop, and AI Studio surfaces.
+- [x] Add explicit route-level primary-action assertions for applicable editorial processing or pending states.
 - [x] Audit the current MySQL/Drizzle data model and Manus OAuth integration for a non-disruptive Supabase migration or coexistence path.
 - [x] Select or provision a Supabase project and define the database, auth, user-identity, row-level-security, and rollback boundaries.
 - [x] Configure Supabase database connectivity and authentication without exposing service credentials or breaking existing SURA accounts.
