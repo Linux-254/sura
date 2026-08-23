@@ -19,6 +19,11 @@ export async function getDb() {
   return _db;
 }
 
+/** Test-only seam for exercising concrete database helpers through protected router procedures. */
+export function setDbForTest(database: ReturnType<typeof drizzle> | null) {
+  _db = database;
+}
+
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
     throw new Error("User openId is required for upsert");

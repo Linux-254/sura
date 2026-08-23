@@ -59,7 +59,7 @@
 - [x] Add server regression coverage for second-review rejection, non-delivered orders, and wrong-user review attempts.
 - [x] Guard missing commerce orders before review lookup and exercise the concrete review-creation helper or mutation path for all eligibility rejections.
 - [x] Show persisted verified-review status in private orders and replace the review form after submission.
-- [ ] Add end-to-end tests for delivered-only review eligibility, ownership enforcement, and duplicate-submission prevention.
+- [x] Add route-level review-journey integration coverage for delivered-only eligibility, ownership enforcement, and duplicate-submission prevention, alongside the existing user-interface persisted-status journey tests.
 - [x] Add a private-orders submission-journey test that transitions a delivered order from eligible form to persisted review status.
 - [x] Add review-journey regression coverage that surfaces duplicate rejection and blocks wrong-user or non-delivered attempts through the creation path.
 - [x] Add security, permission, commission, delivery, and review validation tests for the AI commerce flows.
