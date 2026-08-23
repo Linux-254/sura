@@ -146,3 +146,4 @@
 - [ ] Resume the user-approved live Supabase inbox-link redirect check after the provider email rate limit clears; do not request or retain recovery tokens.
 - [x] Replace raw `/join` Supabase rate-limit and unverified-email mutation errors with actionable, privacy-preserving recovery guidance and regression coverage.
 - [x] Make `/join` rate-limit guidance mode-specific so account creation explains pending confirmation email delivery and a safe retry path rather than directing unverified users to sign in.
+- [x] Prepare and review a privacy-safe administrator dashboard preview while Supabase email verification is rate-limited.

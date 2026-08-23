@@ -16,6 +16,7 @@ import { CommerceOrdersPage, ShopPage } from "@/pages/CommercePages";
 import CompanyCatalogPage from "@/pages/CompanyCatalogPage";
 import AestheticPreferencesPage from "@/pages/AestheticPreferencesPage";
 import AdminCommissionPage from "@/pages/AdminCommissionPage";
+import AdminDashboardPreview from "@/pages/AdminDashboardPreview";
 import PersonalEditStudio from "@/pages/PersonalEditStudio";
 import NotFound from "@/pages/NotFound";
 import SharedBuild from "@/pages/SharedBuild";
@@ -49,6 +50,7 @@ function Router() {
       <Route path="/company/:id" component={CompanyDetailPage} />
       <Route path="/checkout" component={CheckoutPage} />
       <Route path="/admin" component={AdminPage} />
+      <Route path="/admin-preview" component={AdminDashboardPreview} />
       <Route path="/admin/commissions" component={AdminCommissionPage} />
       <Route path="/admin/engagement" component={AdminEngagementPage} />
       <Route path="/share/:token" component={SharedBuild} />
