@@ -253,7 +253,7 @@ export const aiImageConsents = mysqlTable(
   {
     id: int("id").autoincrement().primaryKey(),
     userId: int("userId").notNull(),
-    purpose: mysqlEnum("purpose", ["home_refresh", "personal_style", "footwear_fit", "inspiration"]).notNull(),
+    purpose: mysqlEnum("purpose", ["home_refresh", "personal_style", "footwear_fit", "inspiration", "wardrobe_edit", "home_showroom", "product_edit", "vehicle_garage", "detailing_bay", "tattoo_concept", "pet_accessory"]).notNull(),
     acceptedAt: timestamp("acceptedAt").defaultNow().notNull(),
     revokedAt: timestamp("revokedAt"),
   },
@@ -266,7 +266,7 @@ export const aiAssistRequests = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     userId: int("userId").notNull(),
     consentId: int("consentId").notNull(),
-    kind: mysqlEnum("kind", ["home_refresh", "personal_style", "footwear_fit", "inspiration"]).notNull(),
+    kind: mysqlEnum("kind", ["home_refresh", "personal_style", "footwear_fit", "inspiration", "wardrobe_edit", "home_showroom", "product_edit", "vehicle_garage", "detailing_bay", "tattoo_concept", "pet_accessory"]).notNull(),
     inputImageKey: varchar("inputImageKey", { length: 500 }),
     inputImageUrl: text("inputImageUrl"),
     brief: text("brief").notNull(),

@@ -1,0 +1,2 @@
+ALTER TABLE `ai_assist_requests` MODIFY COLUMN `kind` enum('home_refresh','personal_style','footwear_fit','inspiration','wardrobe_edit','home_showroom','product_edit','vehicle_garage','detailing_bay','tattoo_concept','pet_accessory') NOT NULL;--> statement-breakpoint
+ALTER TABLE `ai_image_consents` MODIFY COLUMN `purpose` enum('home_refresh','personal_style','footwear_fit','inspiration','wardrobe_edit','home_showroom','product_edit','vehicle_garage','detailing_bay','tattoo_concept','pet_accessory') NOT NULL;

@@ -2,7 +2,7 @@ import { and, count, desc, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { aiAssistRequests, aiImageConsents, authVisualSets, buildBoardSelections, buildShareItems, buildShares, commerceOrders, companies, companyContacts, companyMembers, companyProducts, deliveryQuotes, discountOffers, inquiries, InsertUser, legalConsents, paymentOrders, personalEditCollections, personalEditItems, platformAnnouncements, platformContacts, postLikes, postReposts, savedVendors, socialLinks, userFollows, companyFollows, companyPosts, userMemberships, userProfiles, users, verifiedReviews, webNotifications } from "../drizzle/schema";
 import { ENV } from './_core/env';
-import { assertVerifiedReviewEligibility } from "./sura-commerce";
+import { assertVerifiedReviewEligibility, type AiAssistKind } from "./sura-commerce";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -672,14 +672,14 @@ export async function createCompanyProduct(input: { companyId: number; name: str
   return { id: Number(result[0]?.insertId ?? 0), persisted: true };
 }
 
-export async function recordAiImageConsent(userId: number, purpose: "home_refresh" | "personal_style" | "footwear_fit" | "inspiration") {
+export async function recordAiImageConsent(userId: number, purpose: AiAssistKind) {
   const db = await getDb();
   if (!db) return { id: 0, persisted: false };
   const result = await db.insert(aiImageConsents).values({ userId, purpose });
   return { id: Number(result[0]?.insertId ?? 0), persisted: true };
 }
 
-export async function createAiAssistRequest(input: { userId: number; consentId: number; kind: "home_refresh" | "personal_style" | "footwear_fit" | "inspiration"; inputImageKey?: string; inputImageUrl?: string; brief: string; city: string; budgetKes: number; sizeProfile?: string }) {
+export async function createAiAssistRequest(input: { userId: number; consentId: number; kind: AiAssistKind; inputImageKey?: string; inputImageUrl?: string; brief: string; city: string; budgetKes: number; sizeProfile?: string }) {
   const db = await getDb();
   if (!db) return { id: 0, persisted: false };
   const result = await db.insert(aiAssistRequests).values({ ...input, inputImageKey: input.inputImageKey ?? null, inputImageUrl: input.inputImageUrl ?? null, sizeProfile: input.sizeProfile ?? null, status: "processing" });

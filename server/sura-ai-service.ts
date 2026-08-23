@@ -3,7 +3,7 @@ import { invokeLLM } from "./_core/llm";
 import { storageGetSignedUrl, storagePut } from "./storage";
 import { decodeImageDataUrl } from "./sura-commerce";
 
-export type AiAssistKind = "home_refresh" | "personal_style" | "footwear_fit" | "inspiration";
+export type AiAssistKind = "home_refresh" | "personal_style" | "footwear_fit" | "inspiration" | "wardrobe_edit" | "home_showroom" | "product_edit" | "vehicle_garage" | "detailing_bay" | "tattoo_concept" | "pet_accessory";
 
 export type AiAssistPlan = {
   title: string;

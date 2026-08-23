@@ -169,7 +169,7 @@ export const appRouter = router({
         const request = await createAiAssistRequest({ userId: ctx.user.id, consentId: consent.id, kind: input.kind, inputImageKey: imageKey, inputImageUrl: imageUrl, brief: input.brief, city: input.city, budgetKes: input.budgetKes, sizeProfile: input.sizeProfile });
         if (!request.persisted || !request.id) throw new Error("Unable to start your private assistance request");
         const result = await createAiAssistPlan({ kind: input.kind, brief: input.brief, city: input.city, budgetKes: input.budgetKes, sizeProfile: input.sizeProfile, aestheticMix: input.aestheticMix, imageKey });
-        const category = input.kind === "home_refresh" ? "home" : input.kind === "footwear_fit" ? "footwear" : input.kind === "personal_style" ? "apparel" : undefined;
+        const category = input.kind === "home_refresh" || input.kind === "home_showroom" ? "home" : input.kind === "footwear_fit" ? "footwear" : input.kind === "personal_style" || input.kind === "wardrobe_edit" ? "apparel" : input.kind === "product_edit" || input.kind === "vehicle_garage" || input.kind === "detailing_bay" || input.kind === "tattoo_concept" || input.kind === "pet_accessory" ? "accessory" : undefined;
         const connectedProducts = category ? (await getPublicProducts({ city: input.city, category })).slice(0, 3).map(({ company, ...product }) => {
           const delivery = calculateDeliveryEstimate(company.city, input.city);
           const breakdown = calculateCommissionBreakdown({ unitPriceKes: product.priceKes, quantity: 1, commissionRatePct: company.commissionRatePct, deliveryKes: delivery.deliveryKes });

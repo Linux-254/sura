@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AiStudioPage from "./AiStudioPage";
 
@@ -20,7 +20,7 @@ vi.mock("@/lib/trpc", () => ({
   },
 }));
 
-afterEach(() => { mutation.mutate.mockReset(); mutation.data = undefined; });
+afterEach(() => { cleanup(); mutation.mutate.mockReset(); mutation.data = undefined; });
 
 describe("SURA AI Studio preference-aware assist", () => {
   it("submits saved account aesthetics as a bounded creative lens only after user consent", () => {
@@ -46,5 +46,19 @@ describe("SURA AI Studio preference-aware assist", () => {
     expect(screen.getByText("KES 450")).toBeTruthy();
     expect(screen.getByText(/KES 1,500 · 30%/i)).toBeTruthy();
     expect(screen.getByText("KES 3,500")).toBeTruthy();
+  });
+});
+
+
+describe("SURA Showroom", () => {
+  it("offers category lanes, visual views, fit controls, and brief handoff", () => {
+    render(<AiStudioPage />);
+    expect(screen.getAllByRole("heading", { name: /Build the direction before you buy/i }).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: /Revolving wardrobe/i }));
+    expect(screen.getByRole("button", { name: /Next showroom view/i })).toBeTruthy();
+    expect(screen.getByLabelText(/Model height in centimetres/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Next showroom view/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Use this in my private brief/i }));
+    expect((document.querySelector("textarea") as HTMLTextAreaElement).value).toMatch(/Wardrobe showroom/i);
   });
 });

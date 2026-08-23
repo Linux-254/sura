@@ -83,6 +83,14 @@ The first uploaded image becomes the lead image. The remaining images build the 
 
 The admin visual flow is intentionally separate from the user’s personal edits. Sign-in visuals are public brand content; personal edit images remain private and require their own consent and access rules.
 
+## AI Studio Showroom
+
+AI Studio now includes a private SURA Showroom for shaping an aesthetic before asking for a full AI direction. A member can choose a lane for home, wardrobe, footwear, products, vehicles, detailing, tattoos, or pet accessories. Each lane exposes practical parts such as tops, bottoms, shoes, accessories, room anchors, layers, materials, car bodies, wheels, finishes, service types, placement, line, or pet pieces.
+
+The Showroom uses a four-step visual rail—Front, Angle, Side, and Detail—with previous/next controls, direct view buttons, and a range slider. Generated concepts become the first view when available; bundled Sura editorial imagery keeps the stage visible while the first concept is being created or when managed media is unavailable. The current build can be sent back into the private AI brief instead of being lost as a visual experiment.
+
+Wardrobe and footwear lanes include a height slider and a simple Petite, Balanced, or Broad reference. This is a visual proportion aid, not a sizing decision: the member must still confirm actual measurements with the maker. Vehicle and detailing lanes explain that final fit, parts, labour, service scope, and inspection determine the real quote. A future asset pipeline can replace the four-frame preview with approved multi-angle 3D or spin media without changing the user-facing Showroom contract.
+
 ## Revenue and engagement model
 
 Sura is built to reduce the amount of work required to move from discovery to action. It gives businesses a visual publishing surface and gives people a way to carry the best local work into their own point of view, creating more organic reach without requiring a separate content system.

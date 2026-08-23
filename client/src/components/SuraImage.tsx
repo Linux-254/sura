@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { ImgHTMLAttributes } from "react";
 
 const DEFAULT_FALLBACK = "/assets/sura-auth-interior.jpg";
