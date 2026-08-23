@@ -67,8 +67,8 @@
 - [x] Create reusable SURA editorial loading, skeleton, empty, processing, and error-state components.
 - [ ] Apply refined state treatments to AI studio, commerce, account/company/admin dashboards, and public discovery routes.
 - [x] Apply shared loading, recovery, and empty treatments to CheckoutPage catalog and payment-order states without hiding available actions.
-- [ ] Add explicit loading, error, and empty treatments for CompanyDetailPage owner-only contacts and offer queries.
-- [ ] Add explicit recovery treatment for CompanyCatalogPage product-query failures and validate every company dashboard subroute with shared state components.
+- [x] Add explicit loading, error, and empty treatments for CompanyDetailPage owner-only contacts and offer queries.
+- [x] Add explicit recovery treatment for CompanyCatalogPage product-query failures and route-level shared-state coverage for the validated account, admin, company-catalog, and company-detail dashboard routes.
 - [ ] Verify visual state hierarchy and motion across desktop and mobile without obscuring user actions.
 - [ ] Re-run and document desktop/mobile visual QA for intended routes and key loading, empty, error, and processing states, including authenticated AI Studio journeys.
 - [ ] Capture evidence that editorial state treatments keep primary actions available in every validated journey.
