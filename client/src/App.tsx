@@ -18,6 +18,7 @@ import CompanyCatalogPage from "@/pages/CompanyCatalogPage";
 import AestheticPreferencesPage from "@/pages/AestheticPreferencesPage";
 import AdminCommissionPage from "@/pages/AdminCommissionPage";
 import AdminDashboardPreview from "@/pages/AdminDashboardPreview";
+import DemoAccessPage from "@/pages/DemoAccessPage";
 import PersonalEditStudio from "@/pages/PersonalEditStudio";
 import NotFound from "@/pages/NotFound";
 import SharedBuild from "@/pages/SharedBuild";
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/brief" component={BuildBrief} />
       <Route path="/discover" component={Discover} />
       <Route path="/join" component={AuthPage} />
+      <Route path="/demo" component={DemoAccessPage} />
       <Route path="/terms" component={LegalPage} />
       <Route path="/privacy" component={LegalPage} />
       <Route path="/people/:slug"><PublicProfilePage kind="person" /></Route>

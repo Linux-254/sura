@@ -33,10 +33,12 @@ export const appRouter = router({
       } as const;
     }),
     emailSignUp: publicProcedure.input(z.object({ email: z.string().email().max(320), password: z.string().min(8).max(128), redirectTo: z.string().url().max(500).optional() })).mutation(async ({ input }) => {
-      const existing = await getUserByEmail(input.email);
-      if (existing) throw new Error("An existing SURA account uses this email. Sign in to that account before linking email access.");
-      await registerSupabaseEmailAccount(input.email.trim().toLowerCase(), input.password, resolveSupabaseEmailRedirect(input.redirectTo));
-      return { status: "verification_required" as const };
+      const email = input.email.trim().toLowerCase();
+      const existing = await getUserByEmail(email);
+      await registerSupabaseEmailAccount(email, input.password, resolveSupabaseEmailRedirect(input.redirectTo));
+      return existing
+        ? { status: "verification_and_link_required" as const }
+        : { status: "verification_required" as const };
     }),
     emailSignIn: publicProcedure.input(z.object({ email: z.string().email().max(320), password: z.string().min(8).max(128) })).mutation(async ({ ctx, input }) => {
       const email = input.email.trim().toLowerCase();

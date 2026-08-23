@@ -49,6 +49,13 @@ describe("SURA email authentication page", () => {
     expect(screen.getByText(/Check your inbox to verify/i)).toBeTruthy();
   });
 
+  it("offers a transparent read-only demo without a demo credential or session", () => {
+    render(<AuthPage />);
+    const demoLink = screen.getByRole("link", { name: /Explore the read-only demo/i });
+    expect(demoLink.getAttribute("href")).toBe("/demo");
+    expect(screen.getByText(/No email, password, profile, saved item, payment, or private record is used/i)).toBeTruthy();
+  });
+
   it("offers password recovery without asking for a current password", async () => {
     recovery.mutateAsync.mockResolvedValue({ status: "recovery_sent" });
     render(<AuthPage />);
