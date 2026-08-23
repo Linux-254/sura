@@ -30,4 +30,16 @@ describe("SURA county finder", () => {
     fireEvent.click(screen.getByRole("button", { name: /use my location/i }));
     expect(requestLocation).toHaveBeenCalledTimes(1);
   });
+
+  it("anchors the compact county finder to the mobile viewport with a bounded, scrollable panel", () => {
+    render(<LocationPicker compact />);
+    fireEvent.click(screen.getByRole("button", { name: /find your county/i }));
+    const panel = screen.getByTestId("county-finder-panel");
+    expect(panel.className).toContain("max-xl:fixed");
+    expect(panel.className).toContain("max-xl:inset-x-2");
+    expect(panel.className).toContain("max-xl:max-h-");
+    expect(panel.className).toContain("max-xl:overflow-y-auto");
+    expect(screen.getByRole("button", { name: /close county selector/i })).toBeTruthy();
+    expect(screen.getByRole("textbox", { name: /search kenyan counties/i })).toBeTruthy();
+  });
 });
