@@ -10,6 +10,9 @@ import { buildBoardSelectionInputSchema, inquiryInputSchema, saveVendorInputSche
 import { accountProfileInputSchema, aestheticPreferencesInputSchema, announcementInputSchema, assertCompanyPaymentOwnership, companyContactsInputSchema, companyCreateInputSchema, contactInputSchema, discountOfferInputSchema, legalConsentInputSchema, paymentCatalog, paymentOrderInputSchema, selectableAesthetics } from "./sura-validation";
 import { aiAssistInputSchema, calculateCommissionBreakdown, calculateDeliveryEstimate, companyProductInputSchema, productQuoteInputSchema, verifiedReviewInputSchema } from "./sura-commerce";
 import { createAiAssistPlan, storeConsentImage } from "./sura-ai-service";
+import { assertPersonalEditCollectionOwnership, createPersonalEditCollection, createPersonalEditItem, getPersonalEditCollectionsForUser, getPersonalEditItemsForUser } from "./db";
+import { personalEditCollectionInputSchema, personalEditItemInputSchema } from "./sura-validation";
+import { storePrivatePersonalEditImage } from "./personal-edit";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -54,6 +57,26 @@ export const appRouter = router({
     selections: protectedProcedure.query(({ ctx }) => getBoardSelections(ctx.user.id)),
     saveVendor: protectedProcedure.input(saveVendorInputSchema).mutation(({ ctx, input }) => toggleSavedVendor(ctx.user.id, input.vendorId, input.shouldSave)),
     saveBuild: protectedProcedure.input(buildBoardSelectionInputSchema).mutation(({ ctx, input }) => toggleBuildBoardSelection(ctx.user.id, input.buildId, input.shouldSave)),
+  }),
+  personalEdits: router({
+    collections: protectedProcedure.query(({ ctx }) => getPersonalEditCollectionsForUser(ctx.user.id)),
+    items: protectedProcedure.input(z.object({ collectionId: z.number().int().positive().optional() }).optional()).query(({ ctx, input }) => getPersonalEditItemsForUser({ userId: ctx.user.id, collectionId: input?.collectionId })),
+    createCollection: protectedProcedure.input(personalEditCollectionInputSchema).mutation(({ ctx, input }) => createPersonalEditCollection({ userId: ctx.user.id, ...input })),
+    createItem: protectedProcedure.input(personalEditItemInputSchema).mutation(async ({ ctx, input }) => {
+      await assertPersonalEditCollectionOwnership(ctx.user.id, input.collectionId);
+      const storedImage = input.imageDataUrl ? await storePrivatePersonalEditImage(ctx.user.id, input.imageDataUrl) : undefined;
+      return createPersonalEditItem({
+        userId: ctx.user.id,
+        collectionId: input.collectionId,
+        itemType: input.itemType,
+        title: input.title,
+        note: input.note,
+        tags: JSON.stringify(input.tags),
+        imageKey: storedImage?.key,
+        imageUrl: storedImage?.url,
+        analysisConsentAt: input.analysisConsent ? new Date() : undefined,
+      });
+    }),
   }),
   shares: router({
     create: protectedProcedure.input(shareInputSchema).mutation(async ({ ctx, input }) => {

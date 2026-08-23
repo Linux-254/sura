@@ -1,6 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { aiAssistRequests, aiImageConsents, buildBoardSelections, buildShareItems, buildShares, commerceOrders, companies, companyContacts, companyMembers, companyProducts, deliveryQuotes, discountOffers, inquiries, InsertUser, legalConsents, paymentOrders, platformAnnouncements, platformContacts, savedVendors, socialLinks, userMemberships, userProfiles, users, verifiedReviews, webNotifications } from "../drizzle/schema";
+import { aiAssistRequests, aiImageConsents, buildBoardSelections, buildShareItems, buildShares, commerceOrders, companies, companyContacts, companyMembers, companyProducts, deliveryQuotes, discountOffers, inquiries, InsertUser, legalConsents, paymentOrders, personalEditCollections, personalEditItems, platformAnnouncements, platformContacts, savedVendors, socialLinks, userMemberships, userProfiles, users, verifiedReviews, webNotifications } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { assertVerifiedReviewEligibility } from "./sura-commerce";
 
@@ -487,5 +487,47 @@ export async function createVerifiedReview(input: { orderId: number; userId: num
   const [existingReview] = await db.select().from(verifiedReviews).where(and(eq(verifiedReviews.orderId, order.id), eq(verifiedReviews.userId, input.userId))).limit(1);
   assertVerifiedReviewEligibility({ order, reviewUserId: input.userId, existingReview });
   const result = await db.insert(verifiedReviews).values({ orderId: order.id, userId: input.userId, companyId: order.companyId, productId: order.productId, rating: input.rating, comment: input.comment ?? null, status: "pending" });
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
+}
+
+export async function getPersonalEditCollectionsForUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(personalEditCollections).where(eq(personalEditCollections.userId, userId)).limit(100);
+}
+
+export async function getPersonalEditItemsForUser(input: { userId: number; collectionId?: number }) {
+  const db = await getDb();
+  if (!db) return [];
+  const ownership = input.collectionId === undefined
+    ? eq(personalEditItems.userId, input.userId)
+    : and(eq(personalEditItems.userId, input.userId), eq(personalEditItems.collectionId, input.collectionId));
+  return db.select().from(personalEditItems).where(ownership).limit(200);
+}
+
+export async function assertPersonalEditCollectionOwnership(userId: number, collectionId: number, databaseOverride?: any) {
+  const db = databaseOverride ?? await getDb();
+  if (!db) throw new Error("The private studio is unavailable right now");
+  const [collection] = await db.select().from(personalEditCollections).where(and(eq(personalEditCollections.id, collectionId), eq(personalEditCollections.userId, userId))).limit(1);
+  if (!collection) throw new Error("This private collection is not available to the current account");
+  return collection;
+}
+
+export async function createPersonalEditCollection(input: { userId: number; title: string; editType: "wardrobe" | "tattoo" | "room" | "books" | "lighting" | "inspiration" }) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  const existing = await db.select({ id: personalEditCollections.id }).from(personalEditCollections).where(eq(personalEditCollections.userId, input.userId)).limit(25);
+  if (existing.length >= 24) throw new Error("Keep up to 24 private edit collections so your studio remains focused");
+  const result = await db.insert(personalEditCollections).values({ ...input, isPrivate: true });
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
+}
+
+export async function createPersonalEditItem(input: { userId: number; collectionId: number; itemType: "wardrobe" | "tattoo" | "room" | "books" | "lighting" | "inspiration"; title: string; note?: string; tags?: string; imageKey?: string; imageUrl?: string; analysisConsentAt?: Date }) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  await assertPersonalEditCollectionOwnership(input.userId, input.collectionId);
+  const existing = await db.select({ id: personalEditItems.id }).from(personalEditItems).where(and(eq(personalEditItems.collectionId, input.collectionId), eq(personalEditItems.userId, input.userId))).limit(101);
+  if (existing.length >= 100) throw new Error("Keep up to 100 private references in one collection");
+  const result = await db.insert(personalEditItems).values({ ...input, note: input.note ?? null, tags: input.tags ?? null, imageKey: input.imageKey ?? null, imageUrl: input.imageUrl ?? null, analysisConsentAt: input.analysisConsentAt ?? null });
   return { id: Number(result[0]?.insertId ?? 0), persisted: true };
 }

@@ -321,6 +321,39 @@ export const verifiedReviews = mysqlTable(
   (table) => [index("verified_reviews_company_idx").on(table.companyId), index("verified_reviews_product_idx").on(table.productId), index("verified_reviews_status_idx").on(table.status)],
 );
 
+export const personalEditCollections = mysqlTable(
+  "personal_edit_collections",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    title: varchar("title", { length: 120 }).notNull(),
+    editType: mysqlEnum("editType", ["wardrobe", "tattoo", "room", "books", "lighting", "inspiration"]).notNull(),
+    isPrivate: boolean("isPrivate").default(true).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("personal_edit_collections_user_idx").on(table.userId), index("personal_edit_collections_type_idx").on(table.editType)],
+);
+
+export const personalEditItems = mysqlTable(
+  "personal_edit_items",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    collectionId: int("collectionId").notNull(),
+    userId: int("userId").notNull(),
+    itemType: mysqlEnum("itemType", ["wardrobe", "tattoo", "room", "books", "lighting", "inspiration"]).notNull(),
+    title: varchar("title", { length: 160 }).notNull(),
+    note: text("note"),
+    tags: text("tags"),
+    imageKey: varchar("imageKey", { length: 500 }),
+    imageUrl: text("imageUrl"),
+    analysisConsentAt: timestamp("analysisConsentAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("personal_edit_items_user_idx").on(table.userId), index("personal_edit_items_collection_idx").on(table.collectionId), index("personal_edit_items_type_idx").on(table.itemType)],
+);
+
 export const vendors = mysqlTable(
   "vendors",
   {

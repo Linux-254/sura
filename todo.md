@@ -72,6 +72,13 @@
 - [ ] Verify visual state hierarchy and motion across desktop and mobile without obscuring user actions.
 - [ ] Re-run and document desktop/mobile visual QA for intended routes and key loading, empty, error, and processing states, including authenticated AI Studio journeys.
 - [ ] Capture evidence that editorial state treatments keep primary actions available in every validated journey.
+- [x] Define a privacy-conscious Personal Edit Studio for outfits, tattoos, room design, book arrangements, and aesthetic lighting with clear non-guarantee safety language.
+- [x] Add consented private collections for user-owned wardrobe items and saved inspiration images, with cookie/local preference fallback only for non-sensitive presentation settings.
+- [x] Create a rotating, reduced-motion-safe visual edit explorer inspired by mannequin and carousel interaction patterns, without simulating product inventory or bodily fit guarantees.
+- [x] Add a daily “vibe of the day” prompt that uses the member’s saved aesthetic mix and private collections as optional creative inputs.
+- [x] Add image-led tattoo concept and placement exploration with explicit safety, permanence, artist-consultation, and consent boundaries.
+- [x] Add room, bookshelf, and aesthetic-light arrangement prompts that remain assistive and do not claim structural, electrical, or safety approval.
+- [x] Test private collection ownership, consent requirements, rotation controls, reduced-motion behavior, and mobile accessibility.
 - [x] Research and document varied SURA aesthetic directions, including popular and understated colour combinations appropriate to Kenyan local commerce.
 - [x] Add a signed-in onboarding and settings flow that lets each member select and persist up to five core aesthetics.
 - [x] Personalise SURA artistic expressions, recommendations, and aesthetic presentation from each member’s selected preference mix without compromising contrast or dignity-first language.
@@ -91,3 +98,8 @@
 - [x] Add tests for payment-order ownership and protected dashboard/public-profile behavior.
 - [x] Add a protected company-detail route that requires membership before exposing company management data.
 - [x] Add explicit client access-resolution rules for admin and company management destinations.
+- [x] Add Personal Edit Studio controls to select among multiple private collections of the same edit type.
+- [x] Add category-specific assistive prompts for room, bookshelf, and lighting compositions without safety guarantees.
+- [x] Add explicit mobile browser-style coverage for Personal Edit Studio controls and action visibility.
+- [x] Persist only non-sensitive Personal Edit Studio presentation preferences, such as active edit category, in local storage.
+- [x] Add regression coverage proving Personal Edit Studio restores non-sensitive presentation preferences without placing private collection content in local storage.

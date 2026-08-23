@@ -50,6 +50,13 @@
       "when": 1787440169495,
       "tag": "0006_striped_hellcat",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1787443633445,
+      "tag": "0007_optimal_scalphunter",
+      "breakpoints": true
     }
   ]
 }

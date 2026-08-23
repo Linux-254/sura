@@ -4,6 +4,7 @@ export const socialPlatforms = ["instagram", "tiktok", "linkedin", "youtube", "x
 export const paymentOrderTypes = ["company_membership", "vendor_feature", "build_consultation"] as const;
 export const contactTypes = ["email", "phone", "whatsapp", "address"] as const;
 export const selectableAesthetics = ["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier", "Ink & Ivory", "Orchid After Dark", "Tangerine Social", "Moss & Marigold", "Cobalt Ritual", "Thermal Bloom"] as const;
+export const personalEditTypes = ["wardrobe", "tattoo", "room", "books", "lighting", "inspiration"] as const;
 
 const platformHosts: Record<Exclude<(typeof socialPlatforms)[number], "website">, string[]> = {
   instagram: ["instagram.com"],
@@ -48,6 +49,26 @@ export const aestheticPreferencesInputSchema = z.object({
     message: "Each aesthetic can only appear once",
     path: ["aesthetics"],
   }),
+});
+
+export const personalEditCollectionInputSchema = z.object({
+  title: z.string().trim().min(2).max(120),
+  editType: z.enum(personalEditTypes),
+});
+
+const personalEditImageDataUrlSchema = z.string().max(7 * 1024 * 1024, "Choose an image smaller than 5 MB").regex(/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, "Use a JPEG, PNG, or WebP image");
+
+export const personalEditItemInputSchema = z.object({
+  collectionId: z.number().int().positive(),
+  itemType: z.enum(personalEditTypes),
+  title: z.string().trim().min(2).max(160),
+  note: z.string().trim().max(2000).optional(),
+  tags: z.array(z.string().trim().min(1).max(32)).max(12).default([]),
+  imageDataUrl: personalEditImageDataUrlSchema.optional(),
+  analysisConsent: z.boolean().default(false),
+}).refine((input) => !input.analysisConsent || Boolean(input.imageDataUrl), {
+  message: "Image analysis consent requires a private image",
+  path: ["analysisConsent"],
 });
 
 export const companyCreateInputSchema = z.object({

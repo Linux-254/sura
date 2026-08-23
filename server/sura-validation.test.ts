@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aestheticPreferencesInputSchema, assertCompanyPaymentOwnership, filterPublicSocialLinks, isValidPaymentStatusTransition, paymentOrderInputSchema, socialLinkInputSchema } from "./sura-validation";
+import { aestheticPreferencesInputSchema, assertCompanyPaymentOwnership, filterPublicSocialLinks, isValidPaymentStatusTransition, paymentOrderInputSchema, personalEditCollectionInputSchema, personalEditItemInputSchema, socialLinkInputSchema } from "./sura-validation";
 
 describe("SURA security validation", () => {
   it("accepts only secure URLs that match the social platform selected", () => {
@@ -36,5 +36,15 @@ describe("SURA security validation", () => {
     expect(aestheticPreferencesInputSchema.safeParse({ aesthetics: ["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier"] }).success).toBe(false);
     expect(aestheticPreferencesInputSchema.safeParse({ aesthetics: ["Soft Power", "Soft Power"] }).success).toBe(false);
     expect(aestheticPreferencesInputSchema.safeParse({ aesthetics: ["Invented Aesthetic"] }).success).toBe(false);
+  });
+
+  it("keeps private Personal Edit Studio collections and image references bounded", () => {
+    expect(personalEditCollectionInputSchema.safeParse({ title: "Sunday wardrobe edit", editType: "wardrobe" }).success).toBe(true);
+    expect(personalEditCollectionInputSchema.safeParse({ title: "x", editType: "wardrobe" }).success).toBe(false);
+    expect(personalEditCollectionInputSchema.safeParse({ title: "Unsafe category", editType: "medical" }).success).toBe(false);
+    expect(personalEditItemInputSchema.safeParse({ collectionId: 2, itemType: "tattoo", title: "Abstract linework", tags: ["soft-power", "placement-study"], imageDataUrl: "data:image/png;base64,aGVsbG8=", analysisConsent: true }).success).toBe(true);
+    expect(personalEditItemInputSchema.safeParse({ collectionId: 2, itemType: "tattoo", title: "Abstract linework", tags: Array.from({ length: 13 }, (_, index) => `tag-${index}`) }).success).toBe(false);
+    expect(personalEditItemInputSchema.safeParse({ collectionId: 2, itemType: "room", title: "Lamp corner", imageDataUrl: "javascript:alert(1)" }).success).toBe(false);
+    expect(personalEditItemInputSchema.safeParse({ collectionId: 2, itemType: "room", title: "Lamp corner", analysisConsent: true }).success).toBe(false);
   });
 });

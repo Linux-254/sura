@@ -12,6 +12,7 @@ type DashboardLayoutProps = { title: string; eyebrow: string; description: strin
 const baseNav = [
   { href: "/account", label: "My profile", icon: Settings },
   { href: "/aesthetics", label: "Expression board", icon: Palette },
+  { href: "/edit-studio", label: "Personal edits", icon: Sparkles },
   { href: "/company", label: "Company studio", icon: Building2 },
   { href: "/checkout", label: "Payments", icon: CreditCard },
   { href: "/board", label: "Build board", icon: Sparkles },
