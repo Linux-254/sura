@@ -106,6 +106,6 @@
 - [x] Add automated membership-tier and notification-feed/UI regression coverage alongside existing contact, discount, and administrator access tests.
 - [x] Extend AI assist results with transparent connected-product price, delivery, and commission lines where applicable.
 - [ ] Verify or complete company-facing product and delivery management plus order-specific seller-settlement visibility with tests.
-- [ ] Create or connect a private GitHub repository for SURA and push the validated project history.
-- [ ] Establish `main` as production, `staging` as pre-production, `dev` as the integration branch, and named feature branches for individual changes.
-- [ ] Verify repository ignore rules, remotes, branch tracking, and branch protections or documented protection steps.
+- [x] Create or connect a private GitHub repository for SURA and push the validated project history.
+- [x] Establish `main` as production, `staging` as pre-production, `dev` as the integration branch, and named feature branches for individual changes.
+- [x] Verify repository ignore rules, remotes, branch tracking, and branch protections or documented protection steps.
