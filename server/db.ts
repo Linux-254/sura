@@ -90,6 +90,21 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email.trim().toLowerCase())).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateUserAuthIdentity(userId: number, openId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.update(users).set({ openId, loginMethod: "supabase_email", lastSignedIn: new Date() }).where(eq(users.id, userId));
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return result[0];
+}
+
 export async function getSavedVendorIds(userId: number) {
   const db = await getDb();
   if (!db) return [];

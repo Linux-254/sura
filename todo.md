@@ -121,3 +121,16 @@
 - [x] Configure a staged Supabase PostgreSQL and Auth foundation without replacing active Manus OAuth sessions until identity mapping is validated.
 - [x] Record the active user-provided Supabase project reference and distinguish it from an agent-created project.
 - [x] Define and apply Supabase row-level-security policies, or explicitly document why they remain deferred for the staged identity-link data.
+- [x] Define the Supabase email sign-up, sign-in, email-verification, password-recovery, and session-refresh contract without using OAuth providers.
+- [x] Implement server-side Supabase JWT verification and a consented existing-account link policy that preserves SURA ownership boundaries.
+- [x] Replace the active sign-in experience with Supabase email authentication, including clear verification, recovery, loading, and error states.
+- [ ] Validate email-auth registration, sign-in, verification, recovery, protected ownership, and account-linking behavior without migrating user data automatically.
+- [ ] Add the SURA production redirect URL to Supabase Auth settings and conduct a live verification and password-recovery test with a user-approved test email.
+- [x] Implement a consented legacy SURA account-linking mutation, protected identity-map update, and ownership-safe regression coverage.
+- [x] Replace remaining OAuth-specific gated-entry copy and behavior with Supabase email-auth language and route-level regression coverage.
+- [x] Ensure private SURA routes require a verified registered Supabase email account, with no pre-registration access path.
+- [x] Replace the footer MVP demonstration-data disclaimer with production-ready SURA footer copy.
+- [x] Add accessible SURA X and Instagram footer links without fabricating verified social handles.
+- [x] Add server regression coverage for consented legacy-account linking, including verification, collision, identity-map, and preserved-ownership cases.
+- [x] Add user-facing account-link-required coverage and a consent-confirmation interface, or explicitly keep linking as a support-assisted server flow.
+- [x] Verify Supabase JWT signatures against the project JWKS and add forged-token rejection coverage before issuing a SURA session.

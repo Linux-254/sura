@@ -311,6 +311,10 @@ class SDKServer {
       throw ForbiddenError("User not found");
     }
 
+    if (user.loginMethod !== "supabase_email") {
+      throw ForbiddenError("Register or link a verified SURA email account before opening private spaces");
+    }
+
     await db.upsertUser({
       openId: user.openId,
       lastSignedIn: signedInAt,

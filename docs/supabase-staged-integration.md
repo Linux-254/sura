@@ -37,6 +37,20 @@ flowchart LR
 
 The initial mapping has one immutable SURA user identifier and one optional Supabase Auth UUID. It must be unique in both directions. No browser token is accepted by protected SURA procedures until the Supabase JWT verification policy, claims mapping, and account-linking UX have been implemented and tested.
 
+## Email Authentication Contract
+
+SURA’s rollout uses Supabase email and password authentication only. No OAuth provider is used for new sign-ins. The browser sends an email and password to a protected SURA server procedure; the server calls Supabase Auth and writes only the SURA session cookie after validating the returned Supabase access token. A Supabase password and access token are never written to local storage, the application database, server logs, or the repository.
+
+| Journey | Supabase action | SURA ownership rule |
+| --- | --- | --- |
+| Register | Create an email/password account and send verification when enabled | No SURA profile or ownership record is created until the email session is verified |
+| Sign in | Exchange email/password for a Supabase session | Match the Supabase UUID to `users.openId`; create a new SURA account only when the email is not already owned by a legacy user |
+| Existing email | Return an account-link requirement rather than creating a duplicate record | A member must authenticate to the original SURA account before an explicit link can be created |
+| Reset password | Ask Supabase Auth to email a recovery link | The recovery URL must be allow-listed in Supabase before release |
+| Sign out | Clear the SURA HttpOnly session cookie | The server never retains the Supabase refresh token |
+
+The server verifies a Supabase access token with the project Auth user endpoint before issuing an SURA application session. Existing user IDs remain authoritative for boards, company membership, orders, reviews, and private collections. Automatic copying of existing accounts or profile data is prohibited.
+
 ## Row-Level Security During Staging
 
 The `sura_identity_links` table has RLS enabled. The `anon` and `authenticated` roles receive no table privileges, while the Supabase `service_role` retains the minimum data privileges needed for server-side migration and reconciliation. This intentionally blocks browser access until the explicit account-linking flow exists. Because policy-only SQL is not represented in the generated Drizzle metadata, the reviewed policy is applied through the idempotent `scripts/apply-supabase-rls.mjs` server script and verified by the Supabase integration test. When SURA begins accepting Supabase sessions, the next migration must add ownership policies tied to the verified linked subject rather than loosening the staged policy.

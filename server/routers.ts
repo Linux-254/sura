@@ -3,6 +3,9 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import { completeAiAssistRequest, createAiAssistRequest, createBuildShareRecord, createCommerceOrder, createCompanyForUser, createCompanyProduct, createDeliveryQuote, createDiscountOffer, createInquiryRecord, createPaymentOrder, createPlatformAnnouncement, createVerifiedReview, failAiAssistRequest, getAccountProfile, getAdminCompanyReviewQueue, getAdminDiscountReviewQueue, getAestheticPreferences, getAiAssistRequestForUser, getBoardSelections, getBuildShareRecord, getCompaniesForUser, getCompanyContacts, getCompanyMembership, getCompanyOwnedByUser, getCompanyProducts, getCommerceOrdersForUser, getDiscountOffersForCompany, getOrCreateFreeMembership, getPaymentOrdersForUser, getProductById, getPublicAccountProfile, getPublicCompanyProfile, getPublicDiscountOffers, getPublicPlatformContacts, getPublicProducts, getSavedVendorIds, getWebNotificationFeed, markWebNotificationRead, recordAiImageConsent, recordLegalConsent, replaceCompanyContacts, replacePlatformContacts, setAestheticPreferences, toggleBuildBoardSelection, toggleSavedVendor, updateCompanyCommissionRate, updateCompanyReviewStatus, updateDiscountOfferReviewStatus, upsertAccountProfile } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { sdk } from "./_core/sdk";
+import { getUserByEmail, getUserByOpenId, updateUserAuthIdentity, upsertUser } from "./db";
+import { recordSupabaseIdentityLink, registerSupabaseEmailAccount, requestSupabasePasswordRecovery, signInWithSupabaseEmail, verifySupabaseAccessToken } from "./supabase-auth";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { demoBuilds, demoVendors, filterDemoVendors, getBuildRecommendation, getVendorBySlug } from "./vibebuild-data";
@@ -27,6 +30,50 @@ export const appRouter = router({
       return {
         success: true,
       } as const;
+    }),
+    emailSignUp: publicProcedure.input(z.object({ email: z.string().email().max(320), password: z.string().min(8).max(128), redirectTo: z.string().url().max(500).optional() })).mutation(async ({ input }) => {
+      const existing = await getUserByEmail(input.email);
+      if (existing) throw new Error("An existing SURA account uses this email. Sign in to that account before linking email access.");
+      await registerSupabaseEmailAccount(input.email.trim().toLowerCase(), input.password, input.redirectTo);
+      return { status: "verification_required" as const };
+    }),
+    emailSignIn: publicProcedure.input(z.object({ email: z.string().email().max(320), password: z.string().min(8).max(128) })).mutation(async ({ ctx, input }) => {
+      const email = input.email.trim().toLowerCase();
+      const session = await signInWithSupabaseEmail(email, input.password);
+      const identity = await verifySupabaseAccessToken(session.access_token);
+      if (!identity.email_confirmed_at) throw new Error("Verify your email before signing in to SURA.");
+      let user = await getUserByOpenId(identity.id);
+      if (!user) {
+        const existing = await getUserByEmail(email);
+        if (existing) return { status: "account_link_required" as const };
+        const name = identity.user_metadata?.full_name ?? identity.user_metadata?.name ?? email.split("@")[0];
+        await upsertUser({ openId: identity.id, email, name, loginMethod: "supabase_email", lastSignedIn: new Date() });
+        user = await getUserByOpenId(identity.id);
+      }
+      if (!user) throw new Error("We could not prepare your SURA account.");
+      const token = await sdk.createSessionToken(identity.id, { name: user.name ?? email, expiresInMs: 1000 * 60 * 60 * 8 });
+      ctx.res.cookie(COOKIE_NAME, token, { ...getSessionCookieOptions(ctx.req), maxAge: 1000 * 60 * 60 * 8 });
+      return { status: "signed_in" as const, user };
+    }),
+    emailPasswordRecovery: publicProcedure.input(z.object({ email: z.string().email().max(320), redirectTo: z.string().url().max(500).optional() })).mutation(async ({ input }) => {
+      await requestSupabasePasswordRecovery(input.email.trim().toLowerCase(), input.redirectTo);
+      return { status: "recovery_sent" as const };
+    }),
+    emailLinkExistingAccount: publicProcedure.input(z.object({ email: z.string().email().max(320), password: z.string().min(8).max(128), consent: z.literal(true) })).mutation(async ({ ctx, input }) => {
+      const email = input.email.trim().toLowerCase();
+      const session = await signInWithSupabaseEmail(email, input.password);
+      const identity = await verifySupabaseAccessToken(session.access_token);
+      if (!identity.email_confirmed_at || identity.email?.toLowerCase() !== email) throw new Error("Verify control of this email before linking it to SURA.");
+      const existing = await getUserByEmail(email);
+      if (!existing) throw new Error("No existing SURA account is available to link with this email.");
+      const alreadyLinked = await getUserByOpenId(identity.id);
+      if (alreadyLinked && alreadyLinked.id !== existing.id) throw new Error("This email identity is already linked to a different SURA account.");
+      await recordSupabaseIdentityLink(existing.id, identity.id);
+      const user = await updateUserAuthIdentity(existing.id, identity.id);
+      if (!user) throw new Error("We could not complete account linking.");
+      const token = await sdk.createSessionToken(identity.id, { name: user.name ?? email, expiresInMs: 1000 * 60 * 60 * 8 });
+      ctx.res.cookie(COOKIE_NAME, token, { ...getSessionCookieOptions(ctx.req), maxAge: 1000 * 60 * 60 * 8 });
+      return { status: "linked" as const, user };
     }),
   }),
   vendors: router({
