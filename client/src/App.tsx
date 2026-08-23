@@ -12,6 +12,7 @@ import PublicProfilePage from "@/pages/PublicProfilePage";
 import CompanyDetailPage from "@/pages/CompanyDetailPage";
 import { AdminEngagementPage, MembershipPage, OffersPage } from "@/pages/EngagementPages";
 import AiStudioPage from "@/pages/AiStudioPage";
+import AiStudioPreview from "@/pages/AiStudioPreview";
 import { CommerceOrdersPage, ShopPage } from "@/pages/CommercePages";
 import CompanyCatalogPage from "@/pages/CompanyCatalogPage";
 import AestheticPreferencesPage from "@/pages/AestheticPreferencesPage";
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/board" component={BuildBoard} />
       <Route path="/membership" component={MembershipPage} />
       <Route path="/ai-studio" component={AiStudioPage} />
+      <Route path="/ai-studio-preview" component={AiStudioPreview} />
       <Route path="/edit-studio" component={PersonalEditStudio} />
       <Route path="/shop" component={ShopPage} />
       <Route path="/orders" component={CommerceOrdersPage} />
