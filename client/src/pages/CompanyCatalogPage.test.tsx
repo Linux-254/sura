@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import CompanyCatalogPage from "./CompanyCatalogPage";
 
@@ -12,7 +12,7 @@ vi.mock("wouter", () => ({ Link: ({ children }: { children: React.ReactNode }) =
 vi.mock("@/components/DashboardLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <main>{children}</main> }));
 vi.mock("@/components/SuraStates", () => ({
   SuraEmptyState: ({ title }: { title: string }) => <p>{title}</p>,
-  SuraErrorState: ({ title }: { title: string }) => <p>{title}</p>,
+  SuraErrorState: ({ title, onRetry }: { title: string; onRetry?: () => void }) => <section><p>{title}</p>{onRetry && <button onClick={onRetry}>Retry catalog</button>}</section>,
   SuraPageSkeleton: () => <p>Loading catalog</p>,
 }));
 vi.mock("@/lib/trpc", () => ({
@@ -25,7 +25,7 @@ vi.mock("@/lib/trpc", () => ({
   },
 }));
 
-afterEach(() => { cleanup(); state.mode = "owner-empty"; createProduct.mutate.mockReset(); });
+afterEach(() => { cleanup(); state.mode = "owner-empty"; createProduct.mutate.mockReset(); refetch.mockReset(); });
 
 describe("SURA company catalog states", () => {
   it("keeps a protected owner catalog understandable while membership is loading", () => {
@@ -38,6 +38,8 @@ describe("SURA company catalog states", () => {
     state.mode = "product-error";
     render(<CompanyCatalogPage />);
     expect(screen.getByText(/could not open this product catalog/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /retry catalog/i }));
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 
   it("uses an honest empty state rather than inventing company stock", () => {

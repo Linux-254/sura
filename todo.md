@@ -137,3 +137,5 @@
 - [x] Expand the SURA location control to support all 47 Kenyan counties with accessible search and current-location fallback.
 - [x] Refine desktop and mobile navigation into a considered SURA editorial control surface with clear hierarchy and responsive interaction states.
 - [x] Add regression coverage for complete Kenyan county selection and refreshed navigation behavior, then complete desktop/mobile visual QA.
+- [ ] Correct Supabase email confirmation and password-recovery redirects so production uses the deployed SURA domain rather than a local port 3000 callback.
+- [ ] Add environment-aware redirect regression coverage and document the exact Supabase Auth allow-list configuration required for local and production testing.
