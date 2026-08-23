@@ -147,3 +147,5 @@
 - [x] Replace raw `/join` Supabase rate-limit and unverified-email mutation errors with actionable, privacy-preserving recovery guidance and regression coverage.
 - [x] Make `/join` rate-limit guidance mode-specific so account creation explains pending confirmation email delivery and a safe retry path rather than directing unverified users to sign in.
 - [x] Prepare and review a privacy-safe administrator dashboard preview while Supabase email verification is rate-limited.
+- [x] Expand the privacy-safe administrator preview with non-live sales-report structure, day/month/year/custom-date filters, and additional governance tabs without fabricating commercial activity.
+- [x] Add responsive interaction coverage for administrator reporting period controls and preview tabs, then complete desktop/mobile visual QA.
