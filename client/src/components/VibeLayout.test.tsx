@@ -21,8 +21,8 @@ describe("SURA editorial navigation", () => {
     expect(navigation.textContent).toMatch(/Shape a plan/);
     expect(navigation.textContent).toMatch(/Discover companies/);
     expect(screen.getAllByRole("link", { name: /join sura/i })[0]?.getAttribute("href")).toBe("/join");
-    expect(screen.getByTestId("sura-monogram").tagName).toBe("svg");
-    expect(screen.queryByAltText("SURA")).toBeNull();
+    expect(screen.getByTestId("sura-wordmark").tagName).toBe("svg");
+    expect(screen.queryByTestId("sura-monogram")).toBeNull();
   });
 
   it("opens a clearly labelled mobile exploration panel without hiding the local finder", () => {

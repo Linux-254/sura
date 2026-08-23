@@ -7,7 +7,7 @@ import { useKenyaLocation } from "@/contexts/KenyaLocationContext";
 import { AestheticPicker } from "./AestheticPicker";
 import { NotificationCenter } from "./NotificationCenter";
 import { LocationPicker } from "./LocationPicker";
-import { SuraMonogram } from "./SuraMonogram";
+import { SuraWordmark } from "./SuraWordmark";
 
 type VibeLayoutProps = { children: ReactNode; dark?: boolean };
 
@@ -60,13 +60,9 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
             className={`vb-focus group inline-flex shrink-0 items-center gap-2.5 ${dark ? "text-[#f6f1e9]" : ""}`}
             aria-label="SURA home"
           >
-            <span className="relative">
-              <SuraMonogram className="h-9 w-9 drop-shadow-[0_6px_16px_rgba(42,28,15,0.16)]" />
-              <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-[var(--sura-paper)] bg-[#bd7b3c]" />
-            </span>
-            <span className="hidden flex-col leading-none min-[390px]:flex">
-              <span className="text-[0.85rem] font-extrabold tracking-[0.17em]">SURA</span>
-              <span style={!dark ? { color: palette.accent } : undefined} className="mt-1 text-[0.48rem] font-bold tracking-[0.17em]">
+            <span className="flex flex-col leading-none">
+              <SuraWordmark className="h-9 w-[5.4rem] drop-shadow-[0_6px_16px_rgba(42,28,15,0.10)] min-[390px]:w-[6.1rem]" />
+              <span style={!dark ? { color: palette.accent } : undefined} className="mt-0.5 hidden text-[0.46rem] font-bold tracking-[0.17em] min-[390px]:block">
                 LOCAL EDITS
               </span>
             </span>
