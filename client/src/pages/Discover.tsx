@@ -1,5 +1,5 @@
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { VibeLayout, labelize } from "@/components/VibeLayout";
 import { SuraEmptyState, SuraErrorState, SuraPageSkeleton } from "@/components/SuraStates";
 import { VendorCard } from "@/components/VendorCard";

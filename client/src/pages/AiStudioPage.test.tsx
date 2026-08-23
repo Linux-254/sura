@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AiStudioPage from "./AiStudioPage";
 
 const mutation = vi.hoisted(() => ({ mutate: vi.fn(), isPending: false, isError: false, reset: vi.fn(), data: undefined as any }));
+const preferencesQuery = vi.hoisted(() => ({ data: { aesthetics: ["Tangerine Social", "Comfort Official"], onboardingComplete: true }, isLoading: false, isError: false, refetch: vi.fn() }));
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ isAuthenticated: true, user: { role: "user" } }) }));
 vi.mock("@/contexts/KenyaLocationContext", () => ({ useKenyaLocation: () => ({ city: "Nairobi" }) }));
@@ -15,12 +16,12 @@ vi.mock("@/contexts/AestheticThemeContext", () => ({
 vi.mock("@/components/DashboardLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <main>{children}</main> }));
 vi.mock("@/lib/trpc", () => ({
   trpc: {
-    account: { aestheticPreferences: { useQuery: () => ({ data: { aesthetics: ["Tangerine Social", "Comfort Official"], onboardingComplete: true } }) } },
+    account: { aestheticPreferences: { useQuery: () => preferencesQuery } },
     commerce: { aiAssist: { useMutation: () => mutation } },
   },
 }));
 
-afterEach(() => { mutation.mutate.mockReset(); mutation.reset.mockReset(); mutation.data = undefined; mutation.isError = false; mutation.isPending = false; });
+afterEach(() => { cleanup(); mutation.mutate.mockReset(); mutation.reset.mockReset(); mutation.data = undefined; mutation.isError = false; mutation.isPending = false; preferencesQuery.data = { aesthetics: ["Tangerine Social", "Comfort Official"], onboardingComplete: true }; preferencesQuery.isLoading = false; preferencesQuery.isError = false; preferencesQuery.refetch.mockReset(); });
 
 describe("SURA AI Studio preference-aware assist", () => {
   it("submits saved account aesthetics as a bounded creative lens only after user consent", () => {
@@ -62,5 +63,20 @@ describe("SURA AI Studio preference-aware assist", () => {
     render(<AiStudioPage />);
     const processingAction = screen.getByRole("button", { name: /creating your private direction/i });
     expect(processingAction).toHaveProperty("disabled", true);
+  });
+
+  it("keeps the current palette and private-plan action available while a saved aesthetic mix is loading or needs recovery", () => {
+    preferencesQuery.isLoading = true;
+    const { rerender } = render(<AiStudioPage />);
+    expect(screen.getByRole("status").textContent).toMatch(/opening your saved aesthetic mix/i);
+    expect(screen.getByRole("button", { name: /create my ai concept/i })).toBeTruthy();
+
+    preferencesQuery.isLoading = false;
+    preferencesQuery.isError = true;
+    rerender(<AiStudioPage />);
+    expect(screen.getByRole("alert").textContent).toMatch(/saved mix could not be opened/i);
+    fireEvent.click(screen.getByRole("button", { name: /retry saved mix/i }));
+    expect(preferencesQuery.refetch).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: /create my ai concept/i })).toBeTruthy();
   });
 });

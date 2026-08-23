@@ -67,7 +67,7 @@
 - [x] Add security, permission, commission, delivery, and review validation tests for the AI commerce flows.
 - [x] Add admin-only company commission controls that enforce and display the 20%–50% platform range.
 - [x] Create reusable SURA editorial loading, skeleton, empty, processing, and error-state components.
-- [ ] Apply refined state treatments to AI studio, commerce, account/company/admin dashboards, and public discovery routes.
+- [x] Apply refined state treatments to AI studio, commerce, account/company/admin dashboards, and public discovery routes.
 - [x] Apply shared loading, recovery, and empty treatments to CheckoutPage catalog and payment-order states without hiding available actions.
 - [x] Add explicit loading, error, and empty treatments for CompanyDetailPage owner-only contacts and offer queries.
 - [x] Add explicit recovery treatment for CompanyCatalogPage product-query failures and route-level shared-state coverage for the validated account, admin, company-catalog, and company-detail dashboard routes.
@@ -151,3 +151,5 @@
 - [x] Add responsive interaction coverage for administrator reporting period controls and preview tabs, then complete desktop/mobile visual QA.
 - [x] Create and verify a non-interactive AI Studio preview that demonstrates guided briefing, consent, privacy, and result-structure boundaries without using AI services or fabricating recommendations.
 - [x] Refine the mobile aesthetic theme selector so three themes are initially visible and the complete list is horizontally scrollable with compact touch-friendly controls.
+- [x] Add explicit loading, empty, error, and recovery treatments for the public discovery route and cover them with browser-like tests.
+- [x] Re-run and document responsive public-discovery state QA alongside existing landing, shop, account, administrator, company, and AI Studio evidence.
