@@ -1,38 +1,39 @@
-import { ArrowRight, Check, LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Check, ChevronLeft, ChevronRight, LockKeyhole, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
-import { VibeLayout } from "@/components/VibeLayout";
 
-const benefits = [
-  { Icon: Sparkles, title: "Keep your edits", copy: "Save ideas, vendors, and briefs in one place." },
-  { Icon: ShieldCheck, title: "Stay in control", copy: "Your private activity stays private by default." },
-  { Icon: LockKeyhole, title: "One secure session", copy: "Sign in through the protected Sura account flow." },
+const frames = [
+  { image: "/assets/sura-auth-hero.jpg", label: "A point of view", meta: "Nairobi · after five" },
+  { image: "/assets/sura-auth-street.jpg", label: "A way forward", meta: "Local edit · in motion" },
+  { image: "/assets/sura-auth-interior.jpg", label: "A place to make", meta: "Home studio · considered" },
 ];
 
 export default function AuthPage() {
   const { isAuthenticated, loading } = useAuth();
+  const [activeFrame, setActiveFrame] = useState(0);
 
-  return (
-    <VibeLayout>
-      <main className="grid min-h-[calc(100vh-4.55rem)] gap-8 px-4 pb-28 pt-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-center lg:px-8 lg:pb-16">
-        <section className="max-w-2xl">
-          <p className="vb-kicker text-[#a66231]">SURA / ACCOUNT</p>
-          <h1 className="mt-4 max-w-xl text-5xl font-black leading-[0.92] tracking-[-0.065em] text-[#211d18] sm:text-7xl">A calmer way to keep your direction.</h1>
-          <p className="mt-6 max-w-lg text-base leading-7 text-[#76695b]">Your board, briefs, and local discoveries are better when they travel with you. Use one secure account to pick up where you left off.</p>
-          <div className="mt-9 grid gap-3 sm:grid-cols-3">{benefits.map(({ Icon, title, copy }) => <div key={title} className="rounded-2xl border border-[#ded5c9] bg-[#fffdf9] p-4"><Icon className="h-4 w-4 text-[#a66231]" /><p className="mt-5 text-sm font-black text-[#352a21]">{title}</p><p className="mt-1.5 text-xs leading-5 text-[#837566]">{copy}</p></div>)}</div>
-        </section>
+  useEffect(() => {
+    const timer = window.setInterval(() => setActiveFrame((current) => (current + 1) % frames.length), 5500);
+    return () => window.clearInterval(timer);
+  }, []);
 
-        <section className="rounded-[1.75rem] bg-[#1b1e16] p-6 text-[#f7f4ed] shadow-[0_22px_52px_rgba(31,26,16,0.18)] sm:p-8">
-          <div className="flex items-center justify-between"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#d7ff4d] text-[#19210d]">S</span><span className="rounded-full border border-white/15 px-3 py-1.5 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#a8aa9d]">Secure access</span></div>
-          <p className="mt-10 text-xs font-bold uppercase tracking-[0.15em] text-[#d7ff4d]">{isAuthenticated ? "Session active" : "Welcome back"}</p>
-          <h2 className="mt-3 text-3xl font-black leading-[0.98] tracking-[-0.05em]">{isAuthenticated ? "You’re already in." : "Sign in to your Sura space."}</h2>
-          <p className="mt-4 text-sm leading-6 text-[#c5c5b9]">{isAuthenticated ? "Your saved board and briefs are ready. Continue shaping what’s next." : "Continue to the protected Sura sign-in portal. Your browser will return here when the session is ready."}</p>
-          {isAuthenticated ? <Link href="/account" className="vb-button vb-focus mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#f7f4ed] px-5 py-3.5 text-sm font-black text-[#1b1e16]">Open my space <ArrowRight className="h-4 w-4" /></Link> : <button onClick={() => startLogin()} disabled={loading} className="vb-button vb-focus mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d7ff4d] px-5 py-3.5 text-sm font-black text-[#19210d] disabled:cursor-wait disabled:opacity-60">{loading ? "Checking session…" : "Continue securely"} <ArrowRight className="h-4 w-4" /></button>}
-          <div className="mt-6 space-y-2 text-xs leading-5 text-[#96998d]"><p className="flex gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#d7ff4d]" />No card, mobile-money PIN, or sensitive payment credential is requested here.</p><p className="flex gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#d7ff4d]" />Sign-in uses Sura’s configured OAuth provider, including Google when enabled.</p></div>
-          <p className="mt-7 border-t border-white/10 pt-5 text-center text-xs text-[#8e9185]">By continuing, you accept our <Link href="/terms" className="text-[#d7ff4d] underline underline-offset-2">Terms</Link> and <Link href="/privacy" className="text-[#d7ff4d] underline underline-offset-2">Privacy Policy</Link>.</p>
-        </section>
-      </main>
-    </VibeLayout>
-  );
+  const moveFrame = (direction: number) => setActiveFrame((current) => (current + direction + frames.length) % frames.length);
+  const secondaryFrame = frames[(activeFrame + 1) % frames.length];
+  const tertiaryFrame = frames[(activeFrame + 2) % frames.length];
+
+  return <main className="min-h-screen bg-[#11130f] text-[#f7f3eb] lg:grid lg:grid-cols-[minmax(0,1.18fr)_minmax(25rem,0.82fr)]">
+    <section className="relative min-h-[30rem] overflow-hidden bg-[#151713] sm:min-h-[38rem] lg:min-h-screen">
+      <div className="absolute inset-0 grid grid-cols-12 gap-2 p-3 sm:gap-3 sm:p-5 lg:p-6">
+        <div className="relative col-span-7 row-span-12 overflow-hidden rounded-[1.35rem] sm:rounded-[1.8rem]"><img src={frames[activeFrame].image} alt={frames[activeFrame].label} className="h-full w-full object-cover transition-opacity duration-500" /><div className="absolute inset-0 bg-gradient-to-t from-[#11130f]/75 via-transparent to-[#11130f]/5" /></div>
+        <div className="relative col-span-5 row-span-7 overflow-hidden rounded-[1.35rem] sm:rounded-[1.8rem]"><img src={secondaryFrame.image} alt={secondaryFrame.label} className="h-full w-full object-cover transition-opacity duration-500" /><div className="absolute inset-0 bg-gradient-to-t from-[#11130f]/60 to-transparent" /></div>
+        <div className="relative col-span-5 row-span-5 overflow-hidden rounded-[1.35rem] bg-[#302d25] sm:rounded-[1.8rem]"><img src={tertiaryFrame.image} alt={tertiaryFrame.label} className="h-full w-full object-cover opacity-85 transition-opacity duration-500" /><div className="absolute inset-0 bg-gradient-to-t from-[#11130f]/70 to-transparent" /></div>
+      </div>
+      <div className="absolute inset-x-0 top-0 flex items-center justify-between px-6 py-6 sm:px-9 sm:py-8"><Link href="/" className="vb-focus flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#d7ff4d] text-sm font-black text-[#19210d]">S</span><span className="leading-none"><span className="block text-sm font-black tracking-[0.22em]">SURA</span><span className="mt-1 block text-[0.5rem] font-bold tracking-[0.17em] text-[#d7ff4d]">LOCAL NETWORK</span></span></Link><span className="rounded-full border border-white/20 bg-[#11130f]/35 px-3 py-2 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#ece6da] backdrop-blur">Nairobi · Kenya</span></div>
+      <div className="absolute inset-x-6 bottom-6 flex items-end justify-between gap-4 sm:inset-x-9 sm:bottom-9"><div className="max-w-md"><p className="text-xs font-bold uppercase tracking-[0.17em] text-[#d7ff4d]">SURA / LOCAL NETWORK</p><h1 className="mt-3 max-w-lg text-4xl font-black leading-[0.92] tracking-[-0.065em] sm:text-6xl">Good ideas find a way here.</h1><p className="mt-4 max-w-sm text-sm leading-6 text-[#d7d3c8]">Discover people, places, products, and plans worth keeping close.</p><div className="mt-5 flex items-center gap-2"><button onClick={() => moveFrame(-1)} className="vb-focus grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-[#11130f]/45 text-white backdrop-blur" aria-label="Previous visual"><ChevronLeft className="h-4 w-4" /></button>{frames.map((frame, index) => <button key={frame.image} onClick={() => setActiveFrame(index)} className={`vb-focus h-1.5 rounded-full transition-all ${activeFrame === index ? "w-8 bg-[#d7ff4d]" : "w-3 bg-white/45"}`} aria-label={`Show ${frame.label}`} aria-pressed={activeFrame === index} />)}<button onClick={() => moveFrame(1)} className="vb-focus grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-[#11130f]/45 text-white backdrop-blur" aria-label="Next visual"><ChevronRight className="h-4 w-4" /></button></div></div><span className="hidden rounded-full border border-white/20 bg-[#11130f]/45 px-3 py-2 text-[0.62rem] font-semibold text-[#e8e2d7] backdrop-blur sm:inline-flex">{frames[activeFrame].meta}</span></div>
+    </section>
+
+    <section className="relative flex min-h-[34rem] flex-col justify-center overflow-hidden bg-[#f4efe6] px-5 py-10 text-[#211d18] sm:px-10 lg:min-h-screen lg:px-14 xl:px-20"><div className="pointer-events-none absolute -right-12 top-1/2 hidden h-[28rem] w-28 -translate-y-1/2 overflow-hidden rounded-l-[2rem] opacity-80 xl:block"><img src={secondaryFrame.image} alt="" className="h-full w-full object-cover grayscale-[0.2]" /></div><div className="relative z-10 mx-auto w-full max-w-[27rem]"><div className="flex items-center justify-between"><span className="vb-kicker text-[#a66231]">SURA / ACCOUNT</span><span className="inline-flex items-center gap-1.5 text-[0.63rem] font-bold uppercase tracking-[0.1em] text-[#8c7c6a]"><LockKeyhole className="h-3.5 w-3.5" /> Secure access</span></div><h2 className="mt-5 max-w-md text-4xl font-black leading-[0.94] tracking-[-0.06em] sm:text-5xl">Keep your direction moving.</h2><p className="mt-5 max-w-md text-sm leading-6 text-[#746757]">Sign in to pick up your saved edits, local briefs, and company discoveries wherever you left them.</p><div className="mt-8 border-y border-[#ddd3c5] py-5"><div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#d7ff4d] text-sm font-black text-[#19210d]">S</span><div><p className="text-sm font-black text-[#30271f]">Your Sura space</p><p className="mt-1 text-xs text-[#8a7a68]">One secure session for every local edit.</p></div></div><div className="mt-5 space-y-3 text-xs leading-5 text-[#756655]"><p className="flex gap-2"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#a66231]" />Save products, people, and plans that feel like you.</p><p className="flex gap-2"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#a66231]" />Your account activity stays private by default.</p><p className="flex gap-2"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#a66231]" />Keep Nairobi and your wider local lens close.</p></div></div>{isAuthenticated ? <Link href="/account" className="vb-button vb-focus mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1b1e16] px-5 py-3.5 text-sm font-black text-[#f7f3eb]">Open my Sura space <ArrowRight className="h-4 w-4" /></Link> : <button onClick={() => startLogin()} disabled={loading} className="vb-button vb-focus mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1b1e16] px-5 py-3.5 text-sm font-black text-[#f7f3eb] hover:bg-[#33382a] disabled:cursor-wait disabled:opacity-60">{loading ? "Checking session…" : "Continue securely"}<ArrowRight className="h-4 w-4" /></button>}<p className="mt-5 text-center text-xs leading-5 text-[#877766]">No card, mobile-money PIN, or sensitive payment credential is requested here.</p><div className="mt-8 flex items-center justify-between gap-3 border-t border-[#ddd3c5] pt-5 text-xs text-[#8b7b6b]"><span>By continuing, you accept our <Link href="/terms" className="font-bold text-[#a66231] underline underline-offset-2">Terms</Link> and <Link href="/privacy" className="font-bold text-[#a66231] underline underline-offset-2">Privacy Policy</Link>.</span><Check className="h-4 w-4 shrink-0 text-[#a66231]" /></div></div></section>
+  </main>;
 }

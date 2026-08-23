@@ -90,7 +90,7 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
     >
       <aside className={`fixed inset-y-0 left-0 z-50 hidden w-[15rem] flex-col border-r px-5 py-6 lg:flex ${dark ? "border-white/[0.09] bg-[#12130f]" : "border-[#ded1bf] bg-[#eee7dc]"}`}>
         <Link href="/" className={`vb-focus flex items-center gap-3 rounded-2xl px-2 py-1.5 ${dark ? "text-[#f6f0e6]" : "text-[#231e18]"}`} aria-label="SURA home">
-          <img src="/manus-storage/sura-packaging-mark_299d54bf.svg" alt="" className="h-10 w-10 rounded-xl shadow-sm" />
+          <span className="relative grid h-10 w-10 overflow-hidden rounded-xl bg-[#d7ff4d] shadow-sm"><img src="/assets/sura-auth-hero.jpg" alt="" className="h-full w-full object-cover" /><span className="absolute inset-0 grid place-items-center bg-[#11130f]/35 text-sm font-black text-white">S</span></span>
           <span className="flex flex-col leading-none">
             <span className="text-[0.92rem] font-black tracking-[0.2em]">SURA</span>
             <span className={`mt-1 text-[0.51rem] font-bold tracking-[0.17em] ${dark ? "text-[#d7ff4d]" : "text-[#a66231]"}`}>LOCAL NETWORK</span>

@@ -65,7 +65,7 @@ export default function Home() {
               <p className="mt-4 max-w-sm text-sm leading-6 text-[#c5c5b9]">A flexible evening look built around one precise line and one strong second-hand find.</p>
               <div className="mt-6 flex flex-wrap items-center gap-3"><Link href="/brief" className="vb-button vb-focus inline-flex items-center gap-2 rounded-xl bg-[#f7f4ed] px-4 py-3 text-sm font-bold text-[#1b1e16]">Open the edit <ArrowUpRight className="h-4 w-4" /></Link><span className="text-xs font-semibold text-[#a8aa9d]">from {formatKes(9400)}</span></div>
             </div>
-            <div className="pointer-events-none absolute bottom-0 right-0 hidden h-full w-[42%] overflow-hidden sm:block"><img src="/manus-storage/nairobi-street-editorial_5f3f7e9e.jpg" alt="" className="h-full w-full object-cover opacity-55 mix-blend-screen [mask-image:linear-gradient(to_right,transparent,black_38%)]" /></div>
+            <div className="pointer-events-none absolute bottom-0 right-0 hidden h-full w-[42%] overflow-hidden sm:block"><img src="/assets/sura-auth-street.jpg" alt="" className="h-full w-full object-cover opacity-55 mix-blend-screen [mask-image:linear-gradient(to_right,transparent,black_38%)]" /></div>
           </section>
 
           <div className="mt-6 flex items-center justify-between"><div><p className="vb-kicker text-[#a66231]">The local pulse</p><h2 className="mt-2 text-xl font-black tracking-[-0.04em] text-[#262019]">Fresh from the network.</h2></div><span className="rounded-full bg-[#eee5d8] px-3 py-1.5 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-[#735e49]">Demo feed</span></div>
