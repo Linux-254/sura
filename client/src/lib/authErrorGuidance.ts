@@ -48,6 +48,22 @@ export function getAuthErrorGuidance(errorMessage?: string, mode: AuthRecoveryMo
       nextMode: "sign-in",
     };
   }
+  if (message.includes("already registered") || message.includes("already exists") || message.includes("email already in use")) {
+    if (mode === "sign-up") {
+      return {
+        title: "This email already has a SURA email account.",
+        copy: "Use Sign in instead. If the password is not accepted, choose Recover. If sign-in asks you to confirm the email, use the newest verification email before trying again; do not create a second account.",
+        actionLabel: "Go to sign in",
+        nextMode: "sign-in",
+      };
+    }
+    return {
+      title: "Use the existing email account.",
+      copy: "This email is already registered. Sign in with its password, or use recovery if you no longer have it. Do not create a second account.",
+      actionLabel: "Go to sign in",
+      nextMode: "sign-in",
+    };
+  }
   if (message.includes("verify your email") || message.includes("email not confirmed")) {
     return {
       title: "Confirm your email before signing in.",

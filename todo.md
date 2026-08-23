@@ -166,5 +166,6 @@
 - [x] Refine the desktop SURA navigation into a denser, more lively editorial composition that reduces unused header space while preserving clarity and responsive behavior.
 - [x] Rebalance the desktop SURA header so the logo, navigation, location control, and build action remain evenly aligned across tablet and desktop widths.
 - [x] Add clearly labelled, privacy-safe demo access that does not depend on Supabase email delivery or reveal real account data.
-- [ ] Diagnose current Supabase account-creation and sign-in refusals without sending additional confirmation or recovery emails.
+- [x] Diagnose current Supabase account-creation and sign-in refusals without sending additional confirmation or recovery emails.
+- [x] Distinguish an existing or unverified email account from provider delivery failures and offer the correct no-email recovery guidance.
 - [x] Align the email account-entry surface with the approved unboxed SURA wordmark and verify the refined demo/access views at desktop and mobile widths.

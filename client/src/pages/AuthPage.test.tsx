@@ -100,6 +100,15 @@ describe("SURA email authentication page", () => {
     expect(screen.getByRole("tab", { name: "Create account" }).getAttribute("aria-selected")).toBe("true");
   });
 
+  it("directs an existing email from account creation to sign-in without requesting a second signup", () => {
+    signUp.error = { message: "User already registered" };
+    render(<AuthPage />);
+    fireEvent.click(screen.getByRole("tab", { name: "Create account" }));
+    expect(screen.getByText("This email already has a SURA email account.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Go to sign in" }));
+    expect(screen.getByRole("tab", { name: "Sign in" }).getAttribute("aria-selected")).toBe("true");
+  });
+
   it("keeps recovery selected when recovery email delivery is rate-limited", () => {
     recovery.error = { message: "email rate limit exceeded" };
     render(<AuthPage />);

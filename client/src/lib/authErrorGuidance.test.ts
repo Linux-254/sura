@@ -41,4 +41,12 @@ describe("SURA email-auth error guidance", () => {
       nextMode: "sign-in",
     });
   });
+
+  it("moves a duplicate email from account creation to sign-in or recovery rather than a second signup", () => {
+    expect(getAuthErrorGuidance("User already registered", "sign-up")).toMatchObject({
+      title: "This email already has a SURA email account.",
+      actionLabel: "Go to sign in",
+      nextMode: "sign-in",
+    });
+  });
 });
