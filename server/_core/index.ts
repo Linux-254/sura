@@ -8,6 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { apiJsonFallback } from "../apiFallback";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -44,6 +45,9 @@ async function startServer() {
       createContext,
     })
   );
+  // API requests must never be handled by the client application's HTML
+  // fallback; that otherwise causes tRPC to fail parsing `<!doctype ...>`.
+  app.use("/api", apiJsonFallback);
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
