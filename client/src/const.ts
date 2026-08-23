@@ -1,4 +1,4 @@
-import { OAUTH_STATE_COOKIE, encodeOAuthState } from "@shared/const";
+import { COOKIE_NAME, getOAuthStateCookieName, encodeOAuthState } from '@shared/const';
 
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
@@ -15,10 +15,17 @@ export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 export const startLogin = () => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;
+  if (!oauthPortalUrl || !appId) {
+    console.error("[Auth] OAuth configuration is missing. Check VITE_OAUTH_PORTAL_URL and VITE_APP_ID.");
+    return;
+  }
   const redirectUri = `${window.location.origin}/api/oauth/callback`;
 
+  const secure = window.location.protocol === "https:";
   const nonce = crypto.randomUUID();
-  document.cookie = `${OAUTH_STATE_COOKIE}=${nonce}; Path=/; Max-Age=600; SameSite=None; Secure`;
+  const cookieName = getOAuthStateCookieName(secure);
+  const cookiePolicy = secure ? "SameSite=None; Secure" : "SameSite=Lax";
+  document.cookie = `${cookieName}=${nonce}; Path=/; Max-Age=600; ${cookiePolicy}`;
   const state = encodeOAuthState({ redirectUri, nonce });
 
   const url = new URL(`${oauthPortalUrl}/app-auth`);

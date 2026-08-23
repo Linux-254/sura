@@ -1,75 +1,97 @@
-import { ArrowDown, ArrowUpRight, Check, CircleDollarSign, Compass, MapPin, Sparkles } from "lucide-react";
+import {
+  ArrowUpRight,
+  Bookmark,
+  Check,
+  ChevronRight,
+  CircleDollarSign,
+  Heart,
+  MapPin,
+  MessageCircle,
+  MoreHorizontal,
+  Plus,
+  Share2,
+  Sparkles,
+  Users,
+  Zap,
+} from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { VibeLayout, formatKes } from "@/components/VibeLayout";
-import { VendorCard } from "@/components/VendorCard";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { startLogin } from "@/const";
+import { VibeLayout, formatKes, labelize } from "@/components/VibeLayout";
 import { trpc } from "@/lib/trpc";
 
-const steps = [
-  { number: "01", title: "Set the brief", copy: "Tell us where you are, what the moment is, what you want it to feel like, and what you are ready to spend.", icon: Compass },
-  { number: "02", title: "See the build", copy: "Receive an itemised direction with a clear cost range and the local vendors who can make it happen.", icon: CircleDollarSign },
-  { number: "03", title: "Make it yours", copy: "Save the parts that matter, share a plan, and start a considered conversation when you are ready.", icon: Sparkles },
+const pulseItems = [
+  { label: "Nairobi", value: "18 new drops" },
+  { label: "Mombasa", value: "6 new drops" },
+  { label: "Kisumu", value: "4 new drops" },
 ];
 
 export default function Home() {
   const [, setLocation] = useLocation();
+  const { isAuthenticated, user } = useAuth();
   const vendors = trpc.vendors.list.useQuery(undefined);
   const featured = vendors.data?.slice(0, 3) ?? [];
 
   return (
     <VibeLayout>
-      <main>
-        <section className="container grid gap-10 pb-16 pt-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-12 lg:pb-24 lg:pt-14">
-          <div className="relative z-10 flex flex-col justify-center lg:py-10">
-            <div className="flex items-center gap-3"><span className="h-px w-8 bg-[#b77835]" /><span className="vb-kicker text-[#9f5d2d]">Local living, composed with care</span></div>
-            <h1 className="vb-serif mt-5 max-w-2xl text-[3.4rem] leading-[0.9] tracking-[-0.052em] text-[#201b16] sm:text-[4.65rem] lg:text-[5.25rem]">Make the budget <em className="font-normal text-[#ad6b36]">work</em> beautifully.</h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-[#6f6354] sm:text-lg">SURA turns a real budget into a considered local plan for your style, space, or next occasion. Not a shopping cart. A clear way forward.</p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button onClick={() => setLocation("/brief")} className="vb-button vb-focus inline-flex items-center gap-2 rounded-full bg-[#1f1b17] px-6 py-3.5 text-sm font-semibold text-[#f7f2ea] shadow-[0_12px_24px_rgba(38,28,17,0.16)] hover:bg-[#504637]">Build my edit <ArrowUpRight className="h-4 w-4" /></button>
-              <Link href="/discover" className="vb-focus inline-flex items-center gap-2 rounded-full border border-[#cfc2b0] bg-[#fbf8f3]/70 px-6 py-3.5 text-sm font-semibold text-[#382f26] hover:border-[#a97745]">Discover companies <ArrowDown className="h-4 w-4" /></Link>
+      <main className="grid min-w-0 gap-8 px-4 pb-28 pt-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:px-8 lg:pb-16">
+        <div className="min-w-0">
+          <section className="border-b border-[#e1d9ce] pb-4">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="vb-kicker text-[#a66231]">{isAuthenticated ? `Welcome back, ${user?.name?.split(" ")[0] || "member"}` : "SURA / NAIROBI"}</p>
+                <h1 className="mt-2 text-3xl font-black tracking-[-0.055em] text-[#211d18] sm:text-4xl">What’s moving locally.</h1>
+              </div>
+              <Link href="/discover" className="vb-focus hidden items-center gap-1 text-xs font-bold text-[#695b4d] sm:inline-flex">See all <ChevronRight className="h-3.5 w-3.5" /></Link>
             </div>
-            <div className="mt-10 flex items-center gap-3 text-xs text-[#726654]"><span className="rounded-full bg-[#e7d6b7] px-3 py-1.5 font-semibold">Nairobi-first</span><span>Demonstration vendors & indicative prices, clearly marked.</span></div>
-          </div>
-          <div className="relative min-h-[26rem] sm:min-h-[30rem] lg:min-h-[33rem]">
-            <div className="absolute right-[2%] top-0 h-[79%] w-[62%] overflow-hidden rounded-t-[8rem] rounded-bl-[1.8rem] rounded-br-[1.8rem] bg-[#d7c0a0] shadow-[0_22px_48px_rgba(65,44,18,0.15)]"><img src="/manus-storage/nairobi-fashion-portrait_558e87d6.jpg" alt="Nairobi creative in a SURA editorial portrait" className="h-full w-full object-cover object-center" /></div>
-            <div className="absolute bottom-0 left-0 h-[53%] w-[54%] overflow-hidden rounded-tl-[1.8rem] rounded-tr-[1.8rem] rounded-br-[7rem] border-[7px] border-[#f4f0e9] bg-[#b77c4b] shadow-[0_18px_40px_rgba(65,44,18,0.11)]"><img src="/manus-storage/nairobi-street-editorial_5f3f7e9e.jpg" alt="Nairobi street style in a SURA editorial collage" className="h-full w-full object-cover" /></div>
-            <div className="absolute left-[14%] top-[13%] rounded-full border border-[#e5d9c8] bg-[#fbf8f2]/95 px-4 py-3 text-center shadow-[0_10px_25px_rgba(67,48,26,0.1)]"><p className="vb-kicker text-[#9d5b28]">Your brief</p><p className="mt-1 text-xs font-medium text-[#453526]">Budget-first. Identity-led.</p></div>
-            <div className="absolute bottom-[7%] right-0 rounded-2xl border border-white/60 bg-[#1d1b18] p-4 text-[#fbf5ec] shadow-[0_14px_30px_rgba(32,25,16,0.24)]"><p className="vb-kicker text-[#d39a52]">A sample edit</p><p className="vb-serif mt-2 text-lg leading-5">The Nairobi<br />After Five</p><p className="mt-3 text-xs text-[#d8cbbc]">from {formatKes(9400)}</p></div>
-          </div>
-        </section>
-
-        <section id="how-it-works" className="vb-ink text-[#f8f3eb]">
-          <div className="container py-16 sm:py-20">
-            <div className="grid gap-8 border-b border-white/15 pb-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-              <div><span className="vb-kicker text-[#d59b58]">A better starting point</span><h2 className="vb-serif mt-4 text-4xl leading-[0.98] tracking-[-0.04em] sm:text-5xl">The plan before the purchase.</h2></div>
-              <p className="max-w-xl text-base leading-7 text-[#cfc4b6]">Most local style decisions begin with too many tabs and no way to judge what works together. SURA holds the full picture: intention, spend, sources, and next step.</p>
+            <div className="mt-5 flex items-center gap-5 overflow-x-auto text-sm font-semibold">
+              <button className="border-b-2 border-[#201c17] pb-3 text-[#201c17]">For you</button>
+              <button onClick={() => isAuthenticated ? setLocation("/board") : startLogin()} className="pb-3 text-[#938475] hover:text-[#201c17]">Following</button>
+              <button onClick={() => setLocation("/discover")} className="pb-3 text-[#938475] hover:text-[#201c17]">Nearby</button>
             </div>
-            <div className="mt-10 grid gap-8 md:grid-cols-3">
-              {steps.map(({ number, title, copy, icon: Icon }) => <article key={number} className="border-t border-white/20 pt-5"><div className="flex items-center justify-between"><span className="vb-serif text-3xl text-[#d59b58]">{number}</span><Icon className="h-5 w-5 text-[#d59b58]" /></div><h3 className="vb-serif mt-8 text-2xl">{title}</h3><p className="mt-3 max-w-sm text-sm leading-6 text-[#cfc4b6]">{copy}</p></article>)}
+          </section>
+
+          <section className="py-4">
+            <button onClick={() => setLocation("/brief")} className="vb-focus flex w-full items-center gap-3 rounded-2xl border border-[#dfd5c7] bg-[#fffdf9] p-3.5 text-left shadow-[0_8px_24px_rgba(49,34,18,0.04)] transition-[border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-[#b6a48f]">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#d7ff4d] text-[#18200c]"><Plus className="h-4 w-4" /></span>
+              <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-[#31281f]">Shape something new</span><span className="mt-0.5 block truncate text-xs text-[#918271]">Start with a budget, a mood, or a moment.</span></span>
+              <ArrowUpRight className="h-4 w-4 text-[#a66231]" />
+            </button>
+          </section>
+
+          <section className="relative isolate overflow-hidden rounded-[1.7rem] bg-[#1b1e16] p-6 text-[#f7f4ed] shadow-[0_18px_42px_rgba(31,26,16,0.16)] sm:p-8">
+            <div className="absolute inset-y-0 right-0 -z-10 w-2/5 bg-[radial-gradient(circle_at_60%_45%,rgba(215,255,77,0.45),transparent_62%)]" />
+            <div className="absolute -right-20 -top-24 -z-10 h-72 w-72 rounded-full border-[40px] border-[#d7ff4d]/15" />
+            <div className="max-w-[27rem]">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-[#d7ff4d]"><Zap className="h-3.5 w-3.5" /> Featured edit · 01</div>
+              <h2 className="mt-4 text-4xl font-black leading-[0.92] tracking-[-0.06em] sm:text-5xl">The Nairobi<br /><span className="text-[#d7ff4d]">After Five.</span></h2>
+              <p className="mt-4 max-w-sm text-sm leading-6 text-[#c5c5b9]">A flexible evening look built around one precise line and one strong second-hand find.</p>
+              <div className="mt-6 flex flex-wrap items-center gap-3"><Link href="/brief" className="vb-button vb-focus inline-flex items-center gap-2 rounded-xl bg-[#f7f4ed] px-4 py-3 text-sm font-bold text-[#1b1e16]">Open the edit <ArrowUpRight className="h-4 w-4" /></Link><span className="text-xs font-semibold text-[#a8aa9d]">from {formatKes(9400)}</span></div>
             </div>
-          </div>
-        </section>
+            <div className="pointer-events-none absolute bottom-0 right-0 hidden h-full w-[42%] overflow-hidden sm:block"><img src="/manus-storage/nairobi-street-editorial_5f3f7e9e.jpg" alt="" className="h-full w-full object-cover opacity-55 mix-blend-screen [mask-image:linear-gradient(to_right,transparent,black_38%)]" /></div>
+          </section>
 
-        <section className="container py-16 sm:py-24">
-          <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-            <div className="lg:sticky lg:top-28"><span className="vb-kicker text-[#9e5d2d]">The standard is clarity</span><h2 className="vb-serif mt-4 max-w-md text-4xl leading-[0.98] tracking-[-0.04em] text-[#251f1a] sm:text-5xl">An edit with a reason behind every choice.</h2><p className="mt-5 max-w-md text-base leading-7 text-[#716453]">Recommendations show an indicative range, item by item, and explain the role each piece plays. You can see what your money is doing before you speak to anyone.</p><button onClick={() => setLocation("/brief")} className="vb-button vb-focus mt-7 inline-flex items-center gap-2 border-b border-[#5c4027] pb-1 text-sm font-bold text-[#4e341f] hover:text-[#a7602b]">Try the brief <ArrowUpRight className="h-4 w-4" /></button></div>
-            <article className="overflow-hidden rounded-[2rem] border border-[#dbcfbf] bg-[#fdfaf5] shadow-[0_20px_54px_rgba(64,45,23,0.08)]">
-              <div className="grid sm:grid-cols-[0.9fr_1.1fr]"><div className="relative min-h-[21rem] overflow-hidden"><img src="/manus-storage/nairobi-street-editorial_5f3f7e9e.jpg" alt="A curated style direction" className="h-full w-full object-cover" /><div className="absolute inset-x-4 bottom-4 rounded-2xl bg-[#f8f3eb]/92 p-4 backdrop-blur"><p className="vb-kicker text-[#9e5d2d]">A transparent sample</p><p className="vb-serif mt-2 text-xl leading-5 text-[#211b16]">The Nairobi After Five</p></div></div><div className="p-6 sm:p-8"><p className="text-sm leading-6 text-[#756857]">A flexible evening look built around one precise line and one strong second-hand find.</p><div className="mt-6 space-y-4">{[["Structured overshirt", "KES 2,800"], ["Wide-leg trouser", "KES 5,200"], ["Finishing edit", "KES 1,400"]].map(([label, cost]) => <div key={label} className="flex items-center justify-between border-b border-[#e2d9cd] pb-3 text-sm"><span className="inline-flex items-center gap-2 text-[#4e4438]"><Check className="h-4 w-4 text-[#ad6b36]" />{label}</span><strong className="font-semibold text-[#221c17]">{cost}</strong></div>)}</div><div className="mt-6 flex items-end justify-between"><div><p className="vb-kicker text-[#8b6b4f]">Build begins at</p><p className="vb-serif mt-1 text-3xl text-[#211b16]">KES 9,400</p></div><button onClick={() => setLocation("/brief")} className="vb-button vb-focus inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#1e1b17] text-[#f8f4ec]"><ArrowUpRight className="h-4 w-4" /></button></div></div></div>
-            </article>
-          </div>
-        </section>
+          <div className="mt-6 flex items-center justify-between"><div><p className="vb-kicker text-[#a66231]">The local pulse</p><h2 className="mt-2 text-xl font-black tracking-[-0.04em] text-[#262019]">Fresh from the network.</h2></div><span className="rounded-full bg-[#eee5d8] px-3 py-1.5 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-[#735e49]">Demo feed</span></div>
 
-        <section className="border-y vb-rule bg-[#f5efe6]">
-          <div className="container py-16 sm:py-20"><div className="max-w-2xl"><span className="vb-kicker text-[#9e5d2d]">SURA visual studies</span><h2 className="vb-serif mt-4 text-4xl leading-[0.98] tracking-[-0.04em] text-[#251f1a] sm:text-5xl">Colour and material, before the catalogue.</h2><p className="mt-4 text-base leading-7 text-[#716453]">Original packaging and material studies inspired by Kenyan design research. They are not connected-company products, listings, or customer work; companies add their own catalog imagery when verified.</p></div><div className="mt-10 grid gap-5 md:grid-cols-3">{[{ image: "/manus-storage/sura-study-sisal-terracotta_bf14606c.jpg", title: "Sisal & terracotta", copy: "Warm paper, woven texture, and a grounded edit." }, { image: "/manus-storage/sura-study-ink-ivory_26f24379.jpg", title: "Ink & ivory", copy: "Gallery contrast for a precise, calm presentation." }, { image: "/manus-storage/sura-study-thermal-bloom_57b8608c.jpg", title: "Thermal bloom", copy: "Controlled colour energy for bolder creative directions." }].map((study) => <article key={study.title} className="overflow-hidden rounded-[1.6rem] border border-[#ded1bf] bg-[#fbf8f2] shadow-[0_14px_34px_rgba(58,40,21,0.06)]"><div className="aspect-[4/3] overflow-hidden bg-[#ded1bf]"><img src={study.image} alt={`Illustrative SURA material study: ${study.title}`} className="vb-image h-full w-full object-cover" /></div><div className="p-5"><p className="vb-kicker text-[#9e5d2d]">Illustrative study · not inventory</p><h3 className="vb-serif mt-3 text-2xl text-[#251f1a]">{study.title}</h3><p className="mt-2 text-sm leading-6 text-[#716453]">{study.copy}</p></div></article>)}</div></div>
-        </section>
-        <section className="border-y vb-rule bg-[#eee6da]">
-          <div className="container py-16 sm:py-20"><div className="flex flex-wrap items-end justify-between gap-5"><div><span className="vb-kicker text-[#9e5d2d]">Source local with intention</span><h2 className="vb-serif mt-4 text-4xl leading-none tracking-[-0.04em] text-[#251f1a] sm:text-5xl">Meet the makers in the mix.</h2></div><Link href="/discover" className="vb-focus inline-flex items-center gap-2 border-b border-[#76563a] pb-1 text-sm font-bold text-[#4e341f]">Browse the directory <ArrowUpRight className="h-4 w-4" /></Link></div>
-            {vendors.isLoading && <div className="mt-10 grid gap-5 md:grid-cols-3">{Array.from({ length: 3 }).map((_, index) => <div key={index} className="h-[23rem] animate-pulse rounded-[1.4rem] bg-[#ddcfbd]" />)}</div>}
-            {vendors.isError && <div className="mt-10 rounded-[1.5rem] border border-[#d8ad9b] bg-[#fff3ed] p-8 text-center"><p className="vb-serif text-2xl text-[#632f21]">The maker list needs a moment.</p><p className="mt-2 text-sm text-[#7c4636]">You can still explore the full directory, or try this list again.</p><button onClick={() => vendors.refetch()} className="vb-button vb-focus mt-5 rounded-full bg-[#5f2d20] px-5 py-2.5 text-sm font-bold text-white">Try again</button></div>}
-            {!vendors.isLoading && !vendors.isError && featured.length === 0 && <div className="mt-10 rounded-[1.5rem] border border-dashed border-[#c9b7a2] bg-[#f8f3ea] p-8 text-center"><p className="vb-serif text-2xl text-[#4d3b2a]">The first makers are on their way.</p><p className="mt-2 text-sm text-[#766856]">Use the directory to see the complete demonstration set as it grows.</p><Link href="/discover" className="vb-button vb-focus mt-5 inline-flex rounded-full bg-[#1e1b17] px-5 py-2.5 text-sm font-bold text-[#fbf7ef]">Open directory</Link></div>}
-            {!vendors.isLoading && !vendors.isError && featured.length > 0 && <div className="mt-10 grid gap-5 md:grid-cols-3">{featured.map((vendor) => <VendorCard key={vendor.id} vendor={vendor} compact />)}</div>}
-            <p className="mt-6 inline-flex items-center gap-2 text-xs text-[#756755]"><MapPin className="h-3.5 w-3.5 text-[#b77835]" />Indicative services and pricing shown for exploration; every profile is visibly marked as a demo.</p></div>
-        </section>
+          <section className="mt-2 divide-y divide-[#e5ddd2]">
+            {vendors.isLoading && Array.from({ length: 3 }).map((_, index) => <div key={index} className="grid animate-pulse gap-4 py-6 sm:grid-cols-[1fr_10rem]"><div><div className="h-3 w-32 rounded bg-[#e1d8cb]" /><div className="mt-4 h-5 w-3/4 rounded bg-[#e1d8cb]" /><div className="mt-3 h-12 w-full rounded bg-[#e1d8cb]" /></div><div className="h-32 rounded-2xl bg-[#e1d8cb]" /></div>)}
+            {vendors.isError && <div className="my-5 rounded-2xl border border-[#ddb09f] bg-[#fff3ed] p-6"><p className="font-bold text-[#632f21]">The local pulse is taking a moment.</p><button onClick={() => vendors.refetch()} className="mt-3 text-sm font-bold text-[#8b3d2d] underline underline-offset-4">Reload the feed</button></div>}
+            {!vendors.isLoading && !vendors.isError && featured.map((vendor, index) => <FeedPost key={vendor.id} vendor={vendor} index={index} onOpen={() => setLocation(`/vendors/${vendor.slug}`)} onSave={() => isAuthenticated ? setLocation("/board") : startLogin()} />)}
+          </section>
+
+          <section className="mt-5 rounded-2xl border border-[#ded5c9] bg-[#eee7dc] p-5 sm:flex sm:items-center sm:justify-between sm:gap-6"><div><p className="vb-kicker text-[#a66231]">Your next post starts here</p><h2 className="mt-2 text-xl font-black tracking-[-0.04em] text-[#272019]">Have a number in mind?</h2><p className="mt-1 text-sm leading-6 text-[#75695b]">Turn a feeling, room, occasion, or idea into a clear local brief.</p></div><Link href="/brief" className="vb-button vb-focus mt-4 inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#1f1b17] px-4 py-3 text-sm font-bold text-[#fbf8f2] sm:mt-0">Create brief <ArrowUpRight className="h-4 w-4" /></Link></section>
+        </div>
+
+        <aside className="hidden space-y-5 lg:block">
+          <section className="rounded-2xl border border-[#ded5c9] bg-[#fffdf9] p-5"><div className="flex items-center justify-between"><h2 className="text-sm font-black text-[#2a221b]">Local pulse</h2><Users className="h-4 w-4 text-[#a66231]" /></div><p className="mt-1 text-xs leading-5 text-[#837566]">What’s active across the Sura network.</p><div className="mt-4 space-y-2">{pulseItems.map((item, index) => <Link key={item.label} href="/discover" className="vb-focus flex items-center justify-between rounded-xl px-2 py-2.5 hover:bg-[#f1eae0]"><span className="flex items-center gap-2.5 text-xs font-bold text-[#4d4034]"><span className="grid h-6 w-6 place-items-center rounded-lg bg-[#eee5d8] text-[0.62rem] text-[#a66231]">0{index + 1}</span>{item.label}</span><span className="text-[0.63rem] font-semibold text-[#938475]">{item.value}</span></Link>)}</div><Link href="/discover" className="mt-3 flex items-center justify-between border-t border-[#e9e0d4] pt-3 text-xs font-bold text-[#a66231]">Explore nearby <ChevronRight className="h-3.5 w-3.5" /></Link></section>
+          <section className="rounded-2xl bg-[#d7ff4d] p-5 text-[#19210d]"><Sparkles className="h-5 w-5" /><p className="mt-4 text-xs font-black uppercase tracking-[0.12em]">Sura signal</p><p className="mt-2 text-xl font-black leading-[1.05] tracking-[-0.04em]">Your budget is a creative direction.</p><p className="mt-3 text-xs leading-5 text-[#4e5d2e]">Give us the range. We’ll help you find the shape.</p><Link href="/brief" className="vb-focus mt-5 inline-flex items-center gap-2 rounded-xl bg-[#19210d] px-3.5 py-2.5 text-xs font-bold text-[#f2f7dc]">Start shaping <ArrowUpRight className="h-3.5 w-3.5" /></Link></section>
+          <section className="rounded-2xl border border-[#ded5c9] bg-[#fffdf9] p-5"><p className="vb-kicker text-[#a66231]">Sura is for</p><div className="mt-4 space-y-3 text-sm font-bold text-[#4d4034]"><p className="flex items-center gap-3"><Check className="h-4 w-4 text-[#a66231]" />People with a point of view</p><p className="flex items-center gap-3"><Check className="h-4 w-4 text-[#a66231]" />Makers worth finding</p><p className="flex items-center gap-3"><Check className="h-4 w-4 text-[#a66231]" />Plans with a clear next step</p></div></section>
+        </aside>
       </main>
     </VibeLayout>
   );
+}
+
+function FeedPost({ vendor, index, onOpen, onSave }: { vendor: any; index: number; onOpen: () => void; onSave: () => void }) {
+  return <article className="py-6 first:pt-5"><header className="flex items-center gap-3"><span className={`grid h-9 w-9 place-items-center rounded-xl text-xs font-black ${index === 1 ? "bg-[#f2c6b3] text-[#653526]" : index === 2 ? "bg-[#d8caef] text-[#48396b]" : "bg-[#d7ff4d] text-[#1a220e]"}`}>{vendor.name.slice(0, 1)}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-black text-[#342a21]">{vendor.name}</p><p className="mt-0.5 flex items-center gap-1 text-[0.68rem] text-[#968675]"><MapPin className="h-3 w-3" />{vendor.neighbourhood} · {labelize(vendor.type)}</p></div><button onClick={onOpen} className="vb-focus rounded-lg p-1.5 text-[#9a8b7a] hover:bg-[#eee7dc] hover:text-[#342a21]" aria-label={`Open ${vendor.name}`}><MoreHorizontal className="h-4 w-4" /></button></header><div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem] sm:items-center"><div><button onClick={onOpen} className="vb-focus text-left"><h3 className="text-xl font-black leading-[1.04] tracking-[-0.04em] text-[#282019] hover:text-[#a66231]">{index === 0 ? "A sharp-eyed edit for the week ahead." : index === 1 ? "Objects with a second life worth styling." : "A softer way to make space work."}</h3></button><p className="mt-2 line-clamp-3 text-sm leading-6 text-[#796c5c]">{vendor.description}</p><div className="mt-4 flex items-center gap-2 text-xs font-semibold text-[#837566]"><span className="rounded-full bg-[#eee5d8] px-2.5 py-1 text-[#735e49]">From {formatKes(vendor.priceFloorKes)}</span><span>·</span><span>Demo profile</span></div></div><button onClick={onOpen} className="vb-focus group relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#ded4c7]"><img src={vendor.portfolio[0]} alt={`${vendor.name} demonstration portfolio`} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /><span className="absolute bottom-2 right-2 grid h-7 w-7 place-items-center rounded-full bg-[#fbf8f2]/90 text-[#2c251e]"><ArrowUpRight className="h-3.5 w-3.5" /></span></button></div><footer className="mt-5 flex items-center gap-1 border-t border-[#eee7dd] pt-3"><button onClick={onOpen} className="vb-focus inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-[#857767] hover:bg-[#f0e9df] hover:text-[#a66231]"><Heart className="h-3.5 w-3.5" /> Curate</button><button onClick={onOpen} className="vb-focus inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-[#857767] hover:bg-[#f0e9df] hover:text-[#a66231]"><MessageCircle className="h-3.5 w-3.5" /> Discuss</button><button onClick={onSave} className="vb-focus ml-auto inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-[#857767] hover:bg-[#f0e9df] hover:text-[#a66231]"><Bookmark className="h-3.5 w-3.5" /> Save</button><button onClick={onOpen} className="vb-focus rounded-lg p-2 text-[#857767] hover:bg-[#f0e9df] hover:text-[#a66231]" aria-label="Share post"><Share2 className="h-3.5 w-3.5" /></button></footer></article>;
 }

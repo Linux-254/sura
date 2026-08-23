@@ -1,8 +1,8 @@
-import { COOKIE_NAME, ONE_YEAR_MS, OAUTH_STATE_COOKIE, decodeOAuthState } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS, decodeOAuthState, getOAuthStateCookieName } from "@shared/const";
 import { parse as parseCookieHeader } from "cookie";
 import type { Express, Request, Response } from "express";
 import * as db from "../db";
-import { getSessionCookieOptions } from "./cookies";
+import { getSessionCookieOptions, isSecureRequest } from "./cookies";
 import { sdk } from "./sdk";
 
 function getQueryParam(req: Request, key: string): string | undefined {
@@ -24,12 +24,18 @@ export function registerOAuthRoutes(app: Express) {
     // startLogin set in the browser that began this login. An attacker can
     // forge `state`, but cannot plant this cookie in the victim's browser.
     const { nonce } = decodeOAuthState(state);
-    const expectedNonce = parseCookieHeader(req.headers.cookie ?? "")[OAUTH_STATE_COOKIE];
+    const secure = isSecureRequest(req);
+    const stateCookieName = getOAuthStateCookieName(secure);
+    const expectedNonce = parseCookieHeader(req.headers.cookie ?? "")[stateCookieName];
     if (!nonce || nonce !== expectedNonce) {
       res.status(403).json({ error: "invalid oauth state" });
       return;
     }
-    res.clearCookie(OAUTH_STATE_COOKIE, { path: "/", secure: true, sameSite: "none" });
+    res.clearCookie(stateCookieName, {
+      path: "/",
+      secure,
+      sameSite: secure ? "none" : "lax",
+    });
 
     try {
       const tokenResponse = await sdk.exchangeCodeForToken(code, state);
