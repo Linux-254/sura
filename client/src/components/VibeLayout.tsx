@@ -48,13 +48,13 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
   return (
     <div
       style={!dark ? { backgroundColor: palette.page, color: palette.ink } : undefined}
-      className={`min-h-screen pb-[5.8rem] xl:pb-0 ${dark ? "vb-ink text-[#f6f1e9]" : "vb-paper"}`}
+      className={`min-h-screen pb-[5.8rem] min-[900px]:pb-0 ${dark ? "vb-ink text-[#f6f1e9]" : "vb-paper"}`}
     >
       <header
         style={!dark ? { backgroundColor: `${palette.page}f2`, borderColor: palette.border } : undefined}
         className={`sticky top-0 z-40 border-b backdrop-blur-xl ${dark ? "border-white/15 bg-[#1d1b18]/92" : "vb-rule"}`}
       >
-        <div className="container flex min-h-[5.15rem] items-center justify-between gap-3 py-3">
+        <div className="container grid min-h-[5.35rem] grid-cols-[auto_1fr_auto] items-center gap-3 py-3 min-[900px]:gap-4">
           <Link
             href="/"
             style={!dark ? { color: palette.ink } : undefined}
@@ -69,20 +69,20 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
             </span>
           </Link>
 
-          <nav className="hidden items-center rounded-full border border-[#ded1bf] bg-[#fbf8f2]/90 p-1 shadow-[0_7px_20px_rgba(69,47,26,0.06)] xl:flex" aria-label="Primary navigation">
+          <nav className="relative hidden items-center justify-self-center rounded-full border border-[#ded1bf] bg-[#fbf8f2]/92 p-1 shadow-[0_10px_24px_rgba(69,47,26,0.09)] min-[900px]:flex" aria-label="Primary navigation">
             {publicLinks.map((item) => <NavLink key={item.href} href={item.href}>{item.label}</NavLink>)}
             <NavLink href={accountHref}>{accountLabel}</NavLink>
           </nav>
 
           <div className="flex items-center justify-end gap-1.5">
-            <div className="hidden xl:block"><LocationPicker /></div>
-            <div className="hidden 2xl:block"><AestheticPicker compact /></div>
-            <div className="hidden sm:flex items-center rounded-full border border-[#ded1bf] bg-[#fbf8f2]/90 p-1 shadow-[0_7px_20px_rgba(69,47,26,0.06)]"><NotificationCenter /></div>
-            <div className="xl:hidden"><LocationPicker compact /></div>
+            <div className="hidden min-[900px]:block"><LocationPicker /></div>
+            <div className="hidden min-[1220px]:block"><AestheticPicker compact /></div>
+            <div className="hidden min-[1120px]:flex items-center rounded-full border border-[#ded1bf] bg-[#fbf8f2]/90 p-1 shadow-[0_7px_20px_rgba(69,47,26,0.06)]"><NotificationCenter /></div>
+            <div className="min-[900px]:hidden"><LocationPicker compact /></div>
             <Link
               href="/brief"
               style={{ backgroundColor: palette.primary, color: palette.paper }}
-              className="vb-button vb-focus inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-bold shadow-[0_8px_18px_rgba(43,30,18,0.16)] sm:px-4"
+              className="vb-button vb-focus inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-bold shadow-[0_8px_18px_rgba(43,30,18,0.16)] min-[900px]:px-3.5 sm:px-4"
             >
               <Compass className="h-3.5 w-3.5 text-[#e5b77a]" />
               <span className="hidden min-[540px]:inline">Build an edit</span>
@@ -93,7 +93,7 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
               type="button"
               onClick={() => setMobileOpen((open) => !open)}
               style={{ backgroundColor: palette.paper, borderColor: palette.border, color: palette.ink }}
-              className="vb-focus grid h-10 w-10 place-items-center rounded-full border shadow-sm xl:hidden"
+              className="vb-focus grid h-10 w-10 place-items-center rounded-full border shadow-sm min-[900px]:hidden"
               aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
               aria-expanded={mobileOpen}
             >
@@ -101,9 +101,13 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
             </button>
           </div>
         </div>
+        <div className="container hidden min-[900px]:flex items-center justify-between border-t border-[#e9dfd1]/70 py-1.5 text-[0.56rem] font-extrabold uppercase tracking-[0.19em] text-[#8b664a]">
+          <span className="inline-flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[#d6814a]" /> Place <span className="h-px w-5 bg-[#c7ad91]" /> Identity <span className="h-px w-5 bg-[#c7ad91]" /> Possibility</span>
+          <span className="text-[#a17a59]">A local edit, in motion</span>
+        </div>
 
         {mobileOpen && (
-          <div style={{ backgroundColor: palette.page, borderColor: palette.border }} className="border-t px-4 py-4 shadow-[0_18px_34px_rgba(59,41,22,0.10)] xl:hidden">
+          <div style={{ backgroundColor: palette.page, borderColor: palette.border }} className="border-t px-4 py-4 shadow-[0_18px_34px_rgba(59,41,22,0.10)] min-[900px]:hidden">
             <nav className="container" aria-label="Mobile navigation">
               <div className="rounded-[1.4rem] border border-[#ded1bf] bg-[#fbf8f2] p-3 shadow-[0_8px_20px_rgba(69,47,26,0.05)]">
                 <div className="flex items-center justify-between gap-3 border-b border-[#eadfce] pb-3">
@@ -162,7 +166,7 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
         </div>
       </footer>
 
-      <nav aria-label="Mobile bottom navigation" className="fixed inset-x-3 bottom-3 z-50 grid grid-cols-5 items-end rounded-[1.55rem] border border-[#d9ccbe]/90 bg-[#fffaf2]/90 px-1.5 pb-2 pt-2 shadow-[0_18px_42px_rgba(46,30,16,0.22)] backdrop-blur-xl xl:hidden">
+      <nav aria-label="Mobile bottom navigation" className="fixed inset-x-3 bottom-3 z-50 grid grid-cols-5 items-end rounded-[1.55rem] border border-[#d9ccbe]/90 bg-[#fffaf2]/90 px-1.5 pb-2 pt-2 shadow-[0_18px_42px_rgba(46,30,16,0.22)] backdrop-blur-xl min-[900px]:hidden">
         <Link href="/" aria-current={location === "/" ? "page" : undefined} className={`vb-focus flex flex-col items-center gap-1 rounded-xl py-1 text-[0.6rem] font-bold ${location === "/" ? "text-[#9f5d32]" : "text-[#716252]"}`}><House className="h-4 w-4" />Home</Link>
         <Link href="/discover" aria-current={location.startsWith("/discover") ? "page" : undefined} className={`vb-focus flex flex-col items-center gap-1 rounded-xl py-1 text-[0.6rem] font-bold ${location.startsWith("/discover") ? "text-[#9f5d32]" : "text-[#716252]"}`}><MapPin className="h-4 w-4" />Discover</Link>
         <Link href="/brief" aria-label="Start a SURA edit" className="vb-focus -mt-7 flex flex-col items-center gap-1 text-[0.6rem] font-extrabold text-[#3b2b22]"><span className="grid h-14 w-14 place-items-center rounded-[1.3rem] border-4 border-[#fffaf2] bg-[#201a16] shadow-[0_10px_24px_rgba(62,39,21,0.28)]"><SuraCreativeBadge className="h-10 w-10" /></span>Build</Link>

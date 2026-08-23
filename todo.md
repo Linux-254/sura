@@ -163,3 +163,4 @@
 - [x] Replace the boxed SURA monogram with an unboxed editorial SURA wordmark and an integrated badge detail across responsive navigation.
 - [x] Create a packaging-ready SURA creative signature with a gradient wave or brushstroke motif, and integrate it into an aesthetic mobile bottom navigation with regression coverage.
 - [x] Refine the SURA logo into a story-led editorial serif wordmark with three meaningful gradient waves and a symbolic badge that represents the local editing journey.
+- [x] Refine the desktop SURA navigation into a denser, more lively editorial composition that reduces unused header space while preserving clarity and responsive behavior.
