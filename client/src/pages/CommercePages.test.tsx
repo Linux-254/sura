@@ -33,4 +33,11 @@ describe("SURA verified review order cards", () => {
     expect(screen.getByText(/Verified review pending/i)).toBeTruthy();
     expect(screen.queryByRole("button", { name: /Submit for moderation/i })).toBeNull();
   });
+
+  it("surfaces a duplicate-review rejection without reopening an unverified feedback path", () => {
+    const duplicate = { mutate: vi.fn(), isPending: false, isError: true, error: { message: "A verified review has already been submitted for this order" } } as never;
+    render(<OrderCard order={{ ...baseOrder, review: null }} review={{ orderId: 12, rating: 5, comment: "" }} onReviewChange={vi.fn()} submitReview={duplicate} />);
+    expect(screen.getByText(/already recorded for this order/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Submit for moderation" })).toBeTruthy();
+  });
 });

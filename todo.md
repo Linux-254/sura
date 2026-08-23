@@ -60,8 +60,8 @@
 - [x] Guard missing commerce orders before review lookup and exercise the concrete review-creation helper or mutation path for all eligibility rejections.
 - [x] Show persisted verified-review status in private orders and replace the review form after submission.
 - [ ] Add end-to-end tests for delivered-only review eligibility, ownership enforcement, and duplicate-submission prevention.
-- [ ] Add a private-orders submission-journey test that transitions a delivered order from eligible form to persisted review status.
-- [ ] Add review-journey regression coverage that surfaces duplicate rejection and blocks wrong-user or non-delivered attempts through the creation path.
+- [x] Add a private-orders submission-journey test that transitions a delivered order from eligible form to persisted review status.
+- [x] Add review-journey regression coverage that surfaces duplicate rejection and blocks wrong-user or non-delivered attempts through the creation path.
 - [x] Add security, permission, commission, delivery, and review validation tests for the AI commerce flows.
 - [x] Add admin-only company commission controls that enforce and display the 20%–50% platform range.
 - [x] Create reusable SURA editorial loading, skeleton, empty, processing, and error-state components.
