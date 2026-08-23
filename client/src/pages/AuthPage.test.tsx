@@ -5,10 +5,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import AuthPage from "./AuthPage";
 import { getSupabaseEmailRedirect } from "@/lib/supabaseAuthRedirect";
 
-const signUp = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false, error: null }));
-const signIn = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false, error: null }));
-const recovery = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false, error: null }));
-const link = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false, error: null }));
+const signUp = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false, error: null as { message: string } | null }));
+const signIn = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false, error: null as { message: string } | null }));
+const recovery = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false, error: null as { message: string } | null }));
+const link = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false, error: null as { message: string } | null }));
 
 vi.mock("wouter", () => ({ Link: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a> }));
 vi.mock("@/components/VibeLayout", () => ({ VibeLayout: ({ children }: { children: React.ReactNode }) => <main>{children}</main> }));
@@ -21,6 +21,10 @@ afterEach(() => {
   signIn.mutateAsync.mockReset();
   recovery.mutateAsync.mockReset();
   link.mutateAsync.mockReset();
+  signUp.error = null;
+  signIn.error = null;
+  recovery.error = null;
+  link.error = null;
 });
 
 describe("SURA email authentication page", () => {
@@ -68,5 +72,22 @@ describe("SURA email authentication page", () => {
     fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(linkButton);
     await waitFor(() => expect(link.mutateAsync).toHaveBeenCalledWith({ email: "member@example.com", password: "a-safe-password", consent: true }));
+  });
+
+  it("turns an email rate limit into next-step guidance rather than exposing provider text", () => {
+    recovery.error = { message: "email rate limit exceeded" };
+    render(<AuthPage />);
+    expect(screen.getByText("Email sending is temporarily paused.")).toBeTruthy();
+    expect(screen.queryByText("email rate limit exceeded")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /return to sign in/i }));
+    expect(screen.getByRole("tab", { name: "Sign in" }).getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("explains that an email must be confirmed before a SURA sign-in can proceed", () => {
+    signIn.error = { message: "Verify your email before signing in to SURA." };
+    render(<AuthPage />);
+    expect(screen.getByText("Confirm your email before signing in.")).toBeTruthy();
+    expect(screen.getByText(/Open the newest SURA verification email/i)).toBeTruthy();
+    expect(screen.queryByText("Verify your email before signing in to SURA.")).toBeNull();
   });
 });

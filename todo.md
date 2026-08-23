@@ -142,3 +142,4 @@
 - [x] Add environment-aware redirect regression coverage and document the exact Supabase Auth allow-list configuration required for local and production testing.
 - [ ] Trigger and verify Supabase confirmation and password-recovery redirects with the user-approved test email, without storing credentials or creating application data before verification.
 - [ ] Resume the user-approved live Supabase inbox-link redirect check after the provider email rate limit clears; do not request or retain recovery tokens.
+- [x] Replace raw `/join` Supabase rate-limit and unverified-email mutation errors with actionable, privacy-preserving recovery guidance and regression coverage.
