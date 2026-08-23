@@ -134,3 +134,6 @@
 - [x] Add server regression coverage for consented legacy-account linking, including verification, collision, identity-map, and preserved-ownership cases.
 - [x] Add user-facing account-link-required coverage and a consent-confirmation interface, or explicitly keep linking as a support-assisted server flow.
 - [x] Verify Supabase JWT signatures against the project JWKS and add forged-token rejection coverage before issuing a SURA session.
+- [x] Expand the SURA location control to support all 47 Kenyan counties with accessible search and current-location fallback.
+- [x] Refine desktop and mobile navigation into a considered SURA editorial control surface with clear hierarchy and responsive interaction states.
+- [x] Add regression coverage for complete Kenyan county selection and refreshed navigation behavior, then complete desktop/mobile visual QA.

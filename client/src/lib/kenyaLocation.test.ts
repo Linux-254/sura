@@ -13,7 +13,7 @@ describe("Kenya location resolution", () => {
   it("does not treat foreign coordinates as a Kenyan city", () => {
     expect(isWithinKenya(-1.2921, 36.8219)).toBe(true);
     expect(resolveKenyanLocation(-1.2921, 36.8219).city).toBe("Nairobi");
-    expect(resolveKenyanLocation(-6.7924, 39.2083)).toEqual({ inKenya: false, city: null, distanceKm: null });
+    expect(resolveKenyanLocation(-6.7924, 39.2083)).toEqual({ inKenya: false, city: null, county: null, distanceKm: null });
   });
 
   it("supports a manual Kenyan city selection and clear permission fallbacks", () => {

@@ -3,6 +3,7 @@ import React from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { KenyaLocationProvider, useKenyaLocation } from "./KenyaLocationContext";
+import { KENYAN_COUNTIES, resolveKenyanLocation } from "@/lib/kenyaLocation";
 
 function LocationProbe() {
   const { city, message, requestLocation, setCity, status } = useKenyaLocation();
@@ -36,12 +37,12 @@ afterEach(() => {
 });
 
 describe("KenyaLocationProvider", () => {
-  it("persists a manually selected Kenyan city", () => {
+  it("persists a manually selected Kenyan county while preserving the county-facing state contract", () => {
     renderProbe();
     fireEvent.click(screen.getByText("Choose Kisumu"));
     expect(screen.getByTestId("city").textContent).toContain("Kisumu");
     expect(screen.getByTestId("status").textContent).toContain("manual");
-    expect(window.localStorage.getItem("vibebuild-kenya-city")).toBe("Kisumu");
+    expect(window.localStorage.getItem("vibebuild-kenya-county")).toBe("Kisumu");
   });
 
   it("provides a manual-city fallback when browser location is unavailable", () => {
@@ -49,7 +50,7 @@ describe("KenyaLocationProvider", () => {
     renderProbe();
     fireEvent.click(screen.getByText("Use location"));
     expect(screen.getByTestId("status").textContent).toContain("unsupported");
-    expect(screen.getByTestId("message").textContent).toContain("Choose your city instead");
+    expect(screen.getByTestId("message").textContent).toContain("Choose your county instead");
   });
 
   it("handles denied permission and outside-Kenya coordinates without storing a location", () => {
@@ -65,5 +66,12 @@ describe("KenyaLocationProvider", () => {
     fireEvent.click(screen.getByText("Use location"));
     expect(screen.getByTestId("status").textContent).toContain("outside_kenya");
     expect(screen.getByTestId("city").textContent).toContain("none");
+  });
+
+  it("makes all 47 counties available and resolves a nearby county from browser location without persisting coordinates", () => {
+    expect(KENYAN_COUNTIES).toHaveLength(47);
+    expect(new Set(KENYAN_COUNTIES.map((county) => county.code)).size).toBe(47);
+    expect(KENYAN_COUNTIES.map((county) => county.name)).toEqual(expect.arrayContaining(["Nairobi", "Lamu", "Turkana", "Wajir", "Kisii"]));
+    expect(resolveKenyanLocation(1.7471, 40.0573)).toMatchObject({ inKenya: true, county: "Wajir", city: "Wajir" });
   });
 });
