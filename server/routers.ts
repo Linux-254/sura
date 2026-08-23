@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { completeAiAssistRequest, createAiAssistRequest, createBuildShareRecord, createCommerceOrder, createCompanyForUser, createCompanyProduct, createDeliveryQuote, createDiscountOffer, createInquiryRecord, createPaymentOrder, createPlatformAnnouncement, createVerifiedReview, failAiAssistRequest, getAccountProfile, getActiveAuthVisualSet, getAdminCompanyReviewQueue, getAdminDiscountReviewQueue, getAestheticPreferences, getAiAssistRequestForUser, getBoardSelections, getBuildShareRecord, getCompaniesForUser, getCompanyContacts, getCompanyMembership, getCompanyOwnedByUser, getCompanyProduct, getCompanyProducts, getCommerceOrdersForUser, getDiscountOffersForCompany, getOrCreateFreeMembership, getPaymentOrdersForUser, getProductById, getPublicAccountProfile, getPublicCompanyProfile, getPublicDiscountOffers, getPublicPlatformContacts, getPublicProducts, getSavedVendorIds, getWebNotificationFeed, markWebNotificationRead, recordAiImageConsent, recordLegalConsent, publishAuthVisualSet, replaceCompanyContacts, replacePlatformContacts, setAestheticPreferences, toggleBuildBoardSelection, toggleSavedVendor, updateCompanyCommissionRate, updateCompanyReviewStatus, updateDiscountOfferReviewStatus, upsertAccountProfile } from "./db";
+import { completeAiAssistRequest, createAiAssistRequest, createBuildShareRecord, createCompanyForUser, createCompanyPost, createCompanyProduct, createCommerceOrder, createDeliveryQuote, createDiscountOffer, createInquiryRecord, createPaymentOrder, createPlatformAnnouncement, createVerifiedReview, failAiAssistRequest, getAccountProfile, getActiveAuthVisualSet, getAdminCompanyPostReviewQueue, getAdminCompanyReviewQueue, getAdminDiscountReviewQueue, getAestheticPreferences, getAiAssistRequestForUser, getBoardSelections, getBuildShareRecord, getCompaniesForUser, getCompanyContacts, getCompanyMembership, getCompanyOwnedByUser, getCompanyPostsForOwner, getCompanyProduct, getCompanyProducts, getCommerceOrdersForUser, getCompanySocialSummary, getDiscountOffersForCompany, getOrCreateFreeMembership, getPaymentOrdersForUser, getProductById, getPublicAccountProfile, getPublicCompanyProfile, getPublicCompanyPosts, getPublicDiscountOffers, getPublicPlatformContacts, getPublicProducts, getSavedVendorIds, getSocialFeed, getUserSocialSummary, getWebNotificationFeed, markWebNotificationRead, recordAiImageConsent, recordLegalConsent, publishAuthVisualSet, replaceCompanyContacts, replacePlatformContacts, setAestheticPreferences, toggleBuildBoardSelection, toggleCompanyFollow, togglePostLike, togglePostRepost, toggleSavedVendor, toggleUserFollow, updateCompanyCommissionRate, updateCompanyPostStatus, updateCompanyReviewStatus, updateDiscountOfferReviewStatus, upsertAccountProfile } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
@@ -13,6 +13,7 @@ import { createAiAssistPlan, storeConsentImage } from "./sura-ai-service";
 import { assertPersonalEditCollectionOwnership, createPersonalEditCollection, createPersonalEditItem, getPersonalEditCollectionsForUser, getPersonalEditItemsForUser } from "./db";
 import { personalEditCollectionInputSchema, personalEditItemInputSchema } from "./sura-validation";
 import { storePrivatePersonalEditImage } from "./personal-edit";
+import { storeCompanyPostImage } from "./post-media";
 import { storeCompanyProductImage } from "./product-media";
 import { storeAuthVisualImage } from "./auth-visuals";
 
@@ -45,6 +46,15 @@ export const appRouter = router({
       if (!vendor) throw new Error("Vendor profile not found");
       return vendor;
     }),
+  }),
+  social: router({
+    feed: publicProcedure.input(z.object({ mode: z.enum(["forYou", "following"]).default("forYou") }).optional()).query(({ ctx, input }) => getSocialFeed(ctx.user?.id, input?.mode ?? "forYou")),
+    profile: publicProcedure.input(z.object({ kind: z.enum(["person", "company"]), id: z.number().int().positive() })).query(({ ctx, input }) => input.kind === "person" ? getUserSocialSummary(input.id, ctx.user?.id) : getCompanySocialSummary(input.id, ctx.user?.id)),
+    companyPosts: publicProcedure.input(z.object({ companyId: z.number().int().positive() })).query(({ ctx, input }) => getPublicCompanyPosts(input.companyId, ctx.user?.id)),
+    followUser: protectedProcedure.input(z.object({ userId: z.number().int().positive(), shouldFollow: z.boolean() })).mutation(({ ctx, input }) => toggleUserFollow(ctx.user.id, input.userId, input.shouldFollow)),
+    followCompany: protectedProcedure.input(z.object({ companyId: z.number().int().positive(), shouldFollow: z.boolean() })).mutation(({ ctx, input }) => toggleCompanyFollow(ctx.user.id, input.companyId, input.shouldFollow)),
+    likePost: protectedProcedure.input(z.object({ postId: z.number().int().positive(), shouldLike: z.boolean() })).mutation(({ ctx, input }) => togglePostLike(ctx.user.id, input.postId, input.shouldLike)),
+    repostPost: protectedProcedure.input(z.object({ postId: z.number().int().positive(), shouldRepost: z.boolean(), note: z.string().trim().max(280).optional() })).mutation(({ ctx, input }) => togglePostRepost(ctx.user.id, input.postId, input.shouldRepost, input.note)),
   }),
   builds: router({
     list: publicProcedure.query(() => demoBuilds),
@@ -210,6 +220,17 @@ export const appRouter = router({
       return membership;
     }),
     create: protectedProcedure.input(companyCreateInputSchema).mutation(({ ctx, input }) => createCompanyForUser({ ownerUserId: ctx.user.id, ...input })),
+    posts: protectedProcedure.input(z.object({ companyId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+      const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
+      if (!company) throw new Error("You can only manage posts for a company you own");
+      return getCompanyPostsForOwner(input.companyId);
+    }),
+    createPost: protectedProcedure.input(z.object({ companyId: z.number().int().positive(), title: z.string().trim().min(3).max(160), caption: z.string().trim().max(2000).optional(), aestheticTags: z.array(z.string().trim().min(1).max(48)).max(8).default([]), imageDataUrl: z.string().regex(/^data:image\/(jpeg|png|webp);base64,/).max(7_000_000) })).mutation(async ({ ctx, input }) => {
+      const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
+      if (!company) throw new Error("You can only publish posts for a company you own");
+      const stored = await storeCompanyPostImage({ dataUrl: input.imageDataUrl, companyId: input.companyId, uploadedByUserId: ctx.user.id });
+      return createCompanyPost({ companyId: input.companyId, createdByUserId: ctx.user.id, title: input.title, caption: input.caption || null, imageUrl: stored.url, aestheticTags: JSON.stringify(input.aestheticTags) });
+    }),
     products: protectedProcedure.input(z.object({ companyId: z.number().int().positive() })).query(async ({ ctx, input }) => {
       const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
       if (!company) throw new Error("You can only manage products for a company you own");
@@ -263,6 +284,8 @@ export const appRouter = router({
     setCompanyReviewStatus: adminProcedure.input(z.object({ companyId: z.number().int().positive(), verificationStatus: z.enum(["draft", "pending", "verified", "rejected"]) })).mutation(({ input }) => updateCompanyReviewStatus(input.companyId, input.verificationStatus)),
     setCompanyCommissionRate: adminProcedure.input(z.object({ companyId: z.number().int().positive(), commissionRatePct: z.number().int().min(20).max(50) })).mutation(({ input }) => updateCompanyCommissionRate(input.companyId, input.commissionRatePct)),
     discountReviewQueue: adminProcedure.query(() => getAdminDiscountReviewQueue()),
+    postReviewQueue: adminProcedure.query(() => getAdminCompanyPostReviewQueue()),
+    setPostStatus: adminProcedure.input(z.object({ postId: z.number().int().positive(), status: z.enum(["draft", "pending", "published", "rejected"]) })).mutation(({ input }) => updateCompanyPostStatus(input.postId, input.status)),
     setDiscountReviewStatus: adminProcedure.input(z.object({ offerId: z.number().int().positive(), status: z.enum(["approved", "rejected"]) })).mutation(({ input }) => updateDiscountOfferReviewStatus(input.offerId, input.status)),
     createAnnouncement: adminProcedure.input(announcementInputSchema).mutation(({ ctx, input }) => createPlatformAnnouncement({ createdByUserId: ctx.user.id, ...input })),
     replacePlatformContacts: adminProcedure.input(z.object({ contacts: z.array(contactInputSchema).max(6) })).mutation(({ ctx, input }) => replacePlatformContacts(ctx.user.id, input.contacts)),

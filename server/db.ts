@@ -1,6 +1,6 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { aiAssistRequests, aiImageConsents, authVisualSets, buildBoardSelections, buildShareItems, buildShares, commerceOrders, companies, companyContacts, companyMembers, companyProducts, deliveryQuotes, discountOffers, inquiries, InsertUser, legalConsents, paymentOrders, personalEditCollections, personalEditItems, platformAnnouncements, platformContacts, savedVendors, socialLinks, userMemberships, userProfiles, users, verifiedReviews, webNotifications } from "../drizzle/schema";
+import { aiAssistRequests, aiImageConsents, authVisualSets, buildBoardSelections, buildShareItems, buildShares, commerceOrders, companies, companyContacts, companyMembers, companyProducts, deliveryQuotes, discountOffers, inquiries, InsertUser, legalConsents, paymentOrders, personalEditCollections, personalEditItems, platformAnnouncements, platformContacts, postLikes, postReposts, savedVendors, socialLinks, userFollows, companyFollows, companyPosts, userMemberships, userProfiles, users, verifiedReviews, webNotifications } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { assertVerifiedReviewEligibility } from "./sura-commerce";
 
@@ -169,7 +169,7 @@ export async function getAccountProfile(userId: number) {
   return { profile, socialLinks: links };
 }
 
-const selectableAestheticNames = new Set(["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier", "Ink & Ivory", "Orchid After Dark", "Tangerine Social", "Moss & Marigold", "Cobalt Ritual", "Thermal Bloom"]);
+const selectableAestheticNames = new Set(["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier", "Ink & Ivory", "Orchid After Dark", "Tangerine Social", "Moss & Marigold", "Cobalt Ritual", "Thermal Bloom", "Soft Comfort", "Warm Minimal", "Quiet Utility", "Earthbound Home", "Bright Play", "Street Archive", "Studio Calm", "Pet Piece", "Object Story", "Motion Detail"]);
 
 function parseAestheticPreferences(raw: string | null | undefined) {
   try {
@@ -256,6 +256,173 @@ export async function getPublicCompanyProfile(slug: string) {
   return { company, socialLinks: links, contacts };
 }
 
+export async function getUserSocialSummary(targetUserId: number, viewerUserId?: number) {
+  const db = await getDb();
+  if (!db) return { followerCount: 0, followingCount: 0, repostCount: 0, isFollowing: false, reposts: [] };
+  const [followers, following, repostCountRows] = await Promise.all([
+    db.select({ total: count(userFollows.id) }).from(userFollows).where(eq(userFollows.followedUserId, targetUserId)),
+    db.select({ total: count(userFollows.id) }).from(userFollows).where(eq(userFollows.followerUserId, targetUserId)),
+    db.select({ total: count(postReposts.id) }).from(postReposts).where(eq(postReposts.userId, targetUserId)),
+  ]);
+  const isFollowing = viewerUserId !== undefined && viewerUserId !== targetUserId
+    ? (await db.select({ id: userFollows.id }).from(userFollows).where(and(eq(userFollows.followerUserId, viewerUserId), eq(userFollows.followedUserId, targetUserId))).limit(1)).length > 0
+    : false;
+  return {
+    followerCount: Number(followers[0]?.total ?? 0),
+    followingCount: Number(following[0]?.total ?? 0),
+    repostCount: Number(repostCountRows[0]?.total ?? 0),
+    isFollowing,
+    reposts: await getPublicRepostsForUser(targetUserId, viewerUserId),
+  };
+}
+
+export async function getCompanySocialSummary(companyId: number, viewerUserId?: number) {
+  const db = await getDb();
+  if (!db) return { followerCount: 0, followingCount: 0, repostCount: 0, isFollowing: false };
+  const [followers] = await db.select({ total: count(companyFollows.id) }).from(companyFollows).where(eq(companyFollows.companyId, companyId));
+  const isFollowing = viewerUserId !== undefined
+    ? (await db.select({ id: companyFollows.id }).from(companyFollows).where(and(eq(companyFollows.followerUserId, viewerUserId), eq(companyFollows.companyId, companyId))).limit(1)).length > 0
+    : false;
+  const [reposts] = await db.select({ total: count(postReposts.id) }).from(postReposts).innerJoin(companyPosts, eq(postReposts.postId, companyPosts.id)).where(eq(companyPosts.companyId, companyId));
+  return { followerCount: Number(followers?.total ?? 0), followingCount: 0, repostCount: Number(reposts?.total ?? 0), isFollowing };
+}
+
+async function getPostMetrics(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, postIds: number[], viewerUserId?: number) {
+  if (postIds.length === 0) return { likes: new Map<number, number>(), reposts: new Map<number, number>(), likedIds: new Set<number>(), repostedIds: new Set<number>() };
+  const [likes, reposts, viewerLikes, viewerReposts] = await Promise.all([
+    db.select({ postId: postLikes.postId, total: count(postLikes.id) }).from(postLikes).where(inArray(postLikes.postId, postIds)).groupBy(postLikes.postId),
+    db.select({ postId: postReposts.postId, total: count(postReposts.id) }).from(postReposts).where(inArray(postReposts.postId, postIds)).groupBy(postReposts.postId),
+    viewerUserId === undefined ? Promise.resolve([]) : db.select({ postId: postLikes.postId }).from(postLikes).where(and(eq(postLikes.userId, viewerUserId), inArray(postLikes.postId, postIds))),
+    viewerUserId === undefined ? Promise.resolve([]) : db.select({ postId: postReposts.postId }).from(postReposts).where(and(eq(postReposts.userId, viewerUserId), inArray(postReposts.postId, postIds))),
+  ]);
+  return {
+    likes: new Map(likes.map((row) => [row.postId, Number(row.total)])),
+    reposts: new Map(reposts.map((row) => [row.postId, Number(row.total)])),
+    likedIds: new Set(viewerLikes.map((row) => row.postId)),
+    repostedIds: new Set(viewerReposts.map((row) => row.postId)),
+  };
+}
+
+export async function getPublicRepostsForUser(userId: number, viewerUserId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({
+    repost: postReposts,
+    post: companyPosts,
+    company: { id: companies.id, name: companies.name, slug: companies.slug, city: companies.city },
+  }).from(postReposts)
+    .innerJoin(companyPosts, eq(postReposts.postId, companyPosts.id))
+    .innerJoin(companies, eq(companyPosts.companyId, companies.id))
+    .where(and(eq(postReposts.userId, userId), eq(companyPosts.status, "published"), eq(companyPosts.isPublic, true), eq(companies.verificationStatus, "verified")))
+    .orderBy(desc(postReposts.createdAt)).limit(12);
+  const metrics = await getPostMetrics(db, rows.map((row) => row.post.id), viewerUserId);
+  return rows.map((row) => ({ ...row, likeCount: metrics.likes.get(row.post.id) ?? 0, repostCount: metrics.reposts.get(row.post.id) ?? 0, liked: metrics.likedIds.has(row.post.id), reposted: metrics.repostedIds.has(row.post.id) }));
+}
+
+export async function getSocialFeed(viewerUserId?: number, mode: "forYou" | "following" = "forYou") {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({
+    post: companyPosts,
+    company: { id: companies.id, name: companies.name, slug: companies.slug, city: companies.city, websiteUrl: companies.websiteUrl },
+  }).from(companyPosts)
+    .innerJoin(companies, eq(companyPosts.companyId, companies.id))
+    .where(and(eq(companyPosts.status, "published"), eq(companyPosts.isPublic, true), eq(companies.verificationStatus, "verified")))
+    .orderBy(desc(companyPosts.createdAt)).limit(50);
+  let reasons = new Map<number, "following_company" | "following_person" | "liked_by_following">();
+  if (mode === "following") {
+    if (viewerUserId === undefined) return [];
+    const [userFollowRows, companyFollowRows] = await Promise.all([
+      db.select({ followedUserId: userFollows.followedUserId }).from(userFollows).where(eq(userFollows.followerUserId, viewerUserId)).limit(200),
+      db.select({ companyId: companyFollows.companyId }).from(companyFollows).where(eq(companyFollows.followerUserId, viewerUserId)).limit(200),
+    ]);
+    const followedUserIds = userFollowRows.map((row) => row.followedUserId);
+    const followedCompanyIds = companyFollowRows.map((row) => row.companyId);
+    const likedByFollowingRows = followedUserIds.length === 0 ? [] : await db.select({ postId: postLikes.postId }).from(postLikes).where(inArray(postLikes.userId, followedUserIds)).limit(500);
+    const likedByFollowing = new Set(likedByFollowingRows.map((row) => row.postId));
+    const reasonEntries: Array<[number, "following_company" | "following_person" | "liked_by_following"]> = [];
+    for (const row of rows) {
+      if (followedCompanyIds.includes(row.company.id)) reasonEntries.push([row.post.id, "following_company"]);
+      else if (followedUserIds.includes(row.post.createdByUserId)) reasonEntries.push([row.post.id, "following_person"]);
+      else if (likedByFollowing.has(row.post.id)) reasonEntries.push([row.post.id, "liked_by_following"]);
+    }
+    reasons = new Map(reasonEntries);
+    if (reasons.size === 0) return [];
+  }
+  const visibleRows = mode === "following" ? rows.filter((row) => reasons.has(row.post.id)) : rows;
+  const metrics = await getPostMetrics(db, visibleRows.map((row) => row.post.id), viewerUserId);
+  return visibleRows.map((row) => ({ ...row, reason: reasons.get(row.post.id), likeCount: metrics.likes.get(row.post.id) ?? 0, repostCount: metrics.reposts.get(row.post.id) ?? 0, liked: metrics.likedIds.has(row.post.id), reposted: metrics.repostedIds.has(row.post.id) }));
+}
+
+export async function getPublicCompanyPosts(companyId: number, viewerUserId?: number) {
+  const feed = await getSocialFeed(viewerUserId, "forYou");
+  return feed.filter((item) => item.company.id === companyId);
+}
+
+export async function getCompanyPostsForOwner(companyId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(companyPosts).where(eq(companyPosts.companyId, companyId)).orderBy(desc(companyPosts.createdAt)).limit(50);
+}
+
+export async function createCompanyPost(input: typeof companyPosts.$inferInsert) {
+  const db = await getDb();
+  if (!db) return { id: 0, persisted: false };
+  const result = await db.insert(companyPosts).values({ ...input, status: "pending", isPublic: false });
+  return { id: Number(result[0]?.insertId ?? 0), persisted: true };
+}
+
+export async function updateCompanyPostStatus(postId: number, status: "draft" | "pending" | "published" | "rejected") {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  await db.update(companyPosts).set({ status, isPublic: status === "published" }).where(eq(companyPosts.id, postId));
+  return { persisted: true };
+}
+
+export async function toggleUserFollow(followerUserId: number, followedUserId: number, shouldFollow: boolean) {
+  const db = await getDb();
+  if (!db || followerUserId === followedUserId) return { following: false, persisted: false };
+  if (shouldFollow) {
+    const [target] = await db.select({ userId: userProfiles.userId }).from(userProfiles).where(and(eq(userProfiles.userId, followedUserId), eq(userProfiles.isPublic, true))).limit(1);
+    if (!target) return { following: false, persisted: false };
+    await db.insert(userFollows).values({ followerUserId, followedUserId }).onDuplicateKeyUpdate({ set: { createdAt: new Date() } });
+  }
+  else await db.delete(userFollows).where(and(eq(userFollows.followerUserId, followerUserId), eq(userFollows.followedUserId, followedUserId)));
+  return { following: shouldFollow, persisted: true };
+}
+
+export async function toggleCompanyFollow(followerUserId: number, companyId: number, shouldFollow: boolean) {
+  const db = await getDb();
+  if (!db) return { following: false, persisted: false };
+  if (shouldFollow) {
+    const [target] = await db.select({ id: companies.id }).from(companies).where(and(eq(companies.id, companyId), eq(companies.verificationStatus, "verified"))).limit(1);
+    if (!target) return { following: false, persisted: false };
+    await db.insert(companyFollows).values({ followerUserId, companyId }).onDuplicateKeyUpdate({ set: { createdAt: new Date() } });
+  }
+  else await db.delete(companyFollows).where(and(eq(companyFollows.followerUserId, followerUserId), eq(companyFollows.companyId, companyId)));
+  return { following: shouldFollow, persisted: true };
+}
+
+export async function togglePostLike(userId: number, postId: number, shouldLike: boolean) {
+  const db = await getDb();
+  if (!db) return { liked: false, persisted: false };
+  const [post] = await db.select({ id: companyPosts.id }).from(companyPosts).where(and(eq(companyPosts.id, postId), eq(companyPosts.status, "published"), eq(companyPosts.isPublic, true))).limit(1);
+  if (!post) return { liked: false, persisted: false };
+  if (shouldLike) await db.insert(postLikes).values({ userId, postId }).onDuplicateKeyUpdate({ set: { createdAt: new Date() } });
+  else await db.delete(postLikes).where(and(eq(postLikes.userId, userId), eq(postLikes.postId, postId)));
+  return { liked: shouldLike, persisted: true };
+}
+
+export async function togglePostRepost(userId: number, postId: number, shouldRepost: boolean, note?: string) {
+  const db = await getDb();
+  if (!db) return { reposted: false, persisted: false };
+  const [post] = await db.select({ id: companyPosts.id }).from(companyPosts).where(and(eq(companyPosts.id, postId), eq(companyPosts.status, "published"), eq(companyPosts.isPublic, true))).limit(1);
+  if (!post) return { reposted: false, persisted: false };
+  if (shouldRepost) await db.insert(postReposts).values({ userId, postId, note: note?.trim() || null }).onDuplicateKeyUpdate({ set: { note: note?.trim() || null, createdAt: new Date() } });
+  else await db.delete(postReposts).where(and(eq(postReposts.userId, userId), eq(postReposts.postId, postId)));
+  return { reposted: shouldRepost, persisted: true };
+}
+
 export async function getPaymentOrdersForUser(userId: number) {
   const db = await getDb();
   if (!db) return [];
@@ -280,6 +447,16 @@ export async function getAdminCompanyReviewQueue() {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(companies).limit(50);
+}
+
+export async function getAdminCompanyPostReviewQueue() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({ post: companyPosts, company: { id: companies.id, name: companies.name, slug: companies.slug } })
+    .from(companyPosts)
+    .innerJoin(companies, eq(companyPosts.companyId, companies.id))
+    .where(eq(companyPosts.status, "pending"))
+    .orderBy(desc(companyPosts.createdAt)).limit(50);
 }
 
 export async function updateCompanyReviewStatus(companyId: number, verificationStatus: "draft" | "pending" | "verified" | "rejected") {

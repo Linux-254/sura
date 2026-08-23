@@ -3,7 +3,7 @@ import { z } from "zod";
 export const socialPlatforms = ["instagram", "tiktok", "linkedin", "youtube", "x", "website"] as const;
 export const paymentOrderTypes = ["company_membership", "vendor_feature", "build_consultation"] as const;
 export const contactTypes = ["email", "phone", "whatsapp", "address"] as const;
-export const selectableAesthetics = ["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier", "Ink & Ivory", "Orchid After Dark", "Tangerine Social", "Moss & Marigold", "Cobalt Ritual", "Thermal Bloom"] as const;
+export const selectableAesthetics = ["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier", "Ink & Ivory", "Orchid After Dark", "Tangerine Social", "Moss & Marigold", "Cobalt Ritual", "Thermal Bloom", "Soft Comfort", "Warm Minimal", "Quiet Utility", "Earthbound Home", "Bright Play", "Street Archive", "Studio Calm", "Pet Piece", "Object Story", "Motion Detail"] as const;
 export const personalEditTypes = ["wardrobe", "tattoo", "room", "books", "lighting", "inspiration"] as const;
 
 const platformHosts: Record<Exclude<(typeof socialPlatforms)[number], "website">, string[]> = {

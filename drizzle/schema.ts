@@ -528,5 +528,88 @@ export const inquiries = mysqlTable(
   ],
 );
 
+export const userFollows = mysqlTable(
+  "user_follows",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    followerUserId: int("followerUserId").notNull(),
+    followedUserId: int("followedUserId").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("user_follows_pair_unique").on(table.followerUserId, table.followedUserId),
+    index("user_follows_follower_idx").on(table.followerUserId),
+    index("user_follows_followed_idx").on(table.followedUserId),
+  ],
+);
+
+export const companyFollows = mysqlTable(
+  "company_follows",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    followerUserId: int("followerUserId").notNull(),
+    companyId: int("companyId").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("company_follows_pair_unique").on(table.followerUserId, table.companyId),
+    index("company_follows_follower_idx").on(table.followerUserId),
+    index("company_follows_company_idx").on(table.companyId),
+  ],
+);
+
+export const companyPosts = mysqlTable(
+  "company_posts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    companyId: int("companyId").notNull(),
+    createdByUserId: int("createdByUserId").notNull(),
+    title: varchar("title", { length: 160 }).notNull(),
+    caption: text("caption"),
+    imageUrl: text("imageUrl").notNull(),
+    aestheticTags: text("aestheticTags"),
+    status: mysqlEnum("status", ["draft", "pending", "published", "rejected"]).default("pending").notNull(),
+    isPublic: boolean("isPublic").default(false).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [
+    index("company_posts_company_idx").on(table.companyId),
+    index("company_posts_status_idx").on(table.status),
+    index("company_posts_created_idx").on(table.createdAt),
+  ],
+);
+
+export const postLikes = mysqlTable(
+  "post_likes",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    postId: int("postId").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("post_likes_user_post_unique").on(table.userId, table.postId),
+    index("post_likes_post_idx").on(table.postId),
+    index("post_likes_user_idx").on(table.userId),
+  ],
+);
+
+export const postReposts = mysqlTable(
+  "post_reposts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    postId: int("postId").notNull(),
+    note: varchar("note", { length: 280 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("post_reposts_user_post_unique").on(table.userId, table.postId),
+    index("post_reposts_post_idx").on(table.postId),
+    index("post_reposts_user_idx").on(table.userId),
+  ],
+);
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;

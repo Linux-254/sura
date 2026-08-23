@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const aiAssistKinds = ["home_refresh", "personal_style", "footwear_fit", "inspiration"] as const;
 export const productCategories = ["apparel", "footwear", "home", "accessory"] as const;
-const aiAssistAesthetics = ["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier", "Ink & Ivory", "Orchid After Dark", "Tangerine Social", "Moss & Marigold", "Cobalt Ritual", "Thermal Bloom"] as const;
+const aiAssistAesthetics = ["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier", "Ink & Ivory", "Orchid After Dark", "Tangerine Social", "Moss & Marigold", "Cobalt Ritual", "Thermal Bloom", "Soft Comfort", "Warm Minimal", "Quiet Utility", "Earthbound Home", "Bright Play", "Street Archive", "Studio Calm", "Pet Piece", "Object Story", "Motion Detail"] as const;
 
 export const aiAssistInputSchema = z.object({
   kind: z.enum(aiAssistKinds),

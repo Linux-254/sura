@@ -22,6 +22,9 @@ Sura uses its own vocabulary so the platform does not feel like a copy of anothe
 | **Field Note** | A short visual post about a place, product, person, or idea. |
 | **Make a Signal** | The mobile-first action for creating a brief or starting an AI-assisted direction. |
 | **Company Studio** | A verified company workspace for publishing products, offers, contacts, and public information. |
+| **Repost to my direction** | Carry a verified business signal onto your own public Sura profile. |
+| **Curate** | Like a signal to show interest and help it travel through the network. |
+| **Following** | A personal stream built from followed people, verified studios, and signals liked by people you follow. |
 
 ## Main experiences
 
@@ -32,6 +35,10 @@ The product experience is image-led. A product can contain a dominant primary im
 The company flow is designed as a publishing studio. A company owner uploads a gallery, writes a structured description, adds price and stock details, previews the public presentation, and publishes to a verified catalog. A company may create a product-specific offer or a shop-wide offer. Offers remain private until an administrator approves them. Customers see the original price, effective price, saving, offer code, and important conditions together.
 
 Public profiles use a Sura Shelf instead of generic story or highlight terminology. The shelf presents four visual windows such as Point of View, Field Notes, Made Here, and Next Signal. The structure is reusable for people and companies and remains image-first on small screens.
+
+Sura’s first social layer is deliberately focused. People can follow public people and verified companies, like company signals, and repost those signals to their own public profile with original attribution. The Following stream includes followed studios, followed people’s activity, and posts liked by followed people. Unique relationship constraints make repeated taps safe, while public visibility and server-side authentication checks protect private accounts and unverified company content.
+
+The first release keeps business contact simple and accountable. People can contact a company through its published public route or the existing inquiry form. Sura does not launch open-ended direct messages yet because a message board would add moderation, abuse handling, unread states, notification delivery, and support work before the discovery loop has earned that complexity.
 
 ## Mobile-first platform behavior
 
@@ -78,7 +85,7 @@ The admin visual flow is intentionally separate from the user’s personal edits
 
 ## Revenue and engagement model
 
-Sura is built to reduce the amount of work required to move from discovery to action.
+Sura is built to reduce the amount of work required to move from discovery to action. It gives businesses a visual publishing surface and gives people a way to carry the best local work into their own point of view, creating more organic reach without requiring a separate content system.
 
 | Revenue or growth path | How Sura creates the opportunity |
 |---|---|
@@ -116,16 +123,19 @@ client/
       AuthPage.tsx                   Image-led sign-in experience
       Home.tsx                       Mobile-first feed surface
       EngagementPages.tsx            Admin engagement and visual publishing
-      PublicProfilePage.tsx          Public profile and Sura Shelf
+      PublicProfilePage.tsx          Public profile, follow controls, and repost shelf
 server/
   auth-visuals.ts                    Secure admin visual upload helper
-  db.ts                              Visual set persistence and public retrieval
-  routers.ts                         Public query and admin mutation contracts
+  post-media.ts                      Managed company-post image upload helper
+  db.ts                              Feed, social graph, and profile persistence
+  routers.ts                         Public, social, company, and admin contracts
 drizzle/
-  schema.ts                          Auth visual set table
+  schema.ts                          Platform and social data tables
   0009_stiff_mole_man.sql            Auth visual set migration
+  0010_fine_boomer.sql               Social network migration
 docs/
   product-publishing.md              Product gallery, offer, and visibility workflow
+  sura-social-model.md               Social, contact, and aesthetic model
 ```
 
 ## Local development
@@ -143,7 +153,7 @@ pnpm test
 pnpm build
 ```
 
-Apply the database migrations in the environment that contains the real `DATABASE_URL`. The new auth visual migration is `drizzle/0009_stiff_mole_man.sql`. A placeholder database URL can be used to generate migration files locally, but migrations should only be applied against the intended environment.
+Apply the database migrations in the environment that contains the real `DATABASE_URL`. The social rollout adds `drizzle/0010_fine_boomer.sql` after the auth visual migration. A placeholder database URL can be used to generate migration files locally, but migrations should only be applied against the intended environment.
 
 ## Operational notes
 
