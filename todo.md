@@ -161,3 +161,4 @@
 - [x] Fix the mobile county finder so its search, county list, and close control stay fully contained and scrollable at narrow viewport widths.
 - [x] Replace the generic SURA “S” header mark with a distinctive, packaging-ready monogram that remains legible at mobile and desktop navigation sizes.
 - [x] Replace the boxed SURA monogram with an unboxed editorial SURA wordmark and an integrated badge detail across responsive navigation.
+- [x] Create a packaging-ready SURA creative signature with a gradient wave or brushstroke motif, and integrate it into an aesthetic mobile bottom navigation with regression coverage.

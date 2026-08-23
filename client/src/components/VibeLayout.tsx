@@ -1,5 +1,5 @@
 import React, { useState, type ReactNode } from "react";
-import { ArrowUpRight, Compass, Instagram, MapPin, Menu, Sparkles, UserRound, X } from "lucide-react";
+import { ArrowUpRight, Compass, House, Instagram, MapPin, Menu, Sparkles, UserRound, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useAestheticTheme } from "@/contexts/AestheticThemeContext";
@@ -7,7 +7,7 @@ import { useKenyaLocation } from "@/contexts/KenyaLocationContext";
 import { AestheticPicker } from "./AestheticPicker";
 import { NotificationCenter } from "./NotificationCenter";
 import { LocationPicker } from "./LocationPicker";
-import { SuraWordmark } from "./SuraWordmark";
+import { SuraCreativeBadge, SuraWordmark } from "./SuraWordmark";
 
 type VibeLayoutProps = { children: ReactNode; dark?: boolean };
 
@@ -37,6 +37,7 @@ function NavLink({ href, children, onClick }: { href: string; children: ReactNod
 }
 
 export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
+  const [location] = useLocation();
   const { county } = useKenyaLocation();
   const { isAuthenticated } = useAuth();
   const { palette } = useAestheticTheme();
@@ -47,7 +48,7 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
   return (
     <div
       style={!dark ? { backgroundColor: palette.page, color: palette.ink } : undefined}
-      className={`min-h-screen ${dark ? "vb-ink text-[#f6f1e9]" : "vb-paper"}`}
+      className={`min-h-screen pb-[5.8rem] xl:pb-0 ${dark ? "vb-ink text-[#f6f1e9]" : "vb-paper"}`}
     >
       <header
         style={!dark ? { backgroundColor: `${palette.page}f2`, borderColor: palette.border } : undefined}
@@ -160,6 +161,14 @@ export function VibeLayout({ children, dark = false }: VibeLayoutProps) {
           <div className={`flex items-center gap-2 text-xs ${dark ? "text-[#c9beb1]" : "text-[#746858]"}`}><MapPin className="h-3.5 w-3.5 text-[#b77835]" /> {county ? `${county} County · Kenya` : "Kenya"}</div>
         </div>
       </footer>
+
+      <nav aria-label="Mobile bottom navigation" className="fixed inset-x-3 bottom-3 z-50 grid grid-cols-5 items-end rounded-[1.55rem] border border-[#d9ccbe]/90 bg-[#fffaf2]/90 px-1.5 pb-2 pt-2 shadow-[0_18px_42px_rgba(46,30,16,0.22)] backdrop-blur-xl xl:hidden">
+        <Link href="/" aria-current={location === "/" ? "page" : undefined} className={`vb-focus flex flex-col items-center gap-1 rounded-xl py-1 text-[0.6rem] font-bold ${location === "/" ? "text-[#9f5d32]" : "text-[#716252]"}`}><House className="h-4 w-4" />Home</Link>
+        <Link href="/discover" aria-current={location.startsWith("/discover") ? "page" : undefined} className={`vb-focus flex flex-col items-center gap-1 rounded-xl py-1 text-[0.6rem] font-bold ${location.startsWith("/discover") ? "text-[#9f5d32]" : "text-[#716252]"}`}><MapPin className="h-4 w-4" />Discover</Link>
+        <Link href="/brief" aria-label="Start a SURA edit" className="vb-focus -mt-7 flex flex-col items-center gap-1 text-[0.6rem] font-extrabold text-[#3b2b22]"><span className="grid h-14 w-14 place-items-center rounded-[1.3rem] border-4 border-[#fffaf2] bg-[#201a16] shadow-[0_10px_24px_rgba(62,39,21,0.28)]"><SuraCreativeBadge className="h-10 w-10" /></span>Build</Link>
+        <Link href="/ai-studio" aria-current={location.startsWith("/ai-studio") ? "page" : undefined} className={`vb-focus flex flex-col items-center gap-1 rounded-xl py-1 text-[0.6rem] font-bold ${location.startsWith("/ai-studio") ? "text-[#9f5d32]" : "text-[#716252]"}`}><Sparkles className="h-4 w-4" />Studio</Link>
+        <Link href={accountHref} aria-current={location === accountHref ? "page" : undefined} className={`vb-focus flex flex-col items-center gap-1 rounded-xl py-1 text-[0.6rem] font-bold ${location === accountHref ? "text-[#9f5d32]" : "text-[#716252]"}`}><UserRound className="h-4 w-4" />Account</Link>
+      </nav>
     </div>
   );
 }

@@ -23,6 +23,10 @@ describe("SURA editorial navigation", () => {
     expect(screen.getAllByRole("link", { name: /join sura/i })[0]?.getAttribute("href")).toBe("/join");
     expect(screen.getByTestId("sura-wordmark").tagName).toBe("svg");
     expect(screen.queryByTestId("sura-monogram")).toBeNull();
+    const dock = screen.getByRole("navigation", { name: /mobile bottom navigation/i });
+    expect(dock.textContent).toMatch(/Home/);
+    expect(dock.textContent).toMatch(/Discover/);
+    expect(screen.getByRole("link", { name: /start a sura edit/i })).toBeTruthy();
   });
 
   it("opens a clearly labelled mobile exploration panel without hiding the local finder", () => {
