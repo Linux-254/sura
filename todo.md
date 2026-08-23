@@ -112,3 +112,12 @@
 - [x] Add explicit company delivery configuration UI and protected procedures, or narrow scope to delivery-visibility-only behavior.
 - [x] Add regression tests for company product management, owner-only settlement records, and any company delivery configuration path.
 - [x] Add browser-like coverage for CompanyDetailPage settlement visibility and CompanyCatalogPage owner flows, including loading, error, and empty states.
+- [ ] Add route-level primary-action assertions for editorial empty, error, recovery, and processing states across the remaining SURA surfaces.
+- [x] Audit the current MySQL/Drizzle data model and Manus OAuth integration for a non-disruptive Supabase migration or coexistence path.
+- [x] Select or provision a Supabase project and define the database, auth, user-identity, row-level-security, and rollback boundaries.
+- [x] Configure Supabase database connectivity and authentication without exposing service credentials or breaking existing SURA accounts.
+- [ ] Migrate or synchronize approved data with validation, then test sign-in, protected ownership, and rollback-safe database behavior.
+- [ ] Create a new Supabase project for SURA and record its non-sensitive project reference.
+- [x] Configure a staged Supabase PostgreSQL and Auth foundation without replacing active Manus OAuth sessions until identity mapping is validated.
+- [x] Record the active user-provided Supabase project reference and distinguish it from an agent-created project.
+- [x] Define and apply Supabase row-level-security policies, or explicitly document why they remain deferred for the staged identity-link data.
