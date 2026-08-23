@@ -11,6 +11,7 @@ import PublicProfilePage from "@/pages/PublicProfilePage";
 import CompanyDetailPage from "@/pages/CompanyDetailPage";
 import { AdminEngagementPage, MembershipPage, OffersPage } from "@/pages/EngagementPages";
 import AiStudioPage from "@/pages/AiStudioPage";
+import AiStudioPreviewPage from "@/pages/AiStudioPreviewPage";
 import { CommerceOrdersPage, ShopPage } from "@/pages/CommercePages";
 import ProductDetailPage from "@/pages/ProductDetailPage";
 import CompanyCatalogPage from "@/pages/CompanyCatalogPage";
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/studios/:slug"><PublicProfilePage kind="company" /></Route>
       <Route path="/board" component={BuildBoard} />
       <Route path="/membership" component={MembershipPage} />
+      <Route path="/ai-studio-preview" component={AiStudioPreviewPage} />
       <Route path="/ai-studio" component={AiStudioPage} />
       <Route path="/edit-studio" component={PersonalEditStudio} />
       <Route path="/shop" component={ShopPage} />
