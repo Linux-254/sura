@@ -4,6 +4,7 @@ import { ArrowUpRight, CheckCircle2, KeyRound, LockKeyhole, Mail, ShieldCheck, S
 import { useAuth } from "@/_core/hooks/useAuth";
 import { VibeLayout } from "@/components/VibeLayout";
 import { trpc } from "@/lib/trpc";
+import { getSupabaseEmailRedirect } from "@/lib/supabaseAuthRedirect";
 
 type Mode = "sign-in" | "sign-up" | "recovery" | "link";
 
@@ -22,7 +23,7 @@ export default function AuthPage() {
   const link = trpc.auth.emailLinkExistingAccount.useMutation();
   const busy = signUp.isPending || signIn.isPending || recovery.isPending || link.isPending;
   const error = signUp.error?.message ?? signIn.error?.message ?? recovery.error?.message ?? link.error?.message;
-  const redirectTo = `${window.location.origin}/join`;
+  const redirectTo = getSupabaseEmailRedirect();
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();

@@ -6,6 +6,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { sdk } from "./_core/sdk";
 import { getUserByEmail, getUserByOpenId, updateUserAuthIdentity, upsertUser } from "./db";
 import { recordSupabaseIdentityLink, registerSupabaseEmailAccount, requestSupabasePasswordRecovery, signInWithSupabaseEmail, verifySupabaseAccessToken } from "./supabase-auth";
+import { resolveSupabaseEmailRedirect } from "./auth-redirect";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { demoBuilds, demoVendors, filterDemoVendors, getBuildRecommendation, getVendorBySlug } from "./vibebuild-data";
@@ -34,7 +35,7 @@ export const appRouter = router({
     emailSignUp: publicProcedure.input(z.object({ email: z.string().email().max(320), password: z.string().min(8).max(128), redirectTo: z.string().url().max(500).optional() })).mutation(async ({ input }) => {
       const existing = await getUserByEmail(input.email);
       if (existing) throw new Error("An existing SURA account uses this email. Sign in to that account before linking email access.");
-      await registerSupabaseEmailAccount(input.email.trim().toLowerCase(), input.password, input.redirectTo);
+      await registerSupabaseEmailAccount(input.email.trim().toLowerCase(), input.password, resolveSupabaseEmailRedirect(input.redirectTo));
       return { status: "verification_required" as const };
     }),
     emailSignIn: publicProcedure.input(z.object({ email: z.string().email().max(320), password: z.string().min(8).max(128) })).mutation(async ({ ctx, input }) => {
@@ -56,7 +57,7 @@ export const appRouter = router({
       return { status: "signed_in" as const, user };
     }),
     emailPasswordRecovery: publicProcedure.input(z.object({ email: z.string().email().max(320), redirectTo: z.string().url().max(500).optional() })).mutation(async ({ input }) => {
-      await requestSupabasePasswordRecovery(input.email.trim().toLowerCase(), input.redirectTo);
+      await requestSupabasePasswordRecovery(input.email.trim().toLowerCase(), resolveSupabaseEmailRedirect(input.redirectTo));
       return { status: "recovery_sent" as const };
     }),
     emailLinkExistingAccount: publicProcedure.input(z.object({ email: z.string().email().max(320), password: z.string().min(8).max(128), consent: z.literal(true) })).mutation(async ({ ctx, input }) => {

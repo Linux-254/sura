@@ -49,7 +49,11 @@ SURA’s rollout uses Supabase email and password authentication only. No OAuth 
 | Reset password | Ask Supabase Auth to email a recovery link | The recovery URL must be allow-listed in Supabase before release |
 | Sign out | Clear the SURA HttpOnly session cookie | The server never retains the Supabase refresh token |
 
-The server verifies a Supabase access token with the project Auth user endpoint before issuing an SURA application session. Existing user IDs remain authoritative for boards, company membership, orders, reviews, and private collections. Automatic copying of existing accounts or profile data is prohibited.
+The server verifies a Supabase access token against the project JWKS, issuer, audience, and subject claims before issuing an SURA application session. Existing user IDs remain authoritative for boards, company membership, orders, reviews, and private collections. Automatic copying of existing accounts or profile data is prohibited.
+
+### Redirect allow list
+
+SURA uses **`https://vibekenya-wbvg4xgc.manus.space/join`** as the canonical email-confirmation and password-recovery callback. In Supabase Auth URL Configuration, set the production Site URL to **`https://vibekenya-wbvg4xgc.manus.space`** and add that exact `/join` URL to the redirect allow list. For local development only, add **`http://localhost:3000/join`** as a separate allowed redirect. Do not add wildcard preview domains, arbitrary local-network addresses, or a production callback containing port `3000`.
 
 ## Row-Level Security During Staging
 

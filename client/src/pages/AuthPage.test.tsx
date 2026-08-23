@@ -3,6 +3,7 @@ import React from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AuthPage from "./AuthPage";
+import { getSupabaseEmailRedirect } from "@/lib/supabaseAuthRedirect";
 
 const signUp = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false, error: null }));
 const signIn = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false, error: null }));
@@ -40,7 +41,7 @@ describe("SURA email authentication page", () => {
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "new@example.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "another-safe-password" } });
     fireEvent.click(screen.getByRole("button", { name: /Create email account/i }));
-    await waitFor(() => expect(signUp.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ email: "new@example.com", password: "another-safe-password" })));
+    await waitFor(() => expect(signUp.mutateAsync).toHaveBeenCalledWith({ email: "new@example.com", password: "another-safe-password", redirectTo: getSupabaseEmailRedirect() }));
     expect(screen.getByText(/Check your inbox to verify/i)).toBeTruthy();
   });
 
@@ -51,7 +52,7 @@ describe("SURA email authentication page", () => {
     expect(screen.queryByLabelText("Password")).toBeNull();
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "member@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: /Send recovery link/i }));
-    await waitFor(() => expect(recovery.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ email: "member@example.com" })));
+    await waitFor(() => expect(recovery.mutateAsync).toHaveBeenCalledWith({ email: "member@example.com", redirectTo: getSupabaseEmailRedirect() }));
   });
 
   it("requires an explicit consent confirmation before it links an existing account", async () => {
