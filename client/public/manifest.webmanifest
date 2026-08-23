@@ -1,0 +1,14 @@
+{
+  "name": "Sura — Local Network",
+  "short_name": "Sura",
+  "description": "A visual platform for local ideas, companies, products, and plans.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#11130f",
+  "theme_color": "#11130f",
+  "icons": [
+    { "src": "/sura-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
