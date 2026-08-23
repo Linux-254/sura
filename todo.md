@@ -37,9 +37,11 @@
 - [x] Prepare a protected checkout/payment flow with explicit order states, non-sensitive UI handling, and a gateway integration boundary.
 - [x] Add security-focused tests for protected roles, social-link validation, payment states, authentication controls, and responsive journeys.
 - [ ] Connect an M-Pesa-compatible gateway before collecting any funds.
-- [ ] Define M-Pesa checkout, callback, reconciliation, and failure-state contracts without handling a customer’s PIN or payment credential.
+- [x] Define M-Pesa checkout, callback, reconciliation, and failure-state contracts without handling a customer’s PIN or payment credential.
 - [ ] Add protected M-Pesa order initiation and payment-status handling with test coverage.
-- [ ] Document the required M-Pesa provider credentials and live-verification steps.
+- [x] Document the required M-Pesa provider credentials and live-verification steps.
+- [x] Document a provider-neutral, no-PIN M-Pesa order-initiation, callback, reconciliation, and failure-state contract.
+- [x] Record the server-only Daraja credential, callback-security, sandbox, and production-readiness checklist without storing credentials in source control.
 - [x] Define accessible colour tokens for each SURA aesthetic direction.
 - [x] Add a persistent user-controlled aesthetic theme preference with a clear reset option.
 - [x] Apply the selected aesthetic palette to public navigation, the planning brief, and private dashboards.
