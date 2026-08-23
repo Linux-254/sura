@@ -50,6 +50,15 @@ export function calculateDeliveryEstimate(originCity: string | null, destination
   return { distanceBand: "same_city", deliveryKes: 450, providerLabel: "City delivery estimate" };
 }
 
+export function calculateCompanyDeliveryEstimate(company: { city: string | null; deliverySameCityKes: number; deliveryNationalKes: number; deliveryProviderLabel: string }, destinationCity: string) {
+  const base = calculateDeliveryEstimate(company.city, destinationCity);
+  return {
+    distanceBand: base.distanceBand,
+    deliveryKes: base.distanceBand === "same_city" ? company.deliverySameCityKes : company.deliveryNationalKes,
+    providerLabel: company.deliveryProviderLabel,
+  };
+}
+
 export function calculateCommissionBreakdown(input: { unitPriceKes: number; quantity: number; commissionRatePct: number; deliveryKes: number }) {
   if (!Number.isInteger(input.unitPriceKes) || input.unitPriceKes <= 0) throw new Error("Product price must be a positive whole-KES amount");
   if (!Number.isInteger(input.quantity) || input.quantity < 1) throw new Error("Quantity must be a positive whole number");

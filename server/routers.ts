@@ -7,12 +7,14 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { demoBuilds, demoVendors, filterDemoVendors, getBuildRecommendation, getVendorBySlug } from "./vibebuild-data";
 import { buildBoardSelectionInputSchema, inquiryInputSchema, saveVendorInputSchema, shareInputSchema } from "./vibebuild-validation";
-import { accountProfileInputSchema, aestheticPreferencesInputSchema, announcementInputSchema, assertCompanyPaymentOwnership, companyContactsInputSchema, companyCreateInputSchema, contactInputSchema, discountOfferInputSchema, legalConsentInputSchema, paymentCatalog, paymentOrderInputSchema, selectableAesthetics } from "./sura-validation";
-import { aiAssistInputSchema, calculateCommissionBreakdown, calculateDeliveryEstimate, companyProductInputSchema, productQuoteInputSchema, verifiedReviewInputSchema } from "./sura-commerce";
+import { accountProfileInputSchema, aestheticPreferencesInputSchema, announcementInputSchema, assertCompanyPaymentOwnership, companyContactsInputSchema, companyCreateInputSchema, companyDeliverySettingsInputSchema, contactInputSchema, discountOfferInputSchema, legalConsentInputSchema, paymentCatalog, paymentOrderInputSchema, selectableAesthetics } from "./sura-validation";
+import { aiAssistInputSchema, calculateCommissionBreakdown, calculateCompanyDeliveryEstimate, companyProductInputSchema, productQuoteInputSchema, verifiedReviewInputSchema } from "./sura-commerce";
 import { createAiAssistPlan, storeConsentImage } from "./sura-ai-service";
 import { assertPersonalEditCollectionOwnership, createPersonalEditCollection, createPersonalEditItem, getPersonalEditCollectionsForUser, getPersonalEditItemsForUser } from "./db";
 import { personalEditCollectionInputSchema, personalEditItemInputSchema } from "./sura-validation";
 import { storePrivatePersonalEditImage } from "./personal-edit";
+import { getCommerceOrdersForCompany } from "./db";
+import { updateCompanyDeliverySettings } from "./db";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -155,7 +157,7 @@ export const appRouter = router({
         const result = await createAiAssistPlan({ kind: input.kind, brief: input.brief, city: input.city, budgetKes: input.budgetKes, sizeProfile: input.sizeProfile, aestheticMix: input.aestheticMix, imageKey });
         const category = input.kind === "home_refresh" ? "home" : input.kind === "footwear_fit" ? "footwear" : input.kind === "personal_style" ? "apparel" : undefined;
         const connectedProducts = category ? (await getPublicProducts({ city: input.city, category })).slice(0, 3).map(({ company, ...product }) => {
-          const delivery = calculateDeliveryEstimate(company.city, input.city);
+          const delivery = calculateCompanyDeliveryEstimate(company, input.city);
           const breakdown = calculateCommissionBreakdown({ unitPriceKes: product.priceKes, quantity: 1, commissionRatePct: company.commissionRatePct, deliveryKes: delivery.deliveryKes });
           return { product, company: { id: company.id, name: company.name, city: company.city }, delivery, ...breakdown };
         }) : [];
@@ -173,7 +175,7 @@ export const appRouter = router({
     quote: protectedProcedure.input(productQuoteInputSchema).mutation(async ({ input }) => {
       const productResult = await getProductById(input.productId);
       if (!productResult) throw new Error("This product is not available");
-      const delivery = calculateDeliveryEstimate(productResult.company.city, input.destinationCity);
+      const delivery = calculateCompanyDeliveryEstimate(productResult.company, input.destinationCity);
       const breakdown = calculateCommissionBreakdown({ unitPriceKes: productResult.product.priceKes, quantity: input.quantity, commissionRatePct: productResult.company.commissionRatePct, deliveryKes: delivery.deliveryKes });
       const quote = await createDeliveryQuote({ productId: productResult.product.id, destinationCity: input.destinationCity, ...delivery, expiresAt: new Date(Date.now() + 30 * 60 * 1000) });
       return { product: productResult.product, company: productResult.company, deliveryQuoteId: quote.id, delivery, ...breakdown };
@@ -182,7 +184,7 @@ export const appRouter = router({
       const productResult = await getProductById(input.productId);
       if (!productResult) throw new Error("This product is not available");
       if (productResult.product.stockQuantity < input.quantity) throw new Error("The requested quantity is not currently available");
-      const delivery = calculateDeliveryEstimate(productResult.company.city, input.destinationCity);
+      const delivery = calculateCompanyDeliveryEstimate(productResult.company, input.destinationCity);
       const breakdown = calculateCommissionBreakdown({ unitPriceKes: productResult.product.priceKes, quantity: input.quantity, commissionRatePct: productResult.company.commissionRatePct, deliveryKes: delivery.deliveryKes });
       const quote = await createDeliveryQuote({ productId: productResult.product.id, destinationCity: input.destinationCity, ...delivery, expiresAt: new Date(Date.now() + 30 * 60 * 1000) });
       const order = await createCommerceOrder({ userId: ctx.user.id, companyId: productResult.company.id, productId: productResult.product.id, deliveryQuoteId: quote.id, quantity: input.quantity, ...breakdown });
@@ -229,10 +231,25 @@ export const appRouter = router({
       if (!company) throw new Error("You can only manage offers for a company you own");
       return getDiscountOffersForCompany(input.companyId);
     }),
+    deliverySettings: protectedProcedure.input(z.object({ companyId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+      const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
+      if (!company) throw new Error("You can only manage delivery settings for a company you own");
+      return { sameCityDeliveryKes: company.deliverySameCityKes, nationalDeliveryKes: company.deliveryNationalKes, providerLabel: company.deliveryProviderLabel };
+    }),
+    updateDeliverySettings: protectedProcedure.input(companyDeliverySettingsInputSchema).mutation(async ({ ctx, input }) => {
+      const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
+      if (!company) throw new Error("You can only manage delivery settings for a company you own");
+      return updateCompanyDeliverySettings(input);
+    }),
     createOffer: protectedProcedure.input(discountOfferInputSchema.safeExtend({ companyId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
       if (!company) throw new Error("You can only create offers for a company you own");
       return createDiscountOffer({ ...input, createdByUserId: ctx.user.id });
+    }),
+    orders: protectedProcedure.input(z.object({ companyId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+      const company = await getCompanyOwnedByUser(input.companyId, ctx.user.id);
+      if (!company) throw new Error("You can only view settlement records for a company you own");
+      return getCommerceOrdersForCompany(input.companyId);
     }),
   }),
   payments: router({

@@ -479,6 +479,22 @@ export async function getCommerceOrdersForUser(userId: number) {
   return orders.map((order) => ({ ...order, review: reviews.find((review) => review.orderId === order.id) ?? null }));
 }
 
+export async function getCommerceOrdersForCompany(companyId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const orders = await db.select().from(commerceOrders).where(eq(commerceOrders.companyId, companyId)).limit(50);
+  if (!orders.length) return [];
+  const products = await db.select({ id: companyProducts.id, name: companyProducts.name, category: companyProducts.category }).from(companyProducts).where(inArray(companyProducts.id, orders.map((order) => order.productId)));
+  return orders.map((order) => ({ ...order, product: products.find((product) => product.id === order.productId) ?? null }));
+}
+
+export async function updateCompanyDeliverySettings(input: { companyId: number; sameCityDeliveryKes: number; nationalDeliveryKes: number; providerLabel: string }) {
+  const db = await getDb();
+  if (!db) return { persisted: false };
+  await db.update(companies).set({ deliverySameCityKes: input.sameCityDeliveryKes, deliveryNationalKes: input.nationalDeliveryKes, deliveryProviderLabel: input.providerLabel }).where(eq(companies.id, input.companyId));
+  return { persisted: true };
+}
+
 export async function createVerifiedReview(input: { orderId: number; userId: number; rating: number; comment?: string }, databaseOverride?: any) {
   const db = databaseOverride ?? await getDb();
   if (!db) return { id: 0, persisted: false };

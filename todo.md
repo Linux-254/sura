@@ -53,7 +53,7 @@
 - [x] Model shoppable seller listings, stock/size details, delivery quotes, commission allocation from 20% to 50%, purchase records, and verified reviews.
 - [x] Add permission-aware camera, location, and image-file acquisition with clear user explanation, browser-only capture, and secure storage references.
 - [x] Build AI-assisted home and personal-style brief flows that return transparent inspiration, product recommendations, price estimates, delivery, and commission lines.
-- [ ] Build company product, delivery, contact, discount, and commission controls with order-specific seller settlement visibility.
+- [x] Build company product, delivery, contact, discount, and commission controls with order-specific seller settlement visibility.
 - [x] Add verified post-purchase reviews without fabricated user-generated content.
 - [x] Prevent duplicate verified reviews per delivered order and account, with server-side regression coverage.
 - [x] Add server regression coverage for second-review rejection, non-delivered orders, and wrong-user review attempts.
@@ -109,3 +109,6 @@
 - [x] Create or connect a private GitHub repository for SURA and push the validated project history.
 - [x] Establish `main` as production, `staging` as pre-production, `dev` as the integration branch, and named feature branches for individual changes.
 - [x] Verify repository ignore rules, remotes, branch tracking, and branch protections or documented protection steps.
+- [x] Add explicit company delivery configuration UI and protected procedures, or narrow scope to delivery-visibility-only behavior.
+- [ ] Add regression tests for company product management, owner-only settlement records, and any company delivery configuration path.
+- [ ] Add browser-like coverage for CompanyDetailPage settlement visibility and CompanyCatalogPage owner flows, including loading, error, and empty states.

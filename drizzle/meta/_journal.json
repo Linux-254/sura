@@ -57,6 +57,13 @@
       "when": 1787443633445,
       "tag": "0007_optimal_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1787445212146,
+      "tag": "0008_tidy_darkhawk",
+      "breakpoints": true
     }
   ]
 }

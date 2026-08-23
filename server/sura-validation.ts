@@ -80,6 +80,13 @@ export const companyCreateInputSchema = z.object({
   socialLinks: z.array(socialLinkInputSchema).max(6).default([]),
 });
 
+export const companyDeliverySettingsInputSchema = z.object({
+  companyId: z.number().int().positive(),
+  sameCityDeliveryKes: z.number().int().min(0).max(50000),
+  nationalDeliveryKes: z.number().int().min(0).max(50000),
+  providerLabel: z.string().trim().min(2).max(100),
+});
+
 export const legalConsentInputSchema = z.object({
   documentType: z.enum(["terms", "privacy"]),
   version: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/),

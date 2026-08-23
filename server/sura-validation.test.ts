@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aestheticPreferencesInputSchema, assertCompanyPaymentOwnership, filterPublicSocialLinks, isValidPaymentStatusTransition, paymentOrderInputSchema, personalEditCollectionInputSchema, personalEditItemInputSchema, socialLinkInputSchema } from "./sura-validation";
+import { aestheticPreferencesInputSchema, assertCompanyPaymentOwnership, companyDeliverySettingsInputSchema, filterPublicSocialLinks, isValidPaymentStatusTransition, paymentOrderInputSchema, personalEditCollectionInputSchema, personalEditItemInputSchema, socialLinkInputSchema } from "./sura-validation";
 
 describe("SURA security validation", () => {
   it("accepts only secure URLs that match the social platform selected", () => {
@@ -46,5 +46,12 @@ describe("SURA security validation", () => {
     expect(personalEditItemInputSchema.safeParse({ collectionId: 2, itemType: "tattoo", title: "Abstract linework", tags: Array.from({ length: 13 }, (_, index) => `tag-${index}`) }).success).toBe(false);
     expect(personalEditItemInputSchema.safeParse({ collectionId: 2, itemType: "room", title: "Lamp corner", imageDataUrl: "javascript:alert(1)" }).success).toBe(false);
     expect(personalEditItemInputSchema.safeParse({ collectionId: 2, itemType: "room", title: "Lamp corner", analysisConsent: true }).success).toBe(false);
+  });
+
+  it("bounds owner-configured delivery estimates before a connected quote can use them", () => {
+    expect(companyDeliverySettingsInputSchema.safeParse({ companyId: 3, sameCityDeliveryKes: 300, nationalDeliveryKes: 1200, providerLabel: "Studio delivery" }).success).toBe(true);
+    expect(companyDeliverySettingsInputSchema.safeParse({ companyId: 3, sameCityDeliveryKes: -1, nationalDeliveryKes: 1200, providerLabel: "Studio delivery" }).success).toBe(false);
+    expect(companyDeliverySettingsInputSchema.safeParse({ companyId: 3, sameCityDeliveryKes: 300, nationalDeliveryKes: 50001, providerLabel: "Studio delivery" }).success).toBe(false);
+    expect(companyDeliverySettingsInputSchema.safeParse({ companyId: 3, sameCityDeliveryKes: 300, nationalDeliveryKes: 1200, providerLabel: "x" }).success).toBe(false);
   });
 });

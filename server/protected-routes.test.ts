@@ -20,4 +20,9 @@ describe("SURA protected company and payment routes", () => {
     const caller = appRouter.createCaller(createUserContext());
     await expect(caller.payments.createOrder({ orderType: "company_membership", companyId: 1 })).rejects.toThrow("only create an order");
   });
+
+  it("does not expose company settlement records to an account that does not own that company", async () => {
+    const caller = appRouter.createCaller(createUserContext());
+    await expect(caller.companies.orders({ companyId: 1 })).rejects.toThrow("only view settlement records");
+  });
 });

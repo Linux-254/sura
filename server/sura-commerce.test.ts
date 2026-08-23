@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aiAssistInputSchema, assertVerifiedReviewEligibility, calculateCommissionBreakdown, calculateDeliveryEstimate, productQuoteInputSchema, verifiedReviewInputSchema } from "./sura-commerce";
+import { aiAssistInputSchema, assertVerifiedReviewEligibility, calculateCommissionBreakdown, calculateCompanyDeliveryEstimate, calculateDeliveryEstimate, productQuoteInputSchema, verifiedReviewInputSchema } from "./sura-commerce";
 import { createVerifiedReview } from "./db";
 
 function reviewDatabase(order?: { id: number; userId: number; status: string; companyId: number; productId: number }, existingReview?: { id: number }) {
@@ -44,6 +44,12 @@ describe("SURA AI-commerce safeguards", () => {
   it("keeps delivery estimates transparent when origin and destination differ", () => {
     expect(calculateDeliveryEstimate("Nairobi", "Nairobi")).toMatchObject({ distanceBand: "same_city", deliveryKes: 450 });
     expect(calculateDeliveryEstimate("Nairobi", "Mombasa")).toMatchObject({ distanceBand: "national", deliveryKes: 950 });
+  });
+
+  it("uses bounded company-owned delivery configuration without changing the commission allocation", () => {
+    const company = { city: "Nairobi", deliverySameCityKes: 300, deliveryNationalKes: 1200, deliveryProviderLabel: "Studio delivery" };
+    expect(calculateCompanyDeliveryEstimate(company, "Nairobi")).toEqual({ distanceBand: "same_city", deliveryKes: 300, providerLabel: "Studio delivery" });
+    expect(calculateCompanyDeliveryEstimate(company, "Mombasa")).toEqual({ distanceBand: "national", deliveryKes: 1200, providerLabel: "Studio delivery" });
   });
 
   it("accepts only bounded verified-review content; delivered-order ownership remains server-enforced", () => {
