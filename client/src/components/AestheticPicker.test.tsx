@@ -43,4 +43,13 @@ describe("SURA aesthetic picker", () => {
     expect(setAesthetic).toHaveBeenCalledWith("Coastal Ease");
     expect(screen.queryByRole("dialog", { name: /Choose your visual direction/i })).toBeNull();
   });
+
+  it("keeps a compact mobile-menu picker inline rather than positioning its list beyond the menu edge", () => {
+    render(<AestheticPicker compact mobileInline />);
+    fireEvent.click(screen.getByRole("button", { name: /change visual direction/i }));
+    const dialog = screen.getByRole("dialog", { name: /Choose your visual direction/i });
+    expect(dialog.className).toContain("w-full");
+    expect(dialog.className).not.toContain("absolute");
+    expect(screen.getByTestId("mobile-theme-scroll-list").className).not.toContain("-mx-3");
+  });
 });

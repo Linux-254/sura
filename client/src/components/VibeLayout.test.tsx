@@ -8,7 +8,7 @@ vi.mock("wouter", () => ({ Link: ({ href, children, ...props }: { href: string; 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ isAuthenticated: false }) }));
 vi.mock("@/contexts/AestheticThemeContext", () => ({ useAestheticTheme: () => ({ palette: { page: "#fbf8f2", ink: "#282019", accent: "#a56536", primary: "#29211b", paper: "#fffaf1", border: "#ded1bf" } }) }));
 vi.mock("@/contexts/KenyaLocationContext", () => ({ useKenyaLocation: () => ({ county: "Nairobi" }) }));
-vi.mock("./AestheticPicker", () => ({ AestheticPicker: () => <button>Theme control</button> }));
+vi.mock("./AestheticPicker", () => ({ AestheticPicker: ({ mobileInline }: { mobileInline?: boolean }) => <button data-mobile-inline={mobileInline ? "true" : "false"}>Theme control</button> }));
 vi.mock("./NotificationCenter", () => ({ NotificationCenter: () => <button>Notifications</button> }));
 vi.mock("./LocationPicker", () => ({ LocationPicker: () => <button>Find your county</button> }));
 
@@ -29,5 +29,6 @@ describe("SURA editorial navigation", () => {
     expect(screen.getByText(/SURA \/ EXPLORE/i)).toBeTruthy();
     expect(screen.getByText(/shape your next local edit/i)).toBeTruthy();
     expect(screen.getAllByText("Find your county").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByRole("button", { name: "Theme control" }).length).toBeGreaterThanOrEqual(2);
   });
 });

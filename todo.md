@@ -154,3 +154,4 @@
 - [x] Add explicit loading, empty, error, and recovery treatments for the public discovery route and cover them with browser-like tests.
 - [x] Re-run and document responsive public-discovery state QA alongside existing landing, shop, account, administrator, company, and AI Studio evidence.
 - [x] Diagnose and fix the `/discover` tRPC response parsing failure that returns HTML instead of JSON, with regression coverage and browser verification.
+- [x] Fix the mobile navigation theme-control overflow so the compact selector remains within the open menu and does not overlap page or footer content.
