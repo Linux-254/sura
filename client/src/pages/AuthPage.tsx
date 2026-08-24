@@ -210,11 +210,16 @@ export default function AuthPage() {
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="vb-kicker text-[#9a5427]">SURA / ACCOUNT</span>
-            <span className="inline-flex items-center gap-1.5 text-[0.66rem] font-black uppercase tracking-[0.1em] text-[#4e3e30]"><LockKeyhole className="h-3.5 w-3.5" /> Secure access</span>
+            <span className="vb-kicker text-[#9a5427]">SURA / ENTER YOUR EDIT</span>
+            <span className="inline-flex items-center gap-1.5 text-[0.66rem] font-black uppercase tracking-[0.1em] text-[#4e3e30]"><LockKeyhole className="h-3.5 w-3.5" /> Your private space</span>
           </div>
-          <h2 className="mt-5 max-w-md text-4xl font-black leading-[0.94] tracking-[-0.06em] text-[#1e1813] sm:text-5xl">{isCreateAccount ? "Create your Sura space." : "Keep your direction moving."}</h2>
-          <p className="mt-4 max-w-md text-[0.95rem] font-semibold leading-6 text-[#493a2f]">{isCreateAccount ? "Make an account to keep your saved edits, local briefs, and company discoveries close." : "Sign in to pick up your saved edits, local briefs, and company discoveries wherever you left them."}</p>
+          <h2 className="mt-5 max-w-md text-4xl font-black leading-[0.94] tracking-[-0.06em] text-[#1e1813] sm:text-5xl">{isCreateAccount ? "Start your signature here." : "Pick up your point of view."}</h2>
+          <p className="mt-4 max-w-md text-[0.95rem] font-semibold leading-6 text-[#493a2f]">{isCreateAccount ? "Sura is a visual space for the way you want to live—your rooms, wardrobe, objects, places, and details in one direction." : "Return to the visual direction you have been shaping across your spaces, style, places, and everyday finds."}</p>
+          <div className="mt-6 grid grid-cols-3 gap-2 border-y border-[#cfc3b6] py-4">
+            <div className="pr-2"><p className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-[#9a5427]">01</p><p className="mt-2 text-sm font-black leading-4 text-[#2b211a]">Choose a direction.</p><p className="mt-1 text-[0.7rem] font-semibold leading-4 text-[#6b5847]">Soft, bold, quiet, electric.</p></div>
+            <div className="border-l border-[#cfc3b6] px-3"><p className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-[#9a5427]">02</p><p className="mt-2 text-sm font-black leading-4 text-[#2b211a]">Make it recognisable.</p><p className="mt-1 text-[0.7rem] font-semibold leading-4 text-[#6b5847]">Carry it through the details.</p></div>
+            <div className="border-l border-[#cfc3b6] pl-3"><p className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-[#9a5427]">03</p><p className="mt-2 text-sm font-black leading-4 text-[#2b211a]">Make it yours.</p><p className="mt-1 text-[0.7rem] font-semibold leading-4 text-[#6b5847]">Let everyday life become the brand.</p></div>
+          </div>
 
           {isAuthenticated ? (
             <div className="mt-7 space-y-3">
@@ -248,7 +253,7 @@ export default function AuthPage() {
             <p className="flex gap-2"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9a5427]" />New accounts confirm their email with Supabase before access is completed.</p>
             <p className="flex gap-2"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9a5427]" />Start local. Stay close.</p>
           </div>
-          <p className="mt-5 text-center text-xs font-semibold leading-5 text-[#594735]">No card, mobile-money PIN, or sensitive payment credential is requested here.</p>
+          <p className="mt-5 text-center text-xs font-semibold leading-5 text-[#594735]">{isCreateAccount ? "Supabase will send a confirmation email. Open it to enter your new Sura space." : "Use your email to return to your Sura space."}</p>
           <div className="mt-7 flex items-start justify-between gap-3 border-t border-[#cfc3b6] pt-5 text-xs font-semibold leading-5 text-[#4f3d2e]"><span>By continuing, you accept our <Link href="/terms" className="font-black text-[#964c23] underline underline-offset-2">Terms</Link> and <Link href="/privacy" className="font-black text-[#964c23] underline underline-offset-2">Privacy Policy</Link>.</span><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#9a5427]" /></div>
         </div>
       </section>
