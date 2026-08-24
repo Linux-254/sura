@@ -10,7 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
@@ -23,9 +23,22 @@ const fallbackFrames = [
 ];
 
 type AuthMode = "signin" | "signup";
+const AUTH_FLOW_TIMEOUT_MS = 12000;
+
+function withTimeout<T>(promise: Promise<T>, message: string) {
+  let timeoutId: number | undefined;
+  const timeout = new Promise<T>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), AUTH_FLOW_TIMEOUT_MS);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+  });
+}
 
 export default function AuthPage() {
   const { isAuthenticated, loading, logout } = useAuth();
+  const [, setLocation] = useLocation();
+  const utils = trpc.useUtils();
   const visualSet = trpc.public.authVisuals.useQuery();
   const frames = useMemo(() => {
     const activeSet = visualSet.data;
@@ -65,8 +78,15 @@ export default function AuthPage() {
       exchanged = true;
       setAuthNotice("");
       try {
-        await exchangeSupabaseSession.mutateAsync({ accessToken });
-        window.location.replace("/");
+        const result = await withTimeout(
+          exchangeSupabaseSession.mutateAsync({ accessToken }),
+          "The secure Sura session check took too long. Please try the link again.",
+        );
+        // Hydrate the shared auth cache before changing routes, so the root
+        // entry does not perform a second blocking session lookup.
+        utils.auth.me.setData(undefined, result.user);
+        // Stay in the current browser tab after the verified callback.
+        setLocation("/");
       } catch {
         exchanged = false;
         setAuthNotice(
@@ -82,7 +102,7 @@ export default function AuthPage() {
       if (session?.access_token) void exchangeSession(session.access_token);
     });
     return () => listener.subscription.unsubscribe();
-  }, [exchangeSupabaseSession]);
+  }, [exchangeSupabaseSession, setLocation, utils]);
 
   const setMode = (mode: AuthMode) => {
     setAuthMode(mode);
@@ -115,15 +135,18 @@ export default function AuthPage() {
     setIsSendingLink(true);
     try {
       const redirectTo = `${window.location.origin}/join`;
-      const response = await supabase.auth.signInWithOtp({
-        email: normalizedEmail,
-        options: {
-          emailRedirectTo: redirectTo,
-          // Create account remains passwordless: Supabase creates the identity
-          // and sends the confirmation link when this is true.
-          shouldCreateUser: isCreateAccount,
-        },
-      });
+      const response = await withTimeout(
+        supabase.auth.signInWithOtp({
+          email: normalizedEmail,
+          options: {
+            emailRedirectTo: redirectTo,
+            // Create account remains passwordless: Supabase creates the identity
+            // and sends the confirmation link when this is true.
+            shouldCreateUser: isCreateAccount,
+          },
+        }),
+        "The email service is taking too long to respond. Please try again.",
+      );
 
       if (response.error) {
         setAuthNotice(response.error.message);
@@ -136,9 +159,11 @@ export default function AuthPage() {
           ? "Account request received. Check your inbox and confirm your email before returning to Sura."
           : "Check your inbox. Your secure Sura sign-in link will open your private space.",
       );
-    } catch {
+    } catch (error) {
       setAuthNotice(
-        "We could not complete that request. Check your connection and request a fresh email link.",
+        error instanceof Error
+          ? error.message
+          : "We could not complete that request. Check your connection and request a fresh email link.",
       );
     } finally {
       setIsSendingLink(false);

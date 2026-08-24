@@ -2,7 +2,7 @@ import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { supabase } from "@/lib/supabase";
 import { TRPCClientError } from "@trpc/client";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -21,6 +21,17 @@ export function useAuth(options?: UseAuthOptions) {
     retry: false,
     refetchOnWindowFocus: false,
   });
+  const [sessionCheckTimedOut, setSessionCheckTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!meQuery.isLoading) {
+      setSessionCheckTimedOut(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setSessionCheckTimedOut(true), 8000);
+    return () => window.clearTimeout(timeoutId);
+  }, [meQuery.isLoading]);
 
   const logoutMutation = trpc.auth.logout.useMutation({
     onSuccess: () => {
@@ -64,7 +75,10 @@ export function useAuth(options?: UseAuthOptions) {
     );
     return {
       user: meQuery.data ?? null,
-      loading: meQuery.isLoading || logoutMutation.isPending,
+      // Do not hold the entire platform behind a network request forever. A
+      // delayed API should fall back to the Join experience instead of showing
+      // an endless loading screen.
+      loading: (meQuery.isLoading && !sessionCheckTimedOut) || logoutMutation.isPending,
       error: meQuery.error ?? logoutMutation.error ?? null,
       isAuthenticated: Boolean(meQuery.data),
     };
@@ -72,6 +86,7 @@ export function useAuth(options?: UseAuthOptions) {
     meQuery.data,
     meQuery.error,
     meQuery.isLoading,
+    sessionCheckTimedOut,
     logoutMutation.error,
     logoutMutation.isPending,
   ]);
