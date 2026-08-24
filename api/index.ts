@@ -1,5 +1,5 @@
 import express from "express";
-import { app } from "../dist/index.js";
+import { app } from "../dist/serverless.js";
 
 // Keep an explicit Express import in this entrypoint for Vercel's framework detector.
 void express;
