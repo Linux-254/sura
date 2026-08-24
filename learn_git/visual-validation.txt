@@ -1,0 +1,5 @@
+Visual validation completed for representative evidence screenshots.
+
+- step-14.png clearly shows the clean `git log` output with the three requested commits and messages: `removing third.txt`, `adding fourth.txt`, and `adding third.txt`.
+- step-16.png clearly shows `git config --global --list` and the resulting `core.pager=cat` setting.
+- Both screenshots are 1600x900 PNGs with readable monospace terminal text and no visible color-control artifacts.

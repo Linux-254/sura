@@ -1,0 +1,132 @@
+
+=== STEP 01 ===
+$ mkdir learn_git
+
+=== END STEP 01 ===
+
+=== STEP 02 ===
+$ cd learn_git && pwd
+/home/ubuntu/learn_git
+=== END STEP 02 ===
+
+=== STEP 03 ===
+$ touch third.txt && ls -l third.txt
+-rw-r--r-- 1 ubuntu ubuntu 0 Aug 24 19:21 third.txt
+=== END STEP 03 ===
+
+=== STEP 04 ===
+$ git init
+hint: Using 'master' as the name for the initial branch. This default branch name
+hint: is subject to change. To configure the initial branch name to use in all
+hint: of your new repositories, which will suppress this warning, call:
+hint: 
+hint: 	git config --global init.defaultBranch <name>
+hint: 
+hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+hint: 'development'. The just-created branch can be renamed via this command:
+hint: 
+hint: 	git branch -m <name>
+Initialized empty Git repository in /home/ubuntu/learn_git/.git/
+=== END STEP 04 ===
+
+=== STEP 05 ===
+$ git add third.txt && git status --short
+[32mA[m  third.txt
+=== END STEP 05 ===
+
+=== STEP 06 ===
+$ git commit -m "adding third.txt"
+[master (root-commit) a9abd61] adding third.txt
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 third.txt
+=== END STEP 06 ===
+
+=== STEP 07 ===
+$ git log
+[33mcommit a9abd6152c261334ff9cb4d0d6f76264b82ca875[m
+Author: Linux-254 <1.73398433e+08+Linux-254@users.noreply.github.com>
+Date:   Mon Aug 24 19:21:05 2026 +0000
+
+    adding third.txt
+=== END STEP 07 ===
+
+=== STEP 08 ===
+$ touch fourth.txt && ls -l fourth.txt
+-rw-r--r-- 1 ubuntu ubuntu 0 Aug 24 19:21 fourth.txt
+=== END STEP 08 ===
+
+=== STEP 09 ===
+$ git add fourth.txt && git status --short
+[32mA[m  fourth.txt
+=== END STEP 09 ===
+
+=== STEP 10 ===
+$ git commit -m "adding fourth.txt"
+[master 03ad9d3] adding fourth.txt
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 fourth.txt
+=== END STEP 10 ===
+
+=== STEP 11 ===
+$ rm third.txt && ls -la
+total 12
+drwxr-xr-x  3 ubuntu ubuntu 4096 Aug 24 19:21 .
+drwxr-x--- 16 ubuntu ubuntu 4096 Aug 24 19:21 ..
+drwxr-xr-x  8 ubuntu ubuntu 4096 Aug 24 19:21 .git
+-rw-r--r--  1 ubuntu ubuntu    0 Aug 24 19:21 fourth.txt
+=== END STEP 11 ===
+
+=== STEP 12 ===
+$ git add . && git status --short
+[32mD[m  third.txt
+=== END STEP 12 ===
+
+=== STEP 13 ===
+$ git commit -m "removing third.txt"
+[master a92cb54] removing third.txt
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ delete mode 100644 third.txt
+=== END STEP 13 ===
+
+=== STEP 14 ===
+$ git log
+[33mcommit a92cb548562a8c1d42c7fd2523874bfb3ccf27c6[m
+Author: Linux-254 <1.73398433e+08+Linux-254@users.noreply.github.com>
+Date:   Mon Aug 24 19:21:05 2026 +0000
+
+    removing third.txt
+
+[33mcommit 03ad9d3a6e7fb009eed9bf5687cef55d4333ba36[m
+Author: Linux-254 <1.73398433e+08+Linux-254@users.noreply.github.com>
+Date:   Mon Aug 24 19:21:05 2026 +0000
+
+    adding fourth.txt
+
+[33mcommit a9abd6152c261334ff9cb4d0d6f76264b82ca875[m
+Author: Linux-254 <1.73398433e+08+Linux-254@users.noreply.github.com>
+Date:   Mon Aug 24 19:21:05 2026 +0000
+
+    adding third.txt
+=== END STEP 14 ===
+
+=== STEP 15 ===
+$ git config --global core.pager cat && git config --global --get core.pager
+cat
+=== END STEP 15 ===
+
+=== STEP 16 ===
+$ git config --global --list
+credential.https://github.com.helper=
+credential.https://github.com.helper=!/usr/bin/gh auth git-credential
+credential.https://gist.github.com.helper=
+credential.https://gist.github.com.helper=!/usr/bin/gh auth git-credential
+user.name=Linux-254
+user.email=1.73398433e+08+Linux-254@users.noreply.github.com
+core.pager=cat
+=== END STEP 16 ===
+
+=== STEP 17 ===
+$ git status --short && printf "Final files:\\n" && find . -maxdepth 1 -type f -printf "%f\\n" | sort
+Final files:
+fourth.txt
+=== END STEP 17 ===
