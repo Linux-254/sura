@@ -1,10 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "express",
   "buildCommand": "pnpm build && rm -rf public && cp -R dist/public public",
+  "outputDirectory": "public",
   "functions": {
-    "index.ts": {
+    "api/index.ts": {
       "includeFiles": "public/**"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
