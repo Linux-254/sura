@@ -9,7 +9,6 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import { serveStatic, setupVite } from "./vite";
 
 export function createApp(): Express {
   const app = express();
@@ -73,6 +72,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  const { serveStatic, setupVite } = await import("./vite");
   const serverApp = createApp();
   const server = createServer(serverApp);
 
