@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import BuildBrief from "@/pages/BuildBrief";
 import BuildBoard from "@/pages/BuildBoard";
@@ -26,10 +27,28 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { CookieConsentBanner } from "./components/CookieConsentBanner";
 import { InstallSuraPrompt } from "./components/InstallSuraPrompt";
 
+function EntryRoute() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#11130f] px-6 text-[#f7f3eb]">
+        <div className="text-center">
+          <img src="/sura-mark.svg" alt="Sura" className="mx-auto h-12 w-12 rounded-2xl" />
+          <p className="mt-4 text-xs font-black uppercase tracking-[0.18em] text-[#d7ff4d]">Opening Sura</p>
+          <p className="mt-2 text-sm font-semibold text-[#d9d4ca]">Checking your private space…</p>
+        </div>
+      </main>
+    );
+  }
+
+  return user ? <Home /> : <AuthPage />;
+}
+
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={EntryRoute} />
       <Route path="/brief" component={BuildBrief} />
       <Route path="/discover" component={Discover} />
       <Route path="/join" component={AuthPage} />
