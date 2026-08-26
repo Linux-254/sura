@@ -1,8 +1,10 @@
 import { COOKIE_NAME } from "@shared/const";
 import { nanoid } from "nanoid";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { completeAiAssistRequest, createAiAssistRequest, createBuildShareRecord, createCompanyForUser, createCompanyPost, createCompanyProduct, createCommerceOrder, createDeliveryQuote, createDiscountOffer, createInquiryRecord, createPaymentOrder, createPlatformAnnouncement, createVerifiedReview, failAiAssistRequest, getAccountProfile, getActiveAuthVisualSet, getAdminCompanyPostReviewQueue, getAdminCompanyReviewQueue, getAdminDiscountReviewQueue, getAestheticPreferences, getAiAssistRequestForUser, getBoardSelections, getBuildShareRecord, getCompaniesForUser, getCompanyContacts, getCompanyMembership, getCompanyOwnedByUser, getCompanyPostsForOwner, getCompanyProduct, getCompanyProducts, getCommerceOrdersForUser, getCompanySocialSummary, getDiscountOffersForCompany, getOrCreateFreeMembership, getPaymentOrdersForUser, getProductById, getPublicAccountProfile, getPublicCompanyProfile, getPublicCompanyPosts, getPublicDiscountOffers, getPublicPlatformContacts, getPublicProducts, getSavedVendorIds, getSocialFeed, getUserSocialSummary, getWebNotificationFeed, markWebNotificationRead, recordAiImageConsent, recordLegalConsent, publishAuthVisualSet, replaceCompanyContacts, replacePlatformContacts, setAestheticPreferences, toggleBuildBoardSelection, toggleCompanyFollow, togglePostLike, togglePostRepost, toggleSavedVendor, toggleUserFollow, updateCompanyCommissionRate, updateCompanyPostStatus, updateCompanyReviewStatus, updateDiscountOfferReviewStatus, upsertAccountProfile } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { ENV } from "./_core/env";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { demoBuilds, demoVendors, filterDemoVendors, getBuildRecommendation, getVendorBySlug } from "./vibebuild-data";
@@ -31,30 +33,65 @@ export const appRouter = router({
     exchangeSupabaseSession: publicProcedure
       .input(z.object({ accessToken: z.string().trim().min(20).max(8192) }))
       .mutation(async ({ ctx, input }) => {
-        const identity = await verifySupabaseAccessToken(input.accessToken);
+        if (!ENV.supabaseUrl || !ENV.supabasePublishableKey) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Sura email authentication is not configured on this deployment.",
+          });
+        }
+        if (!ENV.databaseUrl) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Sura’s application database is not configured yet. Add a MySQL/TiDB DATABASE_URL and redeploy.",
+          });
+        }
+        if (!ENV.cookieSecret) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Sura’s secure session signing is not configured yet. Add JWT_SECRET and redeploy.",
+          });
+        }
+
+        let identity;
+        try {
+          identity = await verifySupabaseAccessToken(input.accessToken);
+        } catch {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "That Sura sign-in session is invalid or expired. Please sign in again.",
+          });
+        }
+
         const openId = `supabase:${identity.id}`;
         const signedInAt = new Date();
+        try {
+          await upsertUser({
+            openId,
+            email: identity.email,
+            name: identity.name,
+            loginMethod: "supabase_email",
+            lastSignedIn: signedInAt,
+          });
 
-        await upsertUser({
-          openId,
-          email: identity.email,
-          name: identity.name,
-          loginMethod: "supabase_email",
-          lastSignedIn: signedInAt,
-        });
+          const user = await getUserByOpenId(openId);
+          if (!user) throw new Error("User row was not returned after upsert");
 
-        const user = await getUserByOpenId(openId);
-        if (!user) throw new Error("Unable to create your Sura account");
+          const sessionToken = await sdk.createSessionToken(openId, {
+            name: user.name ?? identity.name ?? "",
+          });
+          ctx.res.cookie(COOKIE_NAME, sessionToken, getSessionCookieOptions(ctx.req));
 
-        const sessionToken = await sdk.createSessionToken(openId, {
-          name: user.name ?? identity.name ?? "",
-        });
-        ctx.res.cookie(COOKIE_NAME, sessionToken, getSessionCookieOptions(ctx.req));
-
-        return {
-          success: true,
-          user,
-        } as const;
+          return {
+            success: true,
+            user,
+          } as const;
+        } catch (error) {
+          console.error("[Auth] Sura session exchange failed:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Sura could not open your private session. Check the application database connection and try again.",
+          });
+        }
       }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
