@@ -20,6 +20,7 @@ export const shareInputSchema = z.object({
 });
 
 export const inquiryInputSchema = z.object({
+  companyId: z.number().int().positive().optional(),
   vendorId: z.number().int().positive().optional(),
   buildId: z.number().int().positive().optional(),
   name: z.string().trim().min(2).max(120),
@@ -27,6 +28,6 @@ export const inquiryInputSchema = z.object({
   phone: z.string().trim().min(7).max(32).optional().or(z.literal("")),
   city: z.string().trim().min(2).max(80),
   message: z.string().trim().min(12).max(1200),
-}).refine((input) => Boolean(input.vendorId || input.buildId), {
-  message: "Choose a vendor or build before sending an inquiry",
+}).refine((input) => Boolean(input.companyId || input.vendorId || input.buildId), {
+  message: "Choose a company, vendor, or build before sending an inquiry",
 });

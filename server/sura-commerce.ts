@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const aiAssistKinds = ["home_refresh", "personal_style", "footwear_fit", "inspiration", "wardrobe_edit", "home_showroom", "product_edit", "vehicle_garage", "detailing_bay", "tattoo_concept", "pet_accessory"] as const;
 export type AiAssistKind = (typeof aiAssistKinds)[number];
-export const productCategories = ["apparel", "footwear", "home", "accessory"] as const;
+export const productCategories = ["apparel", "footwear", "home", "accessory", "appliance", "art", "tattoo", "beauty", "pet", "vehicle", "detailing", "architecture", "food", "travel", "technology"] as const;
 const aiAssistAesthetics = ["Soft Power", "Thrift Remix", "Heritage Modern", "Comfort Official", "Coastal Ease", "Savanna Atelier", "Ink & Ivory", "Orchid After Dark", "Tangerine Social", "Moss & Marigold", "Cobalt Ritual", "Thermal Bloom", "Soft Comfort", "Warm Minimal", "Quiet Utility", "Earthbound Home", "Bright Play", "Street Archive", "Studio Calm", "Pet Piece", "Object Story", "Motion Detail"] as const;
 
 export const aiAssistInputSchema = z.object({
@@ -33,6 +33,7 @@ export const productQuoteInputSchema = z.object({
   productId: z.number().int().positive(),
   destinationCity: z.string().trim().min(2).max(80),
   quantity: z.number().int().min(1).max(20).default(1),
+  selectedOfferId: z.number().int().positive().optional(),
 });
 
 export const verifiedReviewInputSchema = z.object({

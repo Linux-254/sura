@@ -1,6 +1,6 @@
-import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray, like, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { aiAssistRequests, aiImageConsents, authVisualSets, buildBoardSelections, buildShareItems, buildShares, commerceOrders, companies, companyContacts, companyMembers, companyProducts, deliveryQuotes, discountOffers, inquiries, InsertUser, legalConsents, paymentOrders, personalEditCollections, personalEditItems, platformAnnouncements, platformContacts, postLikes, postReposts, savedVendors, socialLinks, userFollows, companyFollows, companyPosts, userMemberships, userProfiles, users, verifiedReviews, webNotifications } from "../drizzle/schema";
+import { aiAssistRequests, aiImageConsents, authVisualSets, buildBoardSelections, buildShareItems, buildShares, cartItems, carts, companyAnalyticsEvents, commerceOrders, companies, companyContacts, companyMembers, companyProducts, conversationMessages, conversationParticipants, conversations, deliveryQuotes, discountOffers, inquiries, inquiryQuotes, InsertUser, legalConsents, orderHandoffEvents, orderHandoffs, paymentOrders, personalEditCollections, personalEditItems, platformAnnouncements, platformContacts, postLikes, postReposts, projectBriefEvents, projectBriefItems, projectBriefs, savedCollageItems, savedCollages, savedVendors, socialLinks, userFollows, companyFollows, companyPosts, userMemberships, userProfiles, users, verifiedReviews, webNotifications } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { assertVerifiedReviewEligibility, type AiAssistKind } from "./sura-commerce";
 
@@ -110,7 +110,11 @@ export async function toggleSavedVendor(userId: number, vendorId: number, should
 
 export async function createInquiryRecord(input: typeof inquiries.$inferInsert) {
   const db = await getDb();
-  if (!db) return { id: 0, persisted: false };
+  if (!db) return { id: 0, persisted: false, reason: "database_unavailable" as const };
+  if (input.companyId) {
+    const [company] = await db.select({ id: companies.id }).from(companies).where(and(eq(companies.id, input.companyId), eq(companies.verificationStatus, "verified"))).limit(1);
+    if (!company) return { id: 0, persisted: false, reason: "company_unavailable" as const };
+  }
   const result = await db.insert(inquiries).values(input);
   return { id: Number(result[0]?.insertId ?? 0), persisted: true };
 }
@@ -540,8 +544,10 @@ export async function getAdminDiscountReviewQueue() {
 export async function updateDiscountOfferReviewStatus(offerId: number, status: "approved" | "rejected") {
   const db = await getDb();
   if (!db) return { persisted: false };
-  await db.update(discountOffers).set({ status, isPublic: status === "approved" }).where(eq(discountOffers.id, offerId));
-  return { persisted: true };
+  const [offer] = await db.select({ companyId: discountOffers.companyId, status: discountOffers.status }).from(discountOffers).where(eq(discountOffers.id, offerId)).limit(1);
+  if (!offer || offer.status !== "pending") return { persisted: false };
+  await db.update(discountOffers).set({ status, isPublic: status === "approved" }).where(and(eq(discountOffers.id, offerId), eq(discountOffers.status, "pending")));
+  return { persisted: true, companyId: offer.companyId ?? undefined };
 }
 
 export async function createPlatformAnnouncement(input: { createdByUserId: number; title: string; body: string; linkUrl?: string; isActive: boolean }) {
@@ -628,10 +634,10 @@ async function getLiveProductDiscounts(db: Awaited<ReturnType<typeof getDb>>, co
   return offers.filter((offer) => (!offer.productId || offer.productId === productId) && (!offer.minimumSpendKes || priceKes >= offer.minimumSpendKes) && offer.validFrom <= now && (!offer.validUntil || offer.validUntil >= now)).map((offer) => formatPublicDiscount(offer, priceKes)).sort((a, b) => b.savingsKes - a.savingsKes);
 }
 
-export async function getPublicProducts(input: { category?: "apparel" | "footwear" | "home" | "accessory"; city?: string }) {
+export async function getPublicProducts(input: { category?: "apparel" | "footwear" | "home" | "accessory" | "appliance" | "art" | "tattoo" | "beauty" | "pet" | "vehicle" | "detailing" | "architecture" | "food" | "travel" | "technology"; city?: string }) {
   const db = await getDb();
   if (!db) return [];
-  const products = await db.select().from(companyProducts).where(eq(companyProducts.isActive, true)).limit(100);
+  const products = await db.select().from(companyProducts).where(and(eq(companyProducts.isActive, true), eq(companyProducts.status, "published"))).limit(100);
   const companyIds = Array.from(new Set(products.map((product) => product.companyId)));
   const verifiedCompanies = await Promise.all(companyIds.map(async (companyId) => (await db.select().from(companies).where(and(eq(companies.id, companyId), eq(companies.verificationStatus, "verified"))).limit(1))[0]));
   const allowedCompanies = new Map(verifiedCompanies.filter(Boolean).map((company) => [company!.id, company!]));
@@ -648,7 +654,7 @@ export async function getPublicProducts(input: { category?: "apparel" | "footwea
 export async function getProductById(productId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const [product] = await db.select().from(companyProducts).where(and(eq(companyProducts.id, productId), eq(companyProducts.isActive, true))).limit(1);
+  const [product] = await db.select().from(companyProducts).where(and(eq(companyProducts.id, productId), eq(companyProducts.isActive, true), eq(companyProducts.status, "published"))).limit(1);
   if (!product) return undefined;
   const [company] = await db.select().from(companies).where(and(eq(companies.id, product.companyId), eq(companies.verificationStatus, "verified"))).limit(1);
   if (!company) return undefined;
@@ -664,7 +670,7 @@ export async function getCompanyProduct(companyId: number, productId: number) {
   return product;
 }
 
-export async function createCompanyProduct(input: { companyId: number; name: string; category: "apparel" | "footwear" | "home" | "accessory"; description: string; priceKes: number; imageUrl?: string; imageUrls: string[]; sizeOptions: string[]; stockQuantity: number }) {
+export async function createCompanyProduct(input: { companyId: number; name: string; category: "apparel" | "footwear" | "home" | "accessory" | "appliance" | "art" | "tattoo" | "beauty" | "pet" | "vehicle" | "detailing" | "architecture" | "food" | "travel" | "technology"; description: string; priceKes: number; imageUrl?: string; imageUrls: string[]; sizeOptions: string[]; stockQuantity: number }) {
   const db = await getDb();
   if (!db) return { id: 0, persisted: false };
   const imageUrls = Array.from(new Set([input.imageUrl, ...input.imageUrls].filter((url): url is string => Boolean(url)))).slice(0, 8);

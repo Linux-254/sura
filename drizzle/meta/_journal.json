@@ -85,6 +85,27 @@
       "when": 1787501974191,
       "tag": "0011_regular_dark_phoenix",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1787836907152,
+      "tag": "0012_giant_colonel_america",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1787838479166,
+      "tag": "0013_damp_alex_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1787838863423,
+      "tag": "0014_long_absorbing_man",
+      "breakpoints": true
     }
   ]
 }
