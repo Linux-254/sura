@@ -6,9 +6,9 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#11130f",
-  "theme_color": "#11130f",
+  "background_color": "#121410",
+  "theme_color": "#121410",
   "icons": [
-    { "src": "/sura-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/sura-mark-neon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }

@@ -7,6 +7,7 @@ import AuthPage from "@/pages/AuthPage";
 import { AccountPage, AdminPage, CheckoutPage, CompanyPage } from "@/pages/DashboardPages";
 import Discover from "@/pages/Discover";
 import Home from "@/pages/Home";
+import LandingPage from "@/pages/LandingPage";
 import LegalPage from "@/pages/LegalPage";
 import PublicProfilePage from "@/pages/PublicProfilePage";
 import CompanyDetailPage from "@/pages/CompanyDetailPage";
@@ -32,11 +33,12 @@ function EntryRoute() {
 
   if (loading) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#11130f] px-6 text-[#f7f3eb]">
-        <div className="text-center">
-          <img src="/sura-mark.svg" alt="Sura" className="mx-auto h-12 w-12 rounded-2xl" />
-          <p className="mt-4 text-xs font-black uppercase tracking-[0.18em] text-[#d7ff4d]">Opening Sura</p>
-          <p className="mt-2 text-sm font-semibold text-[#d9d4ca]">Checking your private space…</p>
+      <main className="vb-ink grid min-h-screen place-items-center px-6 text-[#e3e3dc]">
+        <div className="w-full max-w-xs text-center">
+          <img src="/sura-wordmark.svg" alt="SURA" className="mx-auto h-12 w-auto" />
+          <p className="mt-8 text-xs font-black uppercase tracking-[0.18em] text-[#caff32]">Opening the signal</p>
+          <div className="mt-6 space-y-2" aria-hidden="true"><div className="sura-shimmer h-2 w-full rounded-full" /><div className="sura-shimmer mx-auto h-2 w-4/5 rounded-full" /><div className="sura-shimmer mx-auto h-2 w-2/3 rounded-full" /></div>
+          <p className="mt-4 text-sm font-semibold text-[#c5c9af]">Checking your private space…</p>
         </div>
       </main>
     );
@@ -52,6 +54,7 @@ function Router() {
       <Route path="/brief" component={BuildBrief} />
       <Route path="/discover" component={Discover} />
       <Route path="/join" component={AuthPage} />
+      <Route path="/landing" component={LandingPage} />
       <Route path="/terms" component={LegalPage} />
       <Route path="/privacy" component={LegalPage} />
       <Route path="/people/:slug"><PublicProfilePage kind="person" /></Route>
