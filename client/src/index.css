@@ -40,6 +40,10 @@
   --sura-font-display: "Playfair Display", Georgia, serif;
   --sura-font-body: "DM Sans", sans-serif;
   --sura-font-kicker: "DM Sans", sans-serif;
+  --sura-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --sura-duration-fast: 180ms;
+  --sura-duration-panel: 620ms;
+  --sura-duration-hero: 820ms;
   --radius: 1rem;
   --background: oklch(0.958 0.01 83);
   --foreground: oklch(0.22 0.013 70);
@@ -83,11 +87,31 @@
   .vb-button { transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms ease; }
   .vb-button:active { transform: scale(0.97); }
   .vb-focus:focus-visible { outline: 2px solid #b77835; outline-offset: 3px; }
+  .sura-auth-shell { isolation: isolate; background: #11130f; }
+  .sura-auth-shell::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; background: radial-gradient(circle at 18% 15%, rgba(215,255,77,0.12), transparent 27%), radial-gradient(circle at 76% 85%, rgba(166,98,49,0.15), transparent 32%); opacity: 0.72; }
+  .sura-auth-visual { animation: sura-auth-panel-in var(--sura-duration-panel) var(--sura-ease) both; }
+  .sura-auth-panel { animation: sura-auth-panel-in var(--sura-duration-panel) var(--sura-ease) 90ms both; }
+  .sura-auth-frame { contain: paint; }
+  .sura-auth-image { animation: sura-auth-image-in var(--sura-duration-hero) var(--sura-ease) both; }
+  .sura-auth-image-secondary { animation-delay: 90ms; }
+  .sura-auth-image-tertiary { animation-delay: 160ms; }
+  .sura-auth-thumb { transition: opacity var(--sura-duration-fast) ease, transform var(--sura-duration-fast) var(--sura-ease), box-shadow var(--sura-duration-fast) ease; }
+  .sura-auth-thumb:hover { transform: translateY(-2px); }
+  .sura-auth-tab { transition: color var(--sura-duration-fast) ease, background-color var(--sura-duration-fast) ease, transform var(--sura-duration-fast) var(--sura-ease); }
+  .sura-auth-tab:active { transform: scale(0.98); }
+  .sura-auth-form[data-auth-state="busy"] { opacity: 0.82; }
+  .sura-auth-form[data-auth-state="success"] { animation: sura-auth-state-in 320ms var(--sura-ease) both; }
+  .sura-auth-form[data-auth-state="error"] { animation: sura-auth-state-in 260ms var(--sura-ease) both; }
+  .sura-auth-notice { animation: sura-auth-state-in 280ms var(--sura-ease) both; }
+  @keyframes sura-auth-panel-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes sura-auth-image-in { from { opacity: 0.25; transform: scale(1.04); } to { opacity: 1; transform: scale(1); } }
+  @keyframes sura-auth-state-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
   .sura-shimmer { background: linear-gradient(100deg, var(--sura-muted, #eee5d8) 25%, color-mix(in srgb, var(--sura-paper, #fffaf2) 88%, white) 45%, var(--sura-muted, #eee5d8) 65%); background-size: 220% 100%; animation: sura-shimmer 1.4s cubic-bezier(0.23, 1, 0.32, 1) infinite; }
   @keyframes sura-shimmer { to { background-position: -220% 0; } }
   .sura-edit-card { animation: sura-edit-turn 260ms cubic-bezier(0.23, 1, 0.32, 1); transform-origin: center; }
   @keyframes sura-edit-turn { from { opacity: 0.45; transform: perspective(900px) rotateY(-6deg) translateX(1rem); } to { opacity: 1; transform: perspective(900px) rotateY(0) translateX(0); } }
   @media (prefers-reduced-motion: reduce) { .sura-shimmer, .sura-edit-card { animation: none !important; transform: none !important; transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .sura-auth-visual, .sura-auth-panel, .sura-auth-image, .sura-auth-form[data-auth-state="success"], .sura-auth-form[data-auth-state="error"], .sura-auth-notice { animation: none !important; transform: none !important; transition: none !important; } .sura-auth-thumb:hover, .sura-auth-tab:active { transform: none !important; } }
   @media (min-width: 640px) { .container { padding-left: 1.5rem; padding-right: 1.5rem; } }
   @media (min-width: 1024px) { .container { padding-left: 2rem; padding-right: 2rem; max-width: 1280px; } }
 }
