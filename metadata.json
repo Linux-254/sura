@@ -1,0 +1,6 @@
+{
+  "name": "Sura",
+  "description": "SURA helps you compose local living with a considered plan, connected companies, and clear next steps.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
