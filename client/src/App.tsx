@@ -6,6 +6,7 @@ import BuildBoard from "@/pages/BuildBoard";
 import AuthPage from "@/pages/AuthPage";
 import { AccountPage, AdminPage, CheckoutPage, CompanyPage } from "@/pages/DashboardPages";
 import Discover from "@/pages/Discover";
+import FeatureDemoPage from "@/pages/FeatureDemoPage";
 import Home from "@/pages/Home";
 import LandingPage from "@/pages/LandingPage";
 import LegalPage from "@/pages/LegalPage";
@@ -55,6 +56,7 @@ function Router() {
       <Route path="/discover" component={Discover} />
       <Route path="/join" component={AuthPage} />
       <Route path="/landing" component={LandingPage} />
+      <Route path="/demo" component={FeatureDemoPage} />
       <Route path="/terms" component={LegalPage} />
       <Route path="/privacy" component={LegalPage} />
       <Route path="/people/:slug"><PublicProfilePage kind="person" /></Route>
