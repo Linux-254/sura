@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import gsap from "gsap";
 import {
   ArrowDownRight,
   ArrowRight,
@@ -36,6 +35,27 @@ type OnboardingRole = "member" | "creator" | "business_owner";
 type BootPhase = "in" | "out" | "done";
 type Notice = { tone: "good" | "bad"; text: string } | null;
 type OnboardingForm = { displayName: string; handle: string; county: string; city: string; bio: string; businessName: string; businessType: string; businessDescription: string; businessEmail: string; businessPhone: string };
+type NavigatorHints = Navigator & { deviceMemory?: number; connection?: { saveData?: boolean; effectiveType?: string } };
+
+function getMotionProfile() {
+  const browser = navigator as NavigatorHints;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const connection = browser.connection;
+  const lowPower = browser.hardwareConcurrency <= 4
+    || (typeof browser.deviceMemory === "number" && browser.deviceMemory <= 4)
+    || connection?.saveData === true
+    || connection?.effectiveType === "slow-2g"
+    || connection?.effectiveType === "2g";
+  return { reduced, lowPower };
+}
+
+type GsapInstance = typeof import("gsap")["default"];
+let gsapPromise: Promise<GsapInstance> | null = null;
+
+function loadGsap() {
+  gsapPromise ??= import("gsap").then((module) => module.default);
+  return gsapPromise;
+}
 
 const FALLBACK_DOMAINS = [
   "Personal style",
@@ -88,14 +108,21 @@ function LoadingScreen({ phase }: { phase: Exclude<BootPhase, "done"> }) {
 
   useEffect(() => {
     const root = loadingRef.current;
-    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const context = gsap.context(() => {
-      gsap.from(".sura-loading-pattern__line", { opacity: 0, scale: 0.72, transformOrigin: "50% 50%", stagger: 0.05, duration: 1.05, ease: "power3.out" });
-      gsap.from(".sura-loading-orbit", { scale: 0.55, opacity: 0, duration: 1.1, ease: "back.out(1.5)" });
-      gsap.from(".sura-loading-mark", { scale: 0.55, rotate: -8, opacity: 0, duration: 0.85, ease: "back.out(1.7)" });
-      gsap.from(".sura-loading-wordmark, .sura-loading-kicker, .sura-loading-caption", { y: 12, opacity: 0, stagger: 0.08, duration: 0.55, delay: 0.18, ease: "power3.out" });
-    }, root);
-    return () => context.revert();
+    const profile = getMotionProfile();
+    if (!root || profile.reduced || profile.lowPower) return;
+    let cancelled = false;
+    let revert = () => {};
+    void loadGsap().then((gsap) => {
+      if (cancelled) return;
+      const context = gsap.context(() => {
+        gsap.from(".sura-loading-pattern__line", { opacity: 0, scale: 0.72, transformOrigin: "50% 50%", stagger: 0.05, duration: 1.05, ease: "power3.out" });
+        gsap.from(".sura-loading-orbit", { scale: 0.55, opacity: 0, duration: 1.1, ease: "back.out(1.5)" });
+        gsap.from(".sura-loading-mark", { scale: 0.55, rotate: -8, opacity: 0, duration: 0.85, ease: "back.out(1.7)" });
+        gsap.from(".sura-loading-wordmark, .sura-loading-kicker, .sura-loading-caption", { y: 12, opacity: 0, stagger: 0.08, duration: 0.55, delay: 0.18, ease: "power3.out" });
+      }, root);
+      revert = () => context.revert();
+    });
+    return () => { cancelled = true; revert(); };
   }, []);
 
   return <div ref={loadingRef} className={`sura-loading-screen ${phase === "out" ? "is-exiting" : ""}`} role="status" aria-label="Opening SURA">
@@ -109,6 +136,7 @@ function LoadingScreen({ phase }: { phase: Exclude<BootPhase, "done"> }) {
 function App() {
   const shellRef = useRef<HTMLDivElement>(null);
   const [bootPhase, setBootPhase] = useState<BootPhase>("in");
+  const [lowPower, setLowPower] = useState(false);
   const [view, setView] = useState<View>("home");
   const [session, setSession] = useState<Session | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -133,10 +161,17 @@ function App() {
   const [checkoutForm, setCheckoutForm] = useState({ county: "Nairobi", phone: "" });
 
   useEffect(() => {
-    const exitTimer = window.setTimeout(() => setBootPhase("out"), 900);
-    const doneTimer = window.setTimeout(() => setBootPhase("done"), 1350);
-    return () => { window.clearTimeout(exitTimer); window.clearTimeout(doneTimer); };
+    setLowPower(getMotionProfile().lowPower);
   }, []);
+
+  useEffect(() => {
+    const { reduced } = getMotionProfile();
+    const exitDelay = reduced ? 120 : lowPower ? 520 : 900;
+    const doneDelay = reduced ? 260 : lowPower ? 780 : 1350;
+    const exitTimer = window.setTimeout(() => setBootPhase("out"), exitDelay);
+    const doneTimer = window.setTimeout(() => setBootPhase("done"), doneDelay);
+    return () => { window.clearTimeout(exitTimer); window.clearTimeout(doneTimer); };
+  }, [lowPower]);
 
   useEffect(() => {
     let cancelled = false;
@@ -164,24 +199,21 @@ function App() {
 
   useEffect(() => {
     const root = shellRef.current;
-    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const context = gsap.context(() => {
-      gsap.from(".sura-site-header", { y: -16, duration: 0.7, ease: "power3.out", clearProps: "transform" });
-      gsap.from(".sura-mobile-nav", { y: 28, scale: 0.96, duration: 0.75, delay: 0.18, ease: "back.out(1.4)", clearProps: "transform" });
-    }, root);
-    return () => context.revert();
+    const profile = getMotionProfile();
+    if (!root || profile.reduced || profile.lowPower) return;
+    let cancelled = false;
+    let revert = () => {};
+    void loadGsap().then((gsap) => {
+      if (cancelled) return;
+      gsap.ticker.lagSmoothing(1000, 33);
+      const context = gsap.context(() => {
+        gsap.from(".sura-site-header", { y: -16, duration: 0.7, ease: "power3.out", clearProps: "transform" });
+        gsap.from(".sura-mobile-nav", { y: 28, scale: 0.96, duration: 0.75, delay: 0.18, ease: "back.out(1.4)", clearProps: "transform" });
+      }, root);
+      revert = () => context.revert();
+    });
+    return () => { cancelled = true; revert(); };
   }, []);
-
-  useEffect(() => {
-    const root = shellRef.current;
-    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const context = gsap.context(() => {
-      gsap.from(".sura-view-shell", { y: 18, duration: 0.65, ease: "power3.out", clearProps: "transform" });
-      gsap.from(".sura-mobile-nav__active", { scale: 0.72, duration: 0.45, ease: "back.out(1.7)", clearProps: "transform" });
-      gsap.from(".sura-mobile-nav__item[data-active=\"true\"] .sura-mobile-nav__glyph", { y: 4, scale: 0.82, rotate: -8, duration: 0.5, ease: "back.out(2)", clearProps: "transform" });
-    }, root);
-    return () => context.revert();
-  }, [view]);
 
   const domainNames = network.domains.length ? network.domains.map((domain) => domain.name) : FALLBACK_DOMAINS;
   const styles = network.nodes.filter((node) => node.node_type === "style" || node.node_type === "category").slice(0, 12);
@@ -232,7 +264,7 @@ function App() {
     finally { setCheckoutBusy(false); }
   };
 
-  return <div ref={shellRef} id="top" className="sura-shell">
+  return <div ref={shellRef} id="top" className={`sura-shell ${lowPower ? "sura-low-power" : ""}`}>
     {bootPhase !== "done" && <LoadingScreen phase={bootPhase} />}
     <Header view={view} session={session} mobileNav={mobileNav} setMobileNav={setMobileNav} navigate={navigate} openAuth={openAuth} openDashboard={() => session ? navigate("dashboard") : openAuth("signin")} />
     <div key={view} className="sura-view-shell">
