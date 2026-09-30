@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
+import gsap from "gsap";
 import {
   ArrowDownRight,
   ArrowRight,
@@ -82,6 +83,7 @@ function Button({ children, variant = "primary", onClick, type = "button", disab
 }
 
 function App() {
+  const shellRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<View>("home");
   const [session, setSession] = useState<Session | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -128,6 +130,27 @@ function App() {
     if (!session) { setMe(null); return; }
     void loadMe().then(setMe).catch(() => setMe(null));
   }, [session]);
+
+  useEffect(() => {
+    const root = shellRef.current;
+    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const context = gsap.context(() => {
+      gsap.fromTo(".sura-site-header", { y: -16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" });
+      gsap.fromTo(".sura-mobile-nav", { y: 28, opacity: 0, scale: 0.96 }, { y: 0, opacity: 1, scale: 1, duration: 0.75, delay: 0.18, ease: "back.out(1.4)" });
+    }, root);
+    return () => context.revert();
+  }, []);
+
+  useEffect(() => {
+    const root = shellRef.current;
+    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const context = gsap.context(() => {
+      gsap.fromTo(".sura-view-shell", { opacity: 0, y: 18, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.65, ease: "power3.out" });
+      gsap.fromTo(".sura-mobile-nav__active", { opacity: 0, scale: 0.72 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.7)" });
+      gsap.fromTo(".sura-mobile-nav__item[data-active=\"true\"] .sura-mobile-nav__glyph", { y: 4, scale: 0.82, rotate: -8 }, { y: 0, scale: 1, rotate: 0, duration: 0.5, ease: "back.out(2)" });
+    }, root);
+    return () => context.revert();
+  }, [view]);
 
   const domainNames = network.domains.length ? network.domains.map((domain) => domain.name) : FALLBACK_DOMAINS;
   const styles = network.nodes.filter((node) => node.node_type === "style" || node.node_type === "category").slice(0, 12);
@@ -178,21 +201,45 @@ function App() {
     finally { setCheckoutBusy(false); }
   };
 
-  return <div id="top" className="sura-shell">
+  return <div ref={shellRef} id="top" className="sura-shell">
     <Header view={view} session={session} mobileNav={mobileNav} setMobileNav={setMobileNav} navigate={navigate} openAuth={openAuth} openDashboard={() => session ? navigate("dashboard") : openAuth("signin")} />
-    {view === "home" && <HomeView domainNames={domainNames} styleCards={styleCards} businesses={network.businesses} networkLoading={networkLoading} openAuth={openAuth} openOnboarding={openOnboarding} setSelectedOffer={setSelectedOffer} navigate={navigate} />}
-    {view === "discover" && <DiscoverView domains={domainNames} nodes={network.nodes} businesses={network.businesses} loading={networkLoading} setSelectedOffer={setSelectedOffer} openOnboarding={openOnboarding} />}
-    {view === "dashboard" && <DashboardView me={me} session={session} openOnboarding={openOnboarding} navigate={navigate} openAuth={openAuth} signOut={handleSignOut} />}
+    <div key={view} className="sura-view-shell">
+      {view === "home" && <HomeView domainNames={domainNames} styleCards={styleCards} businesses={network.businesses} networkLoading={networkLoading} openAuth={openAuth} openOnboarding={openOnboarding} setSelectedOffer={setSelectedOffer} navigate={navigate} />}
+      {view === "discover" && <DiscoverView domains={domainNames} nodes={network.nodes} businesses={network.businesses} loading={networkLoading} setSelectedOffer={setSelectedOffer} openOnboarding={openOnboarding} />}
+      {view === "dashboard" && <DashboardView me={me} session={session} openOnboarding={openOnboarding} navigate={navigate} openAuth={openAuth} signOut={handleSignOut} />}
+    </div>
     {notice && <NoticeBar notice={notice} onClose={() => setNotice(null)} />}
     {authOpen && <AuthModal mode={authMode} setMode={setAuthMode} email={authEmail} setEmail={setAuthEmail} password={authPassword} setPassword={setAuthPassword} busy={authBusy} notice={notice} onSubmit={handleAuth} onClose={() => setAuthOpen(false)} />}
     {onboardingOpen && <OnboardingModal step={onboardingStep} setStep={setOnboardingStep} role={onboardingRole} setRole={setOnboardingRole} form={onboardingForm} setForm={setOnboardingForm} styles={styleCards} selected={selectedAesthetics} setSelected={setSelectedAesthetics} busy={onboardingBusy} onFinish={finishOnboarding} onClose={() => setOnboardingOpen(false)} />}
     {selectedOffer && <CheckoutModal offer={selectedOffer} form={checkoutForm} setForm={setCheckoutForm} busy={checkoutBusy} done={checkoutDone} submit={submitOrder} onClose={() => { setSelectedOffer(null); setCheckoutDone(null); }} />}
+    <MobileNav view={view} mobileNav={mobileNav} setMobileNav={setMobileNav} navigate={navigate} openDashboard={() => session ? navigate("dashboard") : openAuth("signin")} />
     <footer className="border-t border-white/10 px-5 py-10 sm:px-8 lg:px-14"><div className="mx-auto flex max-w-[1320px] flex-col gap-8 sm:flex-row sm:items-end sm:justify-between"><div><Logo compact /><p className="mt-4 max-w-sm text-sm leading-6 text-paper/50">A visual network for the things people see, wear, touch, arrange, drive, live with and carry.</p></div><div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-paper/55"><a href="#about" className="sura-focus hover:text-lime">About</a><a href="#pockets" className="sura-focus hover:text-lime">Pocket ladder</a><a href="#signals" className="sura-focus hover:text-lime">Signals</a><button className="sura-focus hover:text-lime" onClick={() => openAuth("signin")}>Private space</button></div></div></footer>
   </div>;
 }
 
 function Header({ view, session, mobileNav, setMobileNav, navigate, openAuth, openDashboard }: { view: View; session: Session | null; mobileNav: boolean; setMobileNav: (value: boolean) => void; navigate: (view: View) => void; openAuth: (mode?: AuthMode) => void; openDashboard: () => void }) {
-  return <header className="sticky top-0 z-30 border-b border-white/10 bg-ink/90 px-5 py-4 backdrop-blur-xl sm:px-8 lg:px-14"><div className="mx-auto flex max-w-[1320px] items-center justify-between gap-6"><Logo /><nav className={`${mobileNav ? "absolute inset-x-5 top-[72px] flex flex-col border border-white/10 bg-field p-3 shadow-2xl sm:static sm:flex-row sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none" : "hidden sm:flex"} items-center gap-1`}><button onClick={() => navigate("home")} className={`sura-focus px-3 py-2 text-xs font-bold ${view === "home" ? "text-lime" : "text-paper/60 hover:text-paper"}`}>The signal</button><button onClick={() => navigate("discover")} className={`sura-focus px-3 py-2 text-xs font-bold ${view === "discover" ? "text-lime" : "text-paper/60 hover:text-paper"}`}>Explore</button><a href="#pockets" onClick={() => setMobileNav(false)} className="sura-focus px-3 py-2 text-xs font-bold text-paper/60 hover:text-paper">Your pocket</a></nav><div className="flex items-center gap-2"><Meta>NAI / KE</Meta>{session ? <button onClick={openDashboard} className="sura-focus hidden items-center gap-2 border border-white/15 px-3 py-2 text-xs font-bold text-paper sm:inline-flex"><CircleDot className="h-3 w-3 text-lime" /> My SURA</button> : <button onClick={() => openAuth("signin")} className="sura-focus hidden px-3 py-2 text-xs font-bold text-paper/70 hover:text-lime sm:inline-flex">Sign in</button>}<button onClick={() => session ? openDashboard() : openAuth("signup")} className="sura-focus sura-button sura-button-primary min-h-10 px-3 text-[10px]">{session ? "Open space" : "Enter signal"}</button><button onClick={() => setMobileNav(!mobileNav)} className="sura-focus grid h-10 w-10 place-items-center border border-white/15 sm:hidden" aria-label="Toggle navigation">{mobileNav ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button></div></div></header>;
+  return <header className="sura-site-header sticky top-0 z-30 border-b border-white/10 px-5 py-4 sm:px-8 lg:px-14"><div className="relative mx-auto flex max-w-[1320px] items-center justify-between gap-6"><Logo /><nav className={`sura-header-nav ${mobileNav ? "is-open" : ""} items-center gap-1`}><button onClick={() => navigate("home")} className={`sura-focus px-3 py-2 text-xs font-bold ${view === "home" ? "text-lime" : "text-paper/60 hover:text-paper"}`}>The signal</button><button onClick={() => navigate("discover")} className={`sura-focus px-3 py-2 text-xs font-bold ${view === "discover" ? "text-lime" : "text-paper/60 hover:text-paper"}`}>Explore</button><a href="#pockets" onClick={() => setMobileNav(false)} className="sura-focus px-3 py-2 text-xs font-bold text-paper/60 hover:text-paper">Your pocket</a></nav><div className="flex items-center gap-2"><Meta>NAI / KE</Meta>{session ? <button onClick={openDashboard} className="sura-focus hidden items-center gap-2 border border-white/15 px-3 py-2 text-xs font-bold text-paper sm:inline-flex"><CircleDot className="h-3 w-3 text-lime" /> My SURA</button> : <button onClick={() => openAuth("signin")} className="sura-focus hidden px-3 py-2 text-xs font-bold text-paper/70 hover:text-lime sm:inline-flex">Sign in</button>}<button onClick={() => session ? openDashboard() : openAuth("signup")} className="sura-focus sura-button sura-button-primary min-h-10 px-3 text-[10px]">{session ? "Open space" : "Enter signal"}</button><button onClick={() => setMobileNav(!mobileNav)} className="sura-focus grid h-10 w-10 place-items-center border border-white/15 sm:hidden" aria-label="Toggle navigation" aria-expanded={mobileNav}>{mobileNav ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button></div></div></header>;
+}
+
+function MobileNav({ view, mobileNav, setMobileNav, navigate, openDashboard }: { view: View; mobileNav: boolean; setMobileNav: (value: boolean) => void; navigate: (view: View) => void; openDashboard: () => void }) {
+  const items: Array<{ id: View; label: string; Icon: typeof CircleDot }> = [
+    { id: "home", label: "Signal", Icon: CircleDot },
+    { id: "discover", label: "Explore", Icon: Compass },
+    { id: "dashboard", label: "Pocket", Icon: Palette },
+  ];
+  return <nav className="sura-mobile-nav" aria-label="Primary mobile navigation"><div className="sura-mobile-nav__track">
+    {items.map(({ id, label, Icon }) => {
+      const active = view === id;
+      return <button key={id} type="button" data-active={active} aria-current={active ? "page" : undefined} className="sura-focus sura-mobile-nav__item" onClick={() => { setMobileNav(false); id === "dashboard" ? openDashboard() : navigate(id); }}>
+        {active && <span className="sura-mobile-nav__active" aria-hidden="true" />}
+        <span className="sura-mobile-nav__glyph"><Icon className="h-[17px] w-[17px]" /></span><span>{label}</span>
+      </button>;
+    })}
+    <button type="button" data-active={mobileNav} aria-expanded={mobileNav} className="sura-focus sura-mobile-nav__item" onClick={() => setMobileNav(!mobileNav)}>
+      {mobileNav && <span className="sura-mobile-nav__active" aria-hidden="true" />}
+      <span className="sura-mobile-nav__glyph">{mobileNav ? <X className="h-[17px] w-[17px]" /> : <Menu className="h-[17px] w-[17px]" />}</span><span>Menu</span>
+    </button>
+  </div></nav>;
 }
 
 function HomeView({ domainNames, styleCards, businesses, networkLoading, openAuth, openOnboarding, setSelectedOffer, navigate }: { domainNames: string[]; styleCards: Array<{ slug: string; name: string; body: string; tone: string }>; businesses: Business[]; networkLoading: boolean; openAuth: (mode?: AuthMode) => void; openOnboarding: () => void; setSelectedOffer: (offer: { business: Business; item: CatalogItem }) => void; navigate: (view: View) => void }) {
