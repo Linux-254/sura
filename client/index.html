@@ -2,27 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#11130f" />
-    <meta name="application-name" content="Sura" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Sura" />
+    <meta name="application-name" content="SURA" />
+    <meta name="description" content="SURA is an affordability-aware visual network for people, businesses, objects, spaces, style and the details that make life feel like yours." />
+    <meta property="og:title" content="SURA — Make the feeling findable." />
+    <meta property="og:description" content="Discover a direction. Meet the people who make it real." />
+    <meta property="og:image" content="/assets/sura-auth-hero.jpg" />
     <link rel="icon" href="/sura-mark-neon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/sura-mark-neon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="description" content="SURA helps you compose local living with a considered plan, connected companies, and clear next steps." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet" />
-    <title>SURA — See the signal.</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <title>SURA — Make the feeling findable.</title>
   </head>
   <body>
+    <noscript>SURA needs JavaScript to open the visual network.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
-    </script>
-    <script defer src="%VITE_ANALYTICS_ENDPOINT%/umami" data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
   </body>
 </html>

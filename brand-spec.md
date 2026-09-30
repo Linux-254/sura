@@ -1,0 +1,45 @@
+# SURA Brand Specification
+
+## Design read
+
+SURA is an **affordability-aware visual network** for Nairobi-first discovery: people, businesses, objects, spaces, style, food, mobility, pets, events, and the details that make a life feel coherent. The product surface is an editorial tool with a commerce spine, not a generic marketplace.
+
+The v2 direction is a warm-dark **signal room**: charcoal ink, acid lime, mineral paper, clay and soft blue accents; geometric display type paired with a calm humanist sans; sharp editorial cards softened by large image crops; motion that feels like a camera finding a detail rather than a dashboard animating itself.
+
+| Dial | Decision |
+| --- | --- |
+| Visual variance | 8/10 — expressive enough to speak aesthetics, consistent enough to scale across niches |
+| Motion intensity | 6/10 — logo/hero reveals and restrained hover choreography; reduced-motion fallback everywhere |
+| Information density | 6/10 — compact discovery cards, progressive disclosure for onboarding and checkout |
+| Asset dependence | 8/10 — real SURA marks and local visual assets lead the experience |
+| Brand fidelity | 9/10 — use the supplied SVG marks and the SURA lime/charcoal system |
+
+## Asset map
+
+- Primary wordmark: `client/public/sura-wordmark.svg`
+- App mark: `client/public/sura-mark-neon.svg`
+- Monochrome mark: `client/public/sura-mark.svg`
+- Hero visual: `client/public/assets/sura-auth-hero.jpg`
+- Interior visual: `client/public/assets/sura-auth-interior.jpg`
+- Street visual: `client/public/assets/sura-auth-street.jpg`
+
+## Tokens
+
+- Ink: `#11130f`
+- Deep field: `#181b15`
+- Lime: `#caff32`
+- Paper: `#f3f0e7`
+- Soft paper: `#e7e4d9`
+- Mineral: `#b8d9e1`
+- Clay: `#e79b76`
+- Muted ink: `#7d8274`
+- Display: Space Grotesk
+- Body: Manrope
+- Meta: DM Mono
+- Spacing: 4px base, 8px rhythm
+- Radius: 2px editorial cards, 999px status pills
+- Motion: cubic-bezier(.22, 1, .36, 1), 160ms interaction, 700ms hero
+
+## Copy system
+
+Use verbs such as **see, shape, source, carry, make, meet, move**. Never describe a lower budget as a compromise. Say **everyday edit**, **considered edit**, **signature edit**, and **commissioned edit**. The user is building a point of view, not shopping for a personality.

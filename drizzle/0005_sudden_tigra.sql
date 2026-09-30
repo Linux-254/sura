@@ -1,1 +1,0 @@
-ALTER TABLE `companies` ADD `commissionRatePct` int DEFAULT 20 NOT NULL;

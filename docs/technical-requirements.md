@@ -1,24 +1,44 @@
-# VibeBuild Kenya — Technical Requirements
+# SURA — Technical Requirements
 
 ## Application architecture
 
-The application uses the existing React, Node.js, Express, tRPC, Drizzle, and managed MySQL foundation. tRPC is the only client-to-server data boundary. Public queries serve landing content, vendor discovery, profiles, and build recommendations. Auth-protected mutations save planning selections, manage personal build boards, create public-sharing tokens, and submit inquiries.
+SURA is a React/Vite web app with a Vercel-compatible Express API and Supabase as the system of record. The client uses Supabase Auth directly for email/password identity and public read queries. Privileged writes go through the server API so service-role credentials, business review transitions, order orchestration and payment callbacks never run in the browser.
 
 | Layer | Responsibility |
 | --- | --- |
-| Client | Public routes, guided brief, searchable directory, vendor details, build board, share view, responsive states. |
-| tRPC API | Input validation, matching orchestration, filterable data access, save/inquiry mutations, authorization. |
-| Database | Normalized vendors, services, example portfolio images, curated build templates, saved selections, inquiries, and public build shares. |
-| Auth | Existing Manus OAuth for gated saving and build-board ownership. Public matching and vendor browsing remain accessible without sign-in. |
+| Client | Visual discovery, taxonomy search, onboarding, private space and checkout handoff. |
+| Supabase Auth | Session persistence, refresh, email confirmation and identity. |
+| Supabase Postgres | Normalized profiles, roles, taxonomy, businesses, catalogues, orders, payment intents, receipts, reviews, settlements and audit events. |
+| Vercel API | Input validation, authorization, onboarding upserts, order preparation, provider webhooks and receipt issuance. |
+| Vercel | Static Vite output plus `/api/*` rewrites to the serverless function. |
 
-## Data model
+## Roles and authorization
 
-The model extends the template user table with vendors, vendor services, curated build templates, build line items, saved vendors, saved build selections, public shares, and inquiries. Vendor pricing is stored as **indicative lower and upper ranges** so the interface stays transparent about estimates. Demonstration vendors carry an explicit `isDemo` marker and a visible label in the experience.
+The first role model is `member`, `creator`, `business_owner`, `moderator`, `finance` and `admin`. Every authenticated profile receives `member`. Business owners can submit their own business studio. Moderators control the verified business/catalogue boundary. Finance and admins can access reconciliation records. RLS policies use `auth.uid()` and the security-definer helpers `is_business_member` and `has_profile_role`; policies never compare a column to itself as an authorization check.
 
-The matching endpoint is intentionally deterministic. It scores curated build templates by compatible city, lifestyle, aesthetic, and spend-fit, then returns the closest plan with an itemized estimate and recommended vendors. No AI, scraping, claims of live inventory, or background workers are introduced for the MVP.
+## Data model and flow
 
-## Security and quality
+The central graph is `aesthetic_domains → aesthetic_nodes → business_aesthetics`. Nodes carry a `node_type`, affordability band, local relevance note and JSON metadata so categories, subcategories, styles, materials, moods and palettes can scale without repeated schema changes. The initial seed covers personal style, home/living, spaces/places, food/hospitality, mobility/vehicles, digital/creative, objects/craft, events/occasions and beauty/wellbeing.
 
-Mutating endpoints require authenticated users unless the action is a low-friction public inquiry. Public inquiries are validated and rate-limited at the API boundary in a future hardening pass; the MVP validates field shape, normalizes text, and records the source context. Private boards are scoped to the authenticated user. Public shares expose only a non-guessable token and selected public build information.
+The commerce flow is deliberately explicit:
 
-Client interactions must surface loading, empty, recoverable error, and success states. Server coverage must include matching selection, vendor filtering, saving a vendor/build selection, and inquiry validation. The primary layout will be verified at mobile and desktop breakpoints.
+1. The client selects a published catalogue item from a verified business.
+2. `/api/v1/orders` verifies business/item state, calculates subtotal, delivery, commission, settlement and total, then creates the order, order line and payment intent.
+3. The payment provider owns collection. The browser never marks an order paid.
+4. `/api/v1/payments/webhook` validates the shared secret and amount, updates the payment intent and order, and upserts a receipt when status is `paid`.
+5. `/api/v1/orders/:orderId/receipt` exposes the receipt only to the buyer or authorized business member after issuance.
+
+## Required Vercel environment variables
+
+| Variable | Exposure | Purpose |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | Browser | Supabase project URL. |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Browser | Supabase publishable/anon key. |
+| `SUPABASE_URL` | Server | Supabase project URL. |
+| `SUPABASE_PUBLISHABLE_KEY` | Server | Token verification key. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server only | Privileged writes and webhook orchestration. |
+| `SURA_PAYMENT_WEBHOOK_SECRET` | Server only | Shared secret for provider callbacks. |
+
+## Quality gates
+
+`pnpm check` must pass. `pnpm build` must produce the static shell and both server bundles. Public discovery must remain readable when there are zero verified businesses. A payment callback must be idempotent, amount-checked and the only route that can issue a paid receipt. Production must use Supabase RLS and Vercel environment variables; no database URL, service-role key, payment secret or provider credential belongs in the client bundle.
