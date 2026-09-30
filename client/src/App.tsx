@@ -33,6 +33,7 @@ import { isSupabaseConfigured, supabase } from "./lib/supabase";
 type View = "home" | "discover" | "dashboard";
 type AuthMode = "signin" | "signup";
 type OnboardingRole = "member" | "creator" | "business_owner";
+type BootPhase = "in" | "out" | "done";
 type Notice = { tone: "good" | "bad"; text: string } | null;
 type OnboardingForm = { displayName: string; handle: string; county: string; city: string; bio: string; businessName: string; businessType: string; businessDescription: string; businessEmail: string; businessPhone: string };
 
@@ -82,8 +83,32 @@ function Button({ children, variant = "primary", onClick, type = "button", disab
   return <button type={type} disabled={disabled} onClick={onClick} className={`sura-focus sura-button ${variant === "primary" ? "sura-button-primary" : variant === "paper" ? "sura-button-paper" : "sura-button-ghost"} ${className}`}>{children}</button>;
 }
 
+function LoadingScreen({ phase }: { phase: Exclude<BootPhase, "done"> }) {
+  const loadingRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const root = loadingRef.current;
+    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const context = gsap.context(() => {
+      gsap.from(".sura-loading-pattern__line", { opacity: 0, scale: 0.72, transformOrigin: "50% 50%", stagger: 0.05, duration: 1.05, ease: "power3.out" });
+      gsap.from(".sura-loading-orbit", { scale: 0.55, opacity: 0, duration: 1.1, ease: "back.out(1.5)" });
+      gsap.from(".sura-loading-mark", { scale: 0.55, rotate: -8, opacity: 0, duration: 0.85, ease: "back.out(1.7)" });
+      gsap.from(".sura-loading-wordmark, .sura-loading-kicker, .sura-loading-caption", { y: 12, opacity: 0, stagger: 0.08, duration: 0.55, delay: 0.18, ease: "power3.out" });
+    }, root);
+    return () => context.revert();
+  }, []);
+
+  return <div ref={loadingRef} className={`sura-loading-screen ${phase === "out" ? "is-exiting" : ""}`} role="status" aria-label="Opening SURA">
+    <div className="sura-loading-pattern" aria-hidden="true"><svg className="sura-loading-pattern__svg" viewBox="0 0 640 640" fill="none"><path className="sura-loading-pattern__line" d="M0 80 80 0l80 80-80 80L0 80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 240l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 400l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 560l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Z" /><path className="sura-loading-pattern__line" d="M80 0v640M240 0v640M400 0v640M560 0v640" /><path className="sura-loading-pattern__line" d="M0 160h640M0 320h640M0 480h640" /></svg></div>
+    <div className="sura-loading-orbit" aria-hidden="true" />
+    <div className="sura-loading-lockup"><img className="sura-loading-mark" src="/sura-mark-neon.svg" alt="" /><span className="sura-loading-wordmark font-display">SURA</span><span className="sura-loading-kicker sura-meta">Nairobi / Kenya</span></div>
+    <span className="sura-loading-caption sura-meta">Make the feeling findable</span>
+  </div>;
+}
+
 function App() {
   const shellRef = useRef<HTMLDivElement>(null);
+  const [bootPhase, setBootPhase] = useState<BootPhase>("in");
   const [view, setView] = useState<View>("home");
   const [session, setSession] = useState<Session | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -106,6 +131,12 @@ function App() {
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [checkoutDone, setCheckoutDone] = useState<{ status: string; orderId?: string; message: string } | null>(null);
   const [checkoutForm, setCheckoutForm] = useState({ county: "Nairobi", phone: "" });
+
+  useEffect(() => {
+    const exitTimer = window.setTimeout(() => setBootPhase("out"), 900);
+    const doneTimer = window.setTimeout(() => setBootPhase("done"), 1350);
+    return () => { window.clearTimeout(exitTimer); window.clearTimeout(doneTimer); };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -135,8 +166,8 @@ function App() {
     const root = shellRef.current;
     if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const context = gsap.context(() => {
-      gsap.fromTo(".sura-site-header", { y: -16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" });
-      gsap.fromTo(".sura-mobile-nav", { y: 28, opacity: 0, scale: 0.96 }, { y: 0, opacity: 1, scale: 1, duration: 0.75, delay: 0.18, ease: "back.out(1.4)" });
+      gsap.from(".sura-site-header", { y: -16, duration: 0.7, ease: "power3.out", clearProps: "transform" });
+      gsap.from(".sura-mobile-nav", { y: 28, scale: 0.96, duration: 0.75, delay: 0.18, ease: "back.out(1.4)", clearProps: "transform" });
     }, root);
     return () => context.revert();
   }, []);
@@ -145,9 +176,9 @@ function App() {
     const root = shellRef.current;
     if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const context = gsap.context(() => {
-      gsap.fromTo(".sura-view-shell", { opacity: 0, y: 18, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.65, ease: "power3.out" });
-      gsap.fromTo(".sura-mobile-nav__active", { opacity: 0, scale: 0.72 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.7)" });
-      gsap.fromTo(".sura-mobile-nav__item[data-active=\"true\"] .sura-mobile-nav__glyph", { y: 4, scale: 0.82, rotate: -8 }, { y: 0, scale: 1, rotate: 0, duration: 0.5, ease: "back.out(2)" });
+      gsap.from(".sura-view-shell", { y: 18, duration: 0.65, ease: "power3.out", clearProps: "transform" });
+      gsap.from(".sura-mobile-nav__active", { scale: 0.72, duration: 0.45, ease: "back.out(1.7)", clearProps: "transform" });
+      gsap.from(".sura-mobile-nav__item[data-active=\"true\"] .sura-mobile-nav__glyph", { y: 4, scale: 0.82, rotate: -8, duration: 0.5, ease: "back.out(2)", clearProps: "transform" });
     }, root);
     return () => context.revert();
   }, [view]);
@@ -202,6 +233,7 @@ function App() {
   };
 
   return <div ref={shellRef} id="top" className="sura-shell">
+    {bootPhase !== "done" && <LoadingScreen phase={bootPhase} />}
     <Header view={view} session={session} mobileNav={mobileNav} setMobileNav={setMobileNav} navigate={navigate} openAuth={openAuth} openDashboard={() => session ? navigate("dashboard") : openAuth("signin")} />
     <div key={view} className="sura-view-shell">
       {view === "home" && <HomeView domainNames={domainNames} styleCards={styleCards} businesses={network.businesses} networkLoading={networkLoading} openAuth={openAuth} openOnboarding={openOnboarding} setSelectedOffer={setSelectedOffer} navigate={navigate} />}

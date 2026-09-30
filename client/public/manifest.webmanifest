@@ -9,6 +9,6 @@
   "background_color": "#121410",
   "theme_color": "#121410",
   "icons": [
-    { "src": "/sura-mark-neon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/sura-favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }
