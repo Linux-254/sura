@@ -116,6 +116,7 @@ button:disabled { cursor: wait; }
 .sura-stack-card__image { min-height: 0; flex: 1 1 auto; overflow: hidden; background: #25291f; }
 .sura-stack-card__image img { display: block; height: 100%; width: 100%; object-fit: cover; filter: saturate(.92) contrast(1.04); transition: transform 1.1s var(--ease-sura), filter 1.1s ease; }
 .sura-stack-card:hover .sura-stack-card__image img { transform: scale(1.035); filter: saturate(1.12) contrast(1.04); }
+.sura-business-surface { min-height: 20rem; contain: layout paint; }
 .sura-stack-rule { display: flex; align-items: center; gap: .35rem; }
 .sura-stack-rule span { display: block; height: .55rem; width: .55rem; border-radius: 999px; background: var(--color-clay); }
 .sura-stack-rule span:nth-child(2) { width: 4rem; border-radius: 0; background: var(--color-ink); }
@@ -174,6 +175,10 @@ input:focus, textarea:focus, select:focus { border-color: rgb(202 255 50 / .7) !
 }
 
 @media (max-width: 767px) {
+  .sura-site-header, .sura-header-nav, .sura-mobile-nav, .sura-card, .sura-glass, .sura-modal-backdrop { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .sura-pattern-surface::before { animation: none; mix-blend-mode: normal; opacity: .12; }
+  .sura-loading-pattern { opacity: .12; }
+  .sura-loading-pattern__svg, .sura-loading-orbit { animation: none; }
   .sura-horizontal-viewport { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: rgb(202 255 50 / .5) transparent; }
   .sura-horizontal-track { min-height: 0; padding-right: 1.25rem; transform: none !important; scroll-snap-type: x mandatory; }
   .sura-horizontal-panel { min-height: 26rem; scroll-snap-align: start; }
