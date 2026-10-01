@@ -18,11 +18,29 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'; this.onload=null" />
     <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      #critical-shell { min-height: 100vh; overflow: hidden; background: #11130f; color: #f3f0e7; font-family: Manrope, system-ui, sans-serif; }
+      #root:has(.sura-shell) #critical-shell { display: none; }
+      #critical-shell header { display: flex; height: 68px; align-items: center; justify-content: space-between; border-bottom: 1px solid rgb(243 240 231 / .1); padding: 0 20px; }
+      #critical-shell .critical-logo { display: flex; align-items: center; gap: 10px; font-family: "Space Grotesk", system-ui, sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -.08em; }
+      #critical-shell .critical-mark { display: grid; height: 36px; width: 36px; place-items: center; border: 1px solid #caff32; border-radius: 10px; color: #caff32; font-family: "Space Grotesk", system-ui, sans-serif; font-size: 24px; font-weight: 700; }
+      #critical-shell .critical-action { border: 1px solid #caff32; border-radius: 12px; background: #caff32; color: #11130f; padding: 11px 13px; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+      #critical-shell main { padding: 40px 20px 64px; }
+      #critical-shell .critical-wrap { max-width: 1320px; margin: 0 auto; }
+      #critical-shell .critical-kicker { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; color: rgb(243 240 231 / .55); font-family: "DM Mono", ui-monospace, monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+      #critical-shell .critical-kicker::before { width: 48px; height: 1px; background: #caff32; content: ""; }
+      #critical-shell h1 { max-width: 720px; margin: 0; font-family: "Space Grotesk", system-ui, sans-serif; font-size: clamp(3.5rem, 8vw, 8rem); font-weight: 700; letter-spacing: -.075em; line-height: .92; }
+      #critical-shell h1 span { color: #caff32; }
+      #critical-shell p { max-width: 520px; margin: 28px 0 0; color: rgb(243 240 231 / .62); font-size: 18px; line-height: 2; }
+      #critical-shell .critical-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
+      #critical-shell .critical-ghost { border: 1px solid rgb(243 240 231 / .22); border-radius: 12px; color: #f3f0e7; padding: 13px 17px; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+      @media (min-width: 640px) { #critical-shell header { padding: 0 32px; } #critical-shell main { padding: 64px 32px 96px; } }
+    </style>
     <title>SURA — Make the feeling findable.</title>
   </head>
   <body>
     <noscript>SURA needs JavaScript to open the visual network.</noscript>
-    <div id="root"></div>
+    <div id="root"><div id="critical-shell" aria-hidden="true"><header><div class="critical-logo"><span class="critical-mark">S</span><span>SURA</span></div><span class="critical-action">Enter signal</span></header><main><div class="critical-wrap"><div class="critical-kicker">Visual network / 001</div><h1>Make the <span>feeling</span> findable.</h1><p>SURA connects the way you want life to feel with the people, businesses, objects, spaces and next steps that can make it real.</p><div class="critical-actions"><span class="critical-action">Start your direction</span><span class="critical-ghost">See the field</span></div></div></main></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
