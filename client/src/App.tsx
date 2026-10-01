@@ -209,7 +209,10 @@ function App() {
   useEffect(() => {
     let cancelled = false;
     let unsubscribe = () => {};
-    const timer = window.setTimeout(() => {
+    let started = false;
+    const start = () => {
+      if (started || cancelled) return;
+      started = true;
       void getSupabase().then((client) => {
         if (!client || cancelled) return;
         void client.auth.getSession().then(({ data }) => { if (!cancelled) setSession(data.session); });
@@ -218,19 +221,26 @@ function App() {
         });
         unsubscribe = () => listener.subscription.unsubscribe();
       });
-    }, 650);
-    return () => { cancelled = true; window.clearTimeout(timer); unsubscribe(); };
+    };
+    const timer = window.setTimeout(start, 8000);
+    window.addEventListener("pointerdown", start, { passive: true });
+    window.addEventListener("scroll", start, { passive: true, once: true });
+    return () => { cancelled = true; window.clearTimeout(timer); window.removeEventListener("pointerdown", start); window.removeEventListener("scroll", start); unsubscribe(); };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
+    let started = false;
     const load = () => {
       void loadPublicNetwork().then((nextNetwork) => { if (!cancelled) setNetwork(nextNetwork); }).catch((error: unknown) => {
         if (!cancelled) setNotice({ tone: "bad", text: error instanceof Error ? error.message : "The public signal is still warming up." });
       }).finally(() => { if (!cancelled) setNetworkLoading(false); });
     };
-    const timer = window.setTimeout(load, 700);
-    return () => { cancelled = true; window.clearTimeout(timer); };
+    const start = () => { if (started || cancelled) return; started = true; load(); };
+    const timer = window.setTimeout(start, 8000);
+    window.addEventListener("pointerdown", start, { passive: true });
+    window.addEventListener("scroll", start, { passive: true, once: true });
+    return () => { cancelled = true; window.clearTimeout(timer); window.removeEventListener("pointerdown", start); window.removeEventListener("scroll", start); };
   }, []);
 
   useEffect(() => {
