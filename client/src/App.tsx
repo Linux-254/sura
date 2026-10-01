@@ -4,7 +4,6 @@ import {
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
-  BadgeCheck,
   Building2,
   Check,
   ChevronDown,
@@ -23,7 +22,6 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  Store,
   X,
 } from "lucide-react";
 import { apiRequest, loadMe, loadPublicNetwork, type Business, type CatalogItem, type MeBundle, type TaxonomyDomain, type TaxonomyNode } from "./lib/api";
@@ -34,6 +32,7 @@ const LazyDashboardView = lazy(() => import("./lazy-views").then((module) => ({ 
 const LazyAuthModal = lazy(() => import("./lazy-views").then((module) => ({ default: module.AuthModal })));
 const LazyOnboardingModal = lazy(() => import("./lazy-views").then((module) => ({ default: module.OnboardingModal })));
 const LazyCheckoutModal = lazy(() => import("./lazy-views").then((module) => ({ default: module.CheckoutModal })));
+const LazyBelowFoldHome = lazy(() => import("./lazy-views").then((module) => ({ default: module.BelowFoldHome })));
 
 type View = "home" | "discover" | "dashboard";
 type AuthMode = "signin" | "signup";
@@ -59,17 +58,9 @@ function getMotionProfile() {
 
 type GsapInstance = typeof import("gsap")["default"];
 let gsapPromise: Promise<GsapInstance> | null = null;
-type ScrollTriggerInstance = typeof import("gsap/ScrollTrigger")["ScrollTrigger"];
-let scrollMotionPromise: Promise<{ gsap: GsapInstance; ScrollTrigger: ScrollTriggerInstance }> | null = null;
-
 function loadGsap() {
   gsapPromise ??= import("gsap").then((module) => module.default);
   return gsapPromise;
-}
-
-function loadScrollMotion() {
-  scrollMotionPromise ??= Promise.all([loadGsap(), import("gsap/ScrollTrigger")]).then(([gsap, module]) => ({ gsap, ScrollTrigger: module.ScrollTrigger }));
-  return scrollMotionPromise;
 }
 
 const FALLBACK_DOMAINS = [
@@ -90,25 +81,6 @@ const FALLBACK_STYLES = [
   { slug: "coastal-ease", name: "Coastal Ease", body: "Airy, sunlit, material-led", tone: "mineral" },
   { slug: "tangerine-social", name: "Tangerine Social", body: "Joyful, expressive, energetic", tone: "clay" },
 ];
-const POCKETS = [
-  { label: "Everyday edit", range: "Under KES 5k", body: "Small shifts, found objects, repeat-wear details.", color: "#caff32" },
-  { label: "Considered edit", range: "KES 5k–40k", body: "A clearer object, service or room move with room to breathe.", color: "#b8d9e1" },
-  { label: "Signature edit", range: "KES 40k–150k", body: "Fewer, stronger choices with a maker or studio in the loop.", color: "#e79b76" },
-  { label: "Commissioned edit", range: "KES 150k+", body: "Brief-led work where fit, craft and delivery become the point.", color: "#f3f0e7" },
-];
-const FIELD_STAGES = [
-  { label: "Wear / personal style", body: "Fit, repeat-wear, detail and the point of view you carry outside.", tone: "lime" },
-  { label: "Space / interiors", body: "Material, light, arrangement and the rooms that hold your everyday.", tone: "paper" },
-  { label: "Make / craft", body: "Objects with a hand in them, from useful to quietly ceremonial.", tone: "clay" },
-  { label: "Beauty / body art", body: "Consent-led rituals, grooming and expression without body judgement.", tone: "mineral" },
-  { label: "Culture / creative life", body: "Music, image, gathering and the signals that become a scene.", tone: "lime" },
-];
-const STACKED_VISUALS = [
-  { asset: "hero", kicker: "01 / street signal", title: "A point of view has a place." },
-  { asset: "interior", kicker: "02 / room study", title: "Make the room answer back." },
-  { asset: "street", kicker: "03 / movement", title: "Let the everyday carry some voltage." },
-  { asset: "hero", kicker: "04 / the edit", title: "See it. Shape it. Source it." },
-] as const;
 const RESPONSIVE_ASSETS = { hero: "sura-auth-hero", interior: "sura-auth-interior", street: "sura-auth-street" } as const;
 type VisualAsset = keyof typeof RESPONSIVE_ASSETS;
 
@@ -116,10 +88,6 @@ type ResponsiveImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src
 function ResponsiveImage({ asset, sizes = "(max-width: 767px) 100vw, 50vw", ...props }: ResponsiveImageProps) {
   const base = RESPONSIVE_ASSETS[asset];
   return <picture><source type="image/webp" srcSet={`/assets/${base}-480.webp 480w, /assets/${base}-900.webp 900w`} sizes={sizes} /><img {...props} src={`/assets/${base}.jpg`} sizes={sizes} /></picture>;
-}
-
-function formatKes(amount: number | null | undefined) {
-  return `KES ${(amount ?? 0).toLocaleString("en-KE")}`;
 }
 
 function Logo({ compact = false }: { compact?: boolean }) {
@@ -364,97 +332,27 @@ function MobileNav({ view, mobileNav, setMobileNav, navigate, openDashboard }: {
 
 function HomeView({ domainNames, styleCards, businesses, networkLoading, openAuth, openOnboarding, setSelectedOffer, navigate }: { domainNames: string[]; styleCards: Array<{ slug: string; name: string; body: string; tone: string }>; businesses: Business[]; networkLoading: boolean; openAuth: (mode?: AuthMode) => void; openOnboarding: () => void; setSelectedOffer: (offer: { business: Business; item: CatalogItem }) => void; navigate: (view: View) => void }) {
   const landingRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const root = landingRef.current;
-    const profile = getMotionProfile();
-    if (!root || profile.reduced || profile.lowPower || !window.matchMedia("(min-width: 768px)").matches) return;
-    let cancelled = false;
-    let revert = () => {};
-    void loadScrollMotion().then(({ gsap, ScrollTrigger }) => {
-      if (cancelled) return;
-      gsap.registerPlugin(ScrollTrigger);
-      const context = gsap.context(() => {
-        const horizontal = root.querySelector<HTMLElement>(".sura-horizontal-section");
-        const track = root.querySelector<HTMLElement>(".sura-horizontal-track");
-        if (horizontal && track) {
-          const distance = () => Math.max(0, track.scrollWidth - horizontal.clientWidth + 24);
-          gsap.to(track, {
-            x: () => -distance(),
-            ease: "none",
-            scrollTrigger: {
-              trigger: horizontal,
-              start: "top top",
-              end: () => `+=${distance() + window.innerHeight * 0.5}`,
-              pin: true,
-              scrub: 0.9,
-              anticipatePin: 1,
-              invalidateOnRefresh: true,
-            },
-          });
-        }
-
-        gsap.to(".sura-hero-pattern__svg", {
-          y: 120,
-          rotate: 12,
-          ease: "none",
-          scrollTrigger: { trigger: ".sura-hero-visual", start: "top bottom", end: "bottom top", scrub: 1.2 },
-        });
-        gsap.to(".sura-hero-card", {
-          y: (index) => (index % 2 ? -28 : 22),
-          rotate: (index) => (index % 2 ? -2 : 1.5),
-          ease: "none",
-          stagger: 0.06,
-          scrollTrigger: { trigger: ".sura-hero-visual", start: "top bottom", end: "bottom top", scrub: 1.1 },
-        });
-
-        gsap.utils.toArray<HTMLElement>(".sura-stack-card").forEach((card, index) => {
-          gsap.fromTo(card, { y: index === 0 ? 0 : 92 + index * 18, rotate: index % 2 ? 2.8 : -2.8 }, {
-            y: 0,
-            rotate: index % 2 ? -1.1 : 1.1,
-            ease: "none",
-            scrollTrigger: { trigger: card, start: "top bottom-=8%", end: "top 26%", scrub: 0.8 },
-          });
-        });
-        window.setTimeout(() => ScrollTrigger.refresh(), 160);
-      }, root);
-      revert = () => context.revert();
-    });
-    return () => { cancelled = true; revert(); };
-  }, []);
-
   return <main ref={landingRef} className="sura-landing">
     <section className="relative overflow-hidden px-5 pb-16 pt-10 sm:px-8 sm:pb-24 sm:pt-16 lg:px-14 lg:pt-20"><div className="pointer-events-none absolute right-[-16rem] top-[-12rem] h-[36rem] w-[36rem] rounded-full bg-lime/10 blur-[110px]" /><div className="pointer-events-none absolute bottom-[-10rem] left-[-12rem] h-[28rem] w-[28rem] rounded-full bg-clay/10 blur-[100px]" /><div className="relative mx-auto grid max-w-[1320px] gap-12 lg:grid-cols-[.92fr_1.08fr] lg:items-end"><div className="max-w-3xl"><div className="mb-7 flex items-center gap-3"><span className="h-px w-12 bg-lime" /><Meta>Visual network / 001</Meta></div><h1 className="sura-display max-w-4xl text-[clamp(3.5rem,8vw,8rem)] font-bold text-paper">Make the <span className="text-lime">feeling</span> findable.</h1><p className="mt-7 max-w-xl text-lg leading-8 text-paper/62 sm:text-xl">SURA connects the way you want life to feel with the people, businesses, objects, spaces and next steps that can make it real.</p><div className="mt-9 flex flex-wrap gap-3"><Button onClick={openOnboarding}>Start your direction <ArrowUpRight className="h-4 w-4" /></Button><Button variant="ghost" onClick={() => navigate("discover")}>See the field <ArrowRight className="h-4 w-4" /></Button></div><div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-3 text-xs text-paper/45"><span className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-lime" />Nairobi first, Kenya wide</span><span className="flex items-center gap-2"><ShieldCheck className="h-3.5 w-3.5 text-lime" />Budget without the shame</span></div></div><HeroVisual /></div><div className="relative mx-auto mt-16 grid max-w-[1320px] gap-4 border-y border-white/10 py-4 sm:grid-cols-4"><div className="sm:col-span-1"><Meta>See → shape → source</Meta></div><div className="sm:col-span-3 grid gap-3 text-sm text-paper/55 sm:grid-cols-3"><span>Choose a direction.</span><span>Meet a point of view.</span><span>Move when it feels right.</span></div></div></section>
-    <section id="about" className="sura-paper px-5 py-16 sm:px-8 sm:py-24 lg:px-14"><div className="mx-auto grid max-w-[1320px] gap-12 lg:grid-cols-[.75fr_1.25fr]"><div><Meta dark>What SURA sees</Meta><h2 className="sura-display mt-5 text-5xl font-bold sm:text-6xl">Aesthetics are a network.</h2></div><div className="grid gap-10 sm:grid-cols-2"><p className="text-lg leading-8 text-ink/65">Not just fashion. The room, the ride, the table, the salon, the studio, the object, the pet, the place and the small ritual that keeps showing up.</p><div><div className="mb-4 flex items-center gap-2"><Layers3 className="h-4 w-4 text-ink/50" /><Meta dark>Eight fields to start</Meta></div><div className="flex flex-wrap gap-2">{domainNames.slice(0, 8).map((domain) => <span key={domain} className="border border-ink/15 px-3 py-2 text-xs font-bold">{domain}</span>)}</div></div></div></div></section>
-    <HorizontalField />
-    <StackingGallery />
-    <section id="pockets" className="px-5 py-16 sm:px-8 sm:py-24 lg:px-14"><div className="mx-auto max-w-[1320px]"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><Meta>Your pocket is a design input</Meta><h2 className="sura-display mt-4 max-w-2xl text-5xl font-bold sm:text-6xl">Taste, with a route to reality.</h2></div><p className="max-w-sm text-sm leading-6 text-paper/50">SURA never turns price into a ranking. It uses it to make the next step honest.</p></div><div className="mt-10 grid border-y border-white/10 sm:grid-cols-2 lg:grid-cols-4">{POCKETS.map((pocket, index) => <article key={pocket.label} className="border-b border-white/10 p-5 last:border-b-0 sm:border-r sm:last:border-r-0 lg:border-b-0"><div className="mb-12 flex items-center justify-between"><span className="h-3 w-3 rounded-full" style={{ background: pocket.color }} /><Meta>{String(index + 1).padStart(2, "0")}</Meta></div><h3 className="font-display text-2xl font-bold">{pocket.label}</h3><p className="mt-2 text-xs font-bold text-lime">{pocket.range}</p><p className="mt-5 text-sm leading-6 text-paper/50">{pocket.body}</p></article>)}</div></div></section>
-    <section id="signals" className="sura-paper px-5 py-16 sm:px-8 sm:py-24 lg:px-14"><div className="mx-auto max-w-[1320px]"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><Meta dark>Current directions</Meta><h2 className="sura-display mt-4 text-5xl font-bold sm:text-6xl">Find your mix.</h2></div><button onClick={() => navigate("discover")} className="sura-focus inline-flex items-center gap-2 self-start text-xs font-bold text-ink/60 hover:text-ink sm:self-auto">Open the whole taxonomy <ArrowUpRight className="h-4 w-4" /></button></div><div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{styleCards.slice(0, 6).map((style, index) => <article key={style.slug} className={`group relative min-h-[260px] overflow-hidden p-5 ${index === 0 ? "bg-ink text-paper" : index === 1 ? "bg-clay text-ink" : index === 2 ? "bg-mineral text-ink" : "bg-soft-paper text-ink"}`}><div className="flex items-start justify-between"><span className="font-display text-3xl font-bold">{String(index + 1).padStart(2, "0")}</span><ArrowUpRight className="h-5 w-5 opacity-50 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" /></div><div className="absolute inset-x-5 bottom-5"><h3 className="font-display text-3xl font-bold tracking-[-.06em]">{style.name}</h3><p className="mt-2 max-w-xs text-sm opacity-70">{style.body}</p></div></article>)}</div></div></section>
-    <BusinessSignals businesses={businesses} loading={networkLoading} setSelectedOffer={setSelectedOffer} openAuth={openAuth} />
-    <section className="px-5 py-20 sm:px-8 sm:py-28 lg:px-14"><div className="sura-grid mx-auto grid max-w-[1320px] gap-10 border border-white/12 p-6 sm:p-10 lg:grid-cols-[1.1fr_.9fr] lg:p-14"><div><Meta>Build with the network</Meta><h2 className="sura-display mt-5 max-w-3xl text-5xl font-bold text-paper sm:text-7xl">The moodboard is only the beginning.</h2><p className="mt-6 max-w-xl text-lg leading-8 text-paper/58">Save a direction. Brief a business. Keep the budget visible. Let payment and receipts have a proper handoff when it is time to move.</p></div><div className="flex flex-col justify-end gap-3 lg:items-end"><Button onClick={openOnboarding}>Create your SURA space <ArrowRight className="h-4 w-4" /></Button><p className="max-w-xs text-right text-xs leading-5 text-paper/40">Supabase Auth, role-based access and RLS-backed records keep the private layer private.</p></div></div></section>
+    <DeferredHomeSections landingRef={landingRef} domainNames={domainNames} styleCards={styleCards} businesses={businesses} networkLoading={networkLoading} openAuth={openAuth} openOnboarding={openOnboarding} setSelectedOffer={setSelectedOffer} navigate={navigate} />
   </main>;
 }
 
+function DeferredHomeSections({ landingRef, domainNames, styleCards, businesses, networkLoading, openAuth, openOnboarding, setSelectedOffer, navigate }: { landingRef: React.RefObject<HTMLElement | null>; domainNames: string[]; styleCards: Array<{ slug: string; name: string; body: string; tone: string }>; businesses: Business[]; networkLoading: boolean; openAuth: (mode?: AuthMode) => void; openOnboarding: () => void; setSelectedOffer: (offer: { business: Business; item: CatalogItem }) => void; navigate: (view: View) => void }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let started = false;
+    const start = () => { if (started) return; started = true; setReady(true); };
+    const timer = window.setTimeout(start, 8000);
+    window.addEventListener("pointerdown", start, { passive: true });
+    window.addEventListener("scroll", start, { passive: true, once: true });
+    return () => { window.clearTimeout(timer); window.removeEventListener("pointerdown", start); window.removeEventListener("scroll", start); };
+  }, []);
+  if (!ready) return null;
+  return <Suspense fallback={null}><LazyBelowFoldHome landingRef={landingRef} domainNames={domainNames} styleCards={styleCards} businesses={businesses} networkLoading={networkLoading} openAuth={openAuth} openOnboarding={openOnboarding} setSelectedOffer={setSelectedOffer} navigate={navigate} /></Suspense>;
+}
 function HeroVisual() {
   return <div className="sura-hero-visual relative min-h-[420px] lg:min-h-[520px]"><div className="sura-hero-pattern absolute inset-[-12%] z-0 opacity-75" aria-hidden="true"><svg className="sura-hero-pattern__svg h-full w-full" viewBox="0 0 640 520" fill="none"><path d="M0 80 80 0l80 80-80 80L0 80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 240l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 400l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Z" stroke="#CAFF32" strokeWidth="1.2" opacity=".24" /><path d="M0 0h640M0 160h640M0 320h640M0 480h640M80 0v520M240 0v520M400 0v520M560 0v520" stroke="#F3F0E7" strokeWidth="1" opacity=".12" /></svg></div><div className="sura-hero-card absolute left-[6%] top-[9%] z-10 w-[48%] rotate-[-5deg] overflow-hidden border border-white/20 bg-field p-2 shadow-2xl sm:left-[8%]"><ResponsiveImage asset="hero" alt="A street-level SURA visual signal" width="760" height="1000" loading="lazy" decoding="async" sizes="(max-width: 767px) 48vw, 24vw" className="sura-image aspect-[.76] w-full object-cover" /><div className="flex items-center justify-between px-1 py-3"><Meta>01 / street</Meta><span className="h-2 w-2 rounded-full bg-lime" /></div></div><div className="sura-hero-card absolute right-[3%] top-0 w-[55%] overflow-hidden border border-white/20 bg-field p-2 shadow-2xl sm:right-[5%]"><ResponsiveImage asset="interior" alt="A warm interior material study" width="860" height="800" loading="lazy" decoding="async" sizes="(max-width: 767px) 55vw, 30vw" className="sura-image aspect-[1.08] w-full object-cover" /><div className="flex items-center justify-between px-1 py-3"><Meta>02 / interior</Meta><span className="text-[10px] text-paper/45">soft utility</span></div></div><div className="sura-hero-card absolute bottom-[3%] right-[9%] z-20 w-[43%] rotate-[4deg] overflow-hidden border border-lime/40 bg-lime p-2 text-ink shadow-2xl"><ResponsiveImage asset="street" alt="A moving street detail" width="760" height="660" loading="lazy" decoding="async" sizes="(max-width: 767px) 43vw, 24vw" className="sura-image aspect-[1.15] w-full object-cover grayscale-[.1]" /><div className="flex items-center justify-between px-1 py-3"><Meta dark>03 / movement</Meta><ArrowUpRight className="h-4 w-4" /></div></div><div className="sura-hero-card absolute bottom-[12%] left-0 z-30 hidden rotate-[-12deg] border border-white/20 bg-paper px-4 py-3 text-ink shadow-2xl sm:block"><span className="sura-meta text-[10px] font-bold">Make it yours.</span></div></div>;
-}
-
-function HorizontalField() {
-  return <section className="sura-horizontal-section sura-pattern-surface overflow-hidden" aria-labelledby="field-title"><div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24 lg:px-14"><div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"><div className="max-w-2xl"><Meta>Scroll the field / 002</Meta><h2 id="field-title" className="sura-display mt-5 text-5xl font-bold text-paper sm:text-7xl">Five doors.<br /><span className="text-lime">Infinite mixes.</span></h2></div><div className="max-w-sm"><p className="text-sm leading-6 text-paper/55">On desktop, vertical scroll becomes a horizontal walk through the network. On touch screens, the same field becomes a native swipe rail.</p><div className="sura-scroll-cue mt-5"><span className="sura-scroll-cue__line" /> scroll / drag →</div></div></div></div><div className="sura-horizontal-viewport"><div className="sura-horizontal-track">{FIELD_STAGES.map((stage, index) => <article key={stage.label} className={`sura-horizontal-panel sura-tone-${stage.tone}`}><div className="flex items-start justify-between"><span className="sura-pattern-glyph" aria-hidden="true"><span /><span /><span /></span><Meta dark>{String(index + 1).padStart(2, "0")} / 05</Meta></div><div className="mt-auto"><p className="sura-meta text-[10px] opacity-60">Aesthetic field</p><h3 className="mt-4 max-w-[15ch] font-display text-4xl font-bold leading-[.92] tracking-[-.07em]">{stage.label}</h3><p className="mt-5 max-w-xs text-sm leading-6 opacity-70">{stage.body}</p></div><span className="sura-panel-index" aria-hidden="true">0{index + 1}</span></article>)}</div></div><div className="mx-auto flex max-w-[1320px] items-center justify-between px-5 pb-8 pt-5 text-[10px] font-bold uppercase tracking-[.16em] text-paper/35 sm:px-8 lg:px-14"><span>Scroll to compose your mix</span><span>01 — 05</span></div><div className="sura-marquee" aria-hidden="true"><div className="sura-marquee__track"><span>MAKE THE FEELING FINDABLE</span><i>◆</i><span>NAIROBI / KENYA</span><i>◆</i><span>SEE → SHAPE → SOURCE</span><i>◆</i><span>MAKE THE FEELING FINDABLE</span><i>◆</i><span>NAIROBI / KENYA</span><i>◆</i><span>SEE → SHAPE → SOURCE</span><i>◆</i></div></div></section>;
-}
-
-function StackingGallery() {
-  return <section className="sura-stack-section sura-paper px-5 py-16 sm:px-8 sm:py-24 lg:px-14" aria-labelledby="stack-title"><div className="mx-auto grid max-w-[1320px] gap-12 lg:grid-cols-[.72fr_1.28fr] lg:gap-20"><div className="sura-stack-intro lg:sticky lg:top-32 lg:h-fit"><Meta dark>Signal studies / 003</Meta><h2 id="stack-title" className="sura-display mt-5 max-w-xl text-5xl font-bold sm:text-7xl">A moodboard that <span className="text-clay">moves.</span></h2><p className="mt-6 max-w-md text-base leading-7 text-ink/60">The feeling is not flat. Scroll through the layers until one starts to feel like yours.</p><div className="sura-stack-rule mt-10"><span /> <span /> <span /></div></div><div className="sura-stack-stage">{STACKED_VISUALS.map((visual, index) => <figure key={`${visual.kicker}-${index}`} className="sura-stack-card" style={{ "--stack-index": index } as React.CSSProperties}><div className="sura-stack-card__image"><ResponsiveImage asset={visual.asset} alt={visual.title} width="960" height="720" loading={index === 0 ? "eager" : "lazy"} decoding="async" sizes="(max-width: 767px) 100vw, 62vw" /></div><figcaption className="flex items-end justify-between gap-5 p-5 sm:p-7"><div><span className="sura-meta text-[10px] text-ink/45">{visual.kicker}</span><h3 className="mt-3 max-w-sm font-display text-3xl font-bold leading-none tracking-[-.06em] sm:text-5xl">{visual.title}</h3></div><span className="sura-meta hidden text-[10px] text-ink/45 sm:block">SURA / field note</span></figcaption></figure>)}</div></div></section>;
-}
-
-function BusinessCard({ business, setSelectedOffer }: { business: Business; setSelectedOffer: (offer: { business: Business; item: CatalogItem }) => void }) {
-  const offer = business.catalog?.[0];
-  return <article className="sura-card group overflow-hidden"><div className="relative aspect-[1.3] overflow-hidden bg-field"><ResponsiveImage asset={(["hero", "interior", "street"] as const)[business.display_name.length % 3]} alt="" width="900" height="1200" loading="lazy" decoding="async" sizes="(max-width: 767px) 100vw, 33vw" className="sura-image h-full w-full object-cover opacity-80" /><div className="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-transparent" /><div className="absolute inset-x-4 bottom-4 flex items-end justify-between gap-3"><div><div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.12em] text-lime"><BadgeCheck className="h-3 w-3" /> Verified</div><h3 className="font-display text-2xl font-bold text-paper">{business.display_name}</h3></div><ArrowUpRight className="h-5 w-5 text-paper/70" /></div></div><div className="p-4"><div className="flex items-center justify-between gap-3"><p className="text-xs font-bold text-paper/70">{business.business_type}</p><span className="flex items-center gap-1 text-[10px] font-bold text-paper/45"><MapPin className="h-3 w-3" />{business.city ?? business.county ?? "Kenya"}</span></div><p className="mt-3 line-clamp-2 text-sm leading-6 text-paper/50">{business.description || "A verified local point of view, ready to be explored."}</p>{offer && <button onClick={() => setSelectedOffer({ business, item: offer })} className="sura-focus mt-5 flex w-full items-center justify-between border-t border-white/10 pt-4 text-left text-xs font-bold text-lime">{offer.name} <span>{formatKes(offer.price_min_kes)} <ArrowRight className="ml-1 inline h-3 w-3" /></span></button>}</div></article>;
-}
-
-
-function BusinessSignals({ businesses, loading, setSelectedOffer, openAuth }: { businesses: Business[]; loading: boolean; setSelectedOffer: (offer: { business: Business; item: CatalogItem }) => void; openAuth: (mode?: AuthMode) => void }) {
-  return <section className="px-5 py-16 sm:px-8 sm:py-24 lg:px-14"><div className="mx-auto max-w-[1320px]"><div className="flex items-center justify-between gap-4"><div><Meta>Verified business signal</Meta><h2 className="sura-display mt-4 text-5xl font-bold sm:text-6xl">The people behind the feeling.</h2></div><Store className="hidden h-10 w-10 text-lime sm:block" /></div>{loading ? <div className="sura-business-surface mt-10 border border-white/10 p-6"><div className="h-3 w-28 animate-pulse bg-white/10" /><div className="mt-7 h-9 max-w-sm animate-pulse bg-white/10" /><div className="mt-5 h-16 max-w-xl animate-pulse bg-white/5" /><div className="mt-8 h-10 max-w-xs animate-pulse bg-white/5" /></div> : businesses.length ? <div className="sura-business-surface mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{businesses.slice(0, 6).map((business) => <BusinessCard key={business.id} business={business} setSelectedOffer={setSelectedOffer} />)}</div> : <div className="sura-business-surface mt-10 grid gap-4 border border-dashed border-white/20 p-6 sm:grid-cols-[1.2fr_.8fr] sm:p-10"><div><BadgeCheck className="h-8 w-8 text-lime" /><h3 className="sura-display mt-7 text-4xl font-bold">The field is opening.</h3><p className="mt-4 max-w-lg text-sm leading-6 text-paper/55">Verified studios and catalogues will appear here as they are approved. If you are a maker, stylist, shop, venue or creative business, your point of view can be one of the first signals in the room.</p></div><div className="flex flex-col justify-end gap-3 border-t border-white/10 pt-6 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0"><Meta>For businesses</Meta><button onClick={() => openAuth("signup")} className="sura-focus flex items-center justify-between border-b border-white/20 py-4 text-left text-sm font-bold hover:border-lime">Put your point of view to work <ArrowRight className="h-4 w-4 text-lime" /></button></div></div>}</div></section>;
 }
 
 function NoticeBar({ notice, onClose }: { notice: Notice; onClose: () => void }) {
