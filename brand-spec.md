@@ -4,6 +4,8 @@
 
 SURA is an **affordability-aware visual network** for Nairobi-first discovery: people, businesses, objects, spaces, style, food, mobility, pets, events, and the details that make a life feel coherent. The product surface is an editorial tool with a commerce spine, not a generic marketplace.
 
+SURA is being built as a **company and category**, not only a platform. The long-term ambition is an Africa-first visual network: identity, discovery, media, community, trust and commerce infrastructure for the people and businesses shaping how Africa feels. Nairobi is the wedge; Africa is the network. See `docs/company-thesis.md` for the product and company expansion thesis.
+
 The v2 direction is a warm-dark **signal room**: charcoal ink, acid lime, mineral paper, clay and soft blue accents; geometric display type paired with a calm humanist sans; sharp editorial cards softened by large image crops; motion that feels like a camera finding a detail rather than a dashboard animating itself. The landing now uses an original East African geometric rhythm — diamonds, grid lines and signal dots — as a system, not as a pasted stock textile.
 
 | Dial | Decision |

@@ -1,10 +1,16 @@
-# SURA — Make the feeling findable
+# SURA — Africa’s visual network
 
-SURA is a Nairobi-first visual network for people, businesses, objects, spaces, style, food, mobility, pets, events and the details that make life feel coherent. It is designed as an editorial discovery layer with a commerce spine: see a direction, understand the pocket it can fit, meet the people who make it real, then move through a clear order and receipt handoff.
+SURA is being built as an Africa-first visual network company. It starts in Nairobi and connects people, businesses, objects, spaces, style, food, mobility, pets, events and the details that make a life feel coherent. It is an editorial, community and discovery layer with a commerce spine: see a direction, shape a point of view, meet the people who make it real, then move through a clear order and receipt handoff.
+
+The ambition is not to become another generic marketplace or imitate an existing social app. SURA is building the visual identity infrastructure for Africa: a signal graph, a creator and business network, a route engine, a trust layer and a set of media surfaces that make African points of view easier to see and economically useful. Nairobi is the wedge; Africa is the network. Read the full thesis in [`docs/company-thesis.md`](docs/company-thesis.md).
 
 ## Product loop
 
 **See → shape → source → handoff.** A visitor can explore a living aesthetics taxonomy without an account. A signed-in member uses Supabase Auth to create a private profile, choose a mix of directions and keep the route visible. A business owner can submit a studio for review, add a catalogue, and later receive order handoffs. A paid order is only marked `paid` after a verified provider callback; the receipt is issued from that callback, never from a browser button.
+
+## Company loop
+
+**Signal → network → trust → movement.** SURA’s long-term system connects members, creators, businesses, cultural partners and cities. A strong signal should become discovery, community, a useful brief, a trusted handoff and a reusable media story — without reducing the company to a feed or a checkout.
 
 ## Architecture
 
@@ -56,4 +62,4 @@ RLS policies are correlated to `auth.uid()` or an explicitly verified business m
 
 ## Principle
 
-> SURA should make the next useful action feel obvious — and make the handoff trustworthy when the user is ready to move.
+> SURA should make Africa’s points of view easier to see, make the next useful action feel obvious, and make the handoff trustworthy when people are ready to move.
