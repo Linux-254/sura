@@ -179,6 +179,8 @@ input:focus, textarea:focus, select:focus { border-color: rgb(202 255 50 / .7) !
   .sura-pattern-surface::before { animation: none; mix-blend-mode: normal; opacity: .12; }
   .sura-loading-pattern { opacity: .12; }
   .sura-loading-pattern__svg, .sura-loading-orbit { animation: none; }
+  .sura-hero-visual { content-visibility: auto; contain-intrinsic-size: 0 420px; }
+  .sura-landing > section:not(:first-child) { content-visibility: auto; contain-intrinsic-size: 0 720px; }
   .sura-horizontal-viewport { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: rgb(202 255 50 / .5) transparent; }
   .sura-horizontal-track { min-height: 0; padding-right: 1.25rem; transform: none !important; scroll-snap-type: x mandatory; }
   .sura-horizontal-panel { min-height: 26rem; scroll-snap-align: start; }
