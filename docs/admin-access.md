@@ -53,3 +53,7 @@ The same route can be used locally at `http://localhost:3000/#admin`.
 - Approve or reject a pending studio
 
 Never put an admin password, service-role key, or permanent bypass token in the browser bundle, Vercel public environment variables, or source code.
+
+## Runtime prerequisite
+
+The current Vercel deployment has the public Supabase URL and publishable key, but it does not yet have the server-only `SUPABASE_SERVICE_ROLE_KEY`. Until that key is added to the SURA Vercel project’s **Production** and **Preview** environment settings, `/api/v1/onboarding`, `/api/v1/me` and the admin endpoints will return a clear `503` rather than silently dropping writes. Add it directly in Vercel’s encrypted environment-variable UI; do not paste it into chat, Git, or any `VITE_*` variable.
