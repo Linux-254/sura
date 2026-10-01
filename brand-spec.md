@@ -6,7 +6,7 @@ SURA is an **affordability-aware visual network** for Nairobi-first discovery: p
 
 SURA is being built as a **company and category**, not only a platform. The long-term ambition is an Africa-first visual network: identity, discovery, media, community, trust and commerce infrastructure for the people and businesses shaping how Africa feels. Nairobi is the wedge; Africa is the network. See `docs/company-thesis.md` for the product and company expansion thesis.
 
-The v2 direction is a warm-dark **signal room**: charcoal ink, acid lime, mineral paper, clay and soft blue accents; geometric display type paired with a calm humanist sans; sharp editorial cards softened by large image crops; motion that feels like a camera finding a detail rather than a dashboard animating itself. The landing now uses an original East African geometric rhythm — diamonds, grid lines and signal dots — as a system, not as a pasted stock textile. The primary mark now makes the company promise explicit: a recognizable African continent silhouette carrying a connected city-to-city signal path.
+The v2 direction is a warm-dark **signal room**: charcoal ink, acid lime, mineral paper, clay and soft blue accents; geometric display type paired with a calm humanist sans; sharp editorial cards softened by large image crops; motion that feels like a camera finding a detail rather than a dashboard animating itself. The landing now uses an original East African geometric rhythm — diamonds, grid lines and signal dots — as a system, not as a pasted stock textile. The primary mark now makes the company promise explicit: a recognizable African continent silhouette carrying a bold lime pattern print; the same print is repeated between the icon and SURA and clipped into the wordmark.
 
 | Dial | Decision |
 | --- | --- |
@@ -19,8 +19,8 @@ The v2 direction is a warm-dark **signal room**: charcoal ink, acid lime, minera
 ## Asset map
 
 - Primary wordmark: `client/public/sura-wordmark.svg`
-- Primary app mark: `client/public/sura-logo-africa.png` — African continent silhouette with connected signal nodes
-- Primary favicon: `client/public/sura-favicon-africa.png` — compact lime tile for browser and home-screen clarity
+- Primary app mark: `client/public/sura-logo-africa-rhythm.png` — the supplied Africa silhouette with diagonal lime print and diamond accents
+- Primary favicon: `client/public/sura-favicon-africa-rhythm.png` — compact paper tile using the same Africa pattern
 - Previous signal SVG retained for rollback: `client/public/sura-mark-signal.svg`
 - Geometric pattern tile: `client/public/sura-pattern-grid.svg`
 - Legacy neon mark retained for rollback: `client/public/sura-mark-neon.svg`

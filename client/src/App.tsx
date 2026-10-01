@@ -97,7 +97,7 @@ function ResponsiveImage({ asset, sizes = "(max-width: 767px) 100vw, 50vw", ...p
 }
 
 function Logo({ compact = false }: { compact?: boolean }) {
-  return <a href="#top" className="sura-focus inline-flex items-center gap-3" aria-label="SURA home"><img src="/sura-logo-africa.png?v=4" alt="" className={`sura-logo-mark ${compact ? "h-8 w-8" : "h-9 w-9"}`} /><span className="font-display text-xl font-bold tracking-[-.08em] text-paper">SURA</span></a>;
+  return <a href="#top" className="sura-focus inline-flex items-center gap-3" aria-label="SURA home"><img src="/sura-logo-africa-rhythm.png?v=5" alt="" className={`sura-logo-mark ${compact ? "h-8 w-8" : "h-9 w-9"}`} /><span className="sura-wordmark-divider" aria-hidden="true" /><span data-word="SURA" className="sura-wordmark-pattern font-display text-xl font-bold tracking-[-.08em]">SURA</span></a>;
 }
 
 function Meta({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
@@ -133,7 +133,7 @@ function LoadingScreen({ phase }: { phase: Exclude<BootPhase, "done"> }) {
   return <div ref={loadingRef} className={`sura-loading-screen ${phase === "out" ? "is-exiting" : ""}`} role="status" aria-label="Opening SURA">
     <div className="sura-loading-pattern" aria-hidden="true"><svg className="sura-loading-pattern__svg" viewBox="0 0 640 640" fill="none"><path className="sura-loading-pattern__line" d="M0 80 80 0l80 80-80 80L0 80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 240l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 400l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 560l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Z" /><path className="sura-loading-pattern__line" d="M80 0v640M240 0v640M400 0v640M560 0v640" /><path className="sura-loading-pattern__line" d="M0 160h640M0 320h640M0 480h640" /></svg></div>
     <div className="sura-loading-orbit" aria-hidden="true" />
-    <div className="sura-loading-lockup"><img className="sura-loading-mark" src="/sura-logo-africa.png?v=4" alt="" /><span className="sura-loading-wordmark font-display">SURA</span><span className="sura-loading-kicker sura-meta">Nairobi / Africa</span></div>
+    <div className="sura-loading-lockup"><img className="sura-loading-mark" src="/sura-logo-africa-rhythm.png?v=5" alt="" /><span data-word="SURA" className="sura-loading-wordmark sura-wordmark-pattern font-display">SURA</span><span className="sura-loading-kicker sura-meta">Nairobi / Africa</span></div>
     <span className="sura-loading-caption sura-meta">Make the feeling findable</span>
   </div>;
 }
@@ -231,12 +231,20 @@ function App() {
   useEffect(() => {
     if (!session || !requestedRole) return;
     const draft = window.localStorage.getItem("sura.pendingProfile");
+    const businessDraft = window.localStorage.getItem("sura.pendingBusinessForm");
     if (draft) {
       try {
         const parsed = JSON.parse(draft) as { displayName?: string; handle?: string };
         setOnboardingForm((current) => ({ ...current, displayName: parsed.displayName || current.displayName, handle: parsed.handle || current.handle }));
       } catch { /* ignore an incomplete local draft */ }
       window.localStorage.removeItem("sura.pendingProfile");
+    }
+    if (businessDraft) {
+      try {
+        const parsed = JSON.parse(businessDraft) as Partial<typeof onboardingForm>;
+        setOnboardingForm((current) => ({ ...current, ...parsed }));
+      } catch { /* ignore an incomplete local draft */ }
+      window.localStorage.removeItem("sura.pendingBusinessForm");
     }
     window.localStorage.removeItem("sura.pendingRole");
     setRequestedRole(null);
@@ -272,6 +280,10 @@ function App() {
     if (!session) {
       setRequestedRole(role);
       window.localStorage.setItem("sura.pendingRole", role);
+      if (role === "business_owner") {
+        setOnboardingRole("business_owner"); setOnboardingStep(1); setOnboardingOpen(true); setNotice(null); setAuthOpen(false);
+        return;
+      }
       openAuth("signup");
       return;
     }
@@ -318,7 +330,17 @@ function App() {
   };
   const handleSignOut = async () => { const client = await getSupabase(); await client?.auth.signOut(); setView("home"); setNotice({ tone: "good", text: "You are signed out." }); };
   const finishOnboarding = async () => {
-    if (!session) return openAuth("signup");
+    if (!session) {
+      if (onboardingRole === "business_owner") {
+        window.localStorage.setItem("sura.pendingBusinessForm", JSON.stringify(onboardingForm));
+        setAuthDisplayName(onboardingForm.displayName);
+        setAuthHandle(onboardingForm.handle);
+      }
+      window.localStorage.setItem("sura.pendingRole", onboardingRole);
+      setRequestedRole(onboardingRole);
+      openAuth("signup");
+      return;
+    }
     if (!onboardingForm.displayName || !onboardingForm.handle || !onboardingForm.county || !onboardingForm.city) { setNotice({ tone: "bad", text: "Add your name, handle, county and city to continue." }); return; }
     if (onboardingRole === "business_owner" && (!onboardingForm.businessName || !onboardingForm.businessType)) { setNotice({ tone: "bad", text: "Add your business name and type so the studio can be reviewed." }); return; }
     setOnboardingBusy(true); setNotice(null);
@@ -353,8 +375,8 @@ function App() {
     </div>
     {notice && <NoticeBar notice={notice} onClose={() => setNotice(null)} />}
     <Suspense fallback={null}>
-      {authOpen && <LazyAuthModal mode={authMode} setMode={setAuthMode} authDisplayName={authDisplayName} setAuthDisplayName={setAuthDisplayName} authHandle={authHandle} setAuthHandle={setAuthHandle} email={authEmail} setEmail={setAuthEmail} password={authPassword} setPassword={setAuthPassword} busy={authBusy} notice={notice} onSubmit={handleAuth} onClose={() => setAuthOpen(false)} onBusinessJoin={() => { setRequestedRole("business_owner"); window.localStorage.setItem("sura.pendingRole", "business_owner"); setAuthMode("signup"); setNotice(null); }} />}
-      {onboardingOpen && onboardingRole === "business_owner" && <LazyBusinessRegistrationModal form={onboardingForm} setForm={setOnboardingForm} styles={styleCards} selected={selectedAesthetics} setSelected={setSelectedAesthetics} busy={onboardingBusy} onFinish={finishOnboarding} onClose={() => setOnboardingOpen(false)} />}
+      {authOpen && <LazyAuthModal mode={authMode} setMode={setAuthMode} authDisplayName={authDisplayName} setAuthDisplayName={setAuthDisplayName} authHandle={authHandle} setAuthHandle={setAuthHandle} email={authEmail} setEmail={setAuthEmail} password={authPassword} setPassword={setAuthPassword} busy={authBusy} notice={notice} onSubmit={handleAuth} onClose={() => setAuthOpen(false)} onBusinessJoin={() => openOnboarding("business_owner")} />}
+      {onboardingOpen && onboardingRole === "business_owner" && <LazyBusinessRegistrationModal authenticated={Boolean(session)} form={onboardingForm} setForm={setOnboardingForm} styles={styleCards} selected={selectedAesthetics} setSelected={setSelectedAesthetics} busy={onboardingBusy} onFinish={finishOnboarding} onClose={() => setOnboardingOpen(false)} />}
       {onboardingOpen && onboardingRole !== "business_owner" && <LazyOnboardingModal step={onboardingStep} setStep={setOnboardingStep} role={onboardingRole} setRole={setOnboardingRole} form={onboardingForm} setForm={setOnboardingForm} styles={styleCards} selected={selectedAesthetics} setSelected={setSelectedAesthetics} busy={onboardingBusy} onFinish={finishOnboarding} onClose={() => setOnboardingOpen(false)} />}
       {selectedOffer && <LazyCheckoutModal offer={selectedOffer} form={checkoutForm} setForm={setCheckoutForm} busy={checkoutBusy} done={checkoutDone} submit={submitOrder} onClose={() => { setSelectedOffer(null); setCheckoutDone(null); }} />}
     </Suspense>

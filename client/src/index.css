@@ -88,8 +88,11 @@ button:disabled { cursor: wait; }
 .sura-image { transition: transform .8s var(--ease-sura), filter .8s ease; }
 .sura-image:hover { transform: scale(1.045); filter: saturate(1.08); }
 .sura-grid { background-image: linear-gradient(rgb(243 240 231 / .07) 1px, transparent 1px), linear-gradient(90deg, rgb(243 240 231 / .07) 1px, transparent 1px); background-size: 30px 30px; }
-.sura-logo-mark { border-radius: .72rem; background: var(--color-lime); padding: 2px; box-shadow: 0 0 0 1px rgb(202 255 50 / .18), 0 0 24px rgb(202 255 50 / .12); transition: transform .5s var(--ease-sura), filter .5s ease, box-shadow .5s ease; }
+.sura-logo-mark { border-radius: .72rem; background: var(--color-paper); padding: 2px; box-shadow: 0 0 0 1px rgb(202 255 50 / .18), 0 0 24px rgb(202 255 50 / .12); transition: transform .5s var(--ease-sura), filter .5s ease, box-shadow .5s ease; }
 .sura-logo-mark:hover { transform: rotate(-4deg) scale(1.08); filter: saturate(1.16); box-shadow: 0 0 0 1px rgb(202 255 50 / .42), 0 0 32px rgb(202 255 50 / .24); }
+.sura-wordmark-divider { display: inline-block; height: .8rem; width: 1.55rem; border-radius: .25rem; background: url("/sura-pattern-print.svg?v=1") center / cover no-repeat; opacity: .95; }
+.sura-wordmark-pattern { position: relative; color: var(--color-lime); -webkit-text-fill-color: var(--color-lime); text-shadow: 0 0 18px rgb(202 255 50 / .16); }
+.sura-wordmark-pattern::after { position: absolute; inset: 0; content: attr(data-word); pointer-events: none; background: url("/sura-pattern-print.svg?v=1") center / 72px 24px repeat; background-clip: text; -webkit-background-clip: text; color: transparent; -webkit-text-fill-color: transparent; opacity: .82; }
 .sura-pattern-surface { position: relative; isolation: isolate; background-color: var(--color-ink); }
 .sura-pattern-surface::before { position: absolute; inset: 0; z-index: -1; content: ""; pointer-events: none; opacity: .18; background-image: url("/sura-pattern-grid.svg?v=3"), linear-gradient(90deg, rgb(243 240 231 / .07) 1px, transparent 1px), linear-gradient(rgb(243 240 231 / .07) 1px, transparent 1px); background-size: 320px 160px, 48px 48px, 48px 48px; mix-blend-mode: screen; animation: sura-pattern-shift 22s linear infinite; }
 .sura-pattern-surface::after { position: absolute; inset: 0; z-index: -1; content: ""; pointer-events: none; background: radial-gradient(circle at 15% 15%, rgb(202 255 50 / .1), transparent 30%), radial-gradient(circle at 85% 70%, rgb(231 155 118 / .1), transparent 28%); }
@@ -143,7 +146,7 @@ button:disabled { cursor: wait; }
 .sura-loading-orbit::before, .sura-loading-orbit::after { content: ""; position: absolute; inset: 9%; border: 1px solid rgb(243 240 231 / .12); border-radius: 50%; transform: rotate(38deg) scaleX(.58); }
 .sura-loading-orbit::after { inset: 18%; transform: rotate(-38deg) scaleX(.58); }
 .sura-loading-lockup { position: relative; display: flex; flex-direction: column; align-items: center; gap: .55rem; }
-.sura-loading-mark { width: 5.2rem; height: 5.2rem; border-radius: 1.35rem; background: var(--color-lime); padding: .28rem; box-shadow: 0 0 0 1px rgb(202 255 50 / .32), 0 0 42px rgb(202 255 50 / .22); }
+.sura-loading-mark { width: 5.2rem; height: 5.2rem; border-radius: 1.35rem; background: var(--color-paper); padding: .28rem; box-shadow: 0 0 0 1px rgb(202 255 50 / .32), 0 0 42px rgb(202 255 50 / .22); }
 .sura-loading-wordmark { font-size: clamp(2.2rem, 8vw, 4.2rem); font-weight: 700; letter-spacing: -.1em; line-height: .9; }
 .sura-loading-kicker { color: rgb(202 255 50 / .8); font-size: .62rem; }
 .sura-loading-caption { position: absolute; bottom: 2.4rem; color: rgb(243 240 231 / .48); font-size: .62rem; }
