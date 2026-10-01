@@ -4,7 +4,7 @@
 
 SURA is an **affordability-aware visual network** for Nairobi-first discovery: people, businesses, objects, spaces, style, food, mobility, pets, events, and the details that make a life feel coherent. The product surface is an editorial tool with a commerce spine, not a generic marketplace.
 
-The v2 direction is a warm-dark **signal room**: charcoal ink, acid lime, mineral paper, clay and soft blue accents; geometric display type paired with a calm humanist sans; sharp editorial cards softened by large image crops; motion that feels like a camera finding a detail rather than a dashboard animating itself.
+The v2 direction is a warm-dark **signal room**: charcoal ink, acid lime, mineral paper, clay and soft blue accents; geometric display type paired with a calm humanist sans; sharp editorial cards softened by large image crops; motion that feels like a camera finding a detail rather than a dashboard animating itself. The landing now uses an original East African geometric rhythm — diamonds, grid lines and signal dots — as a system, not as a pasted stock textile.
 
 | Dial | Decision |
 | --- | --- |
@@ -17,7 +17,10 @@ The v2 direction is a warm-dark **signal room**: charcoal ink, acid lime, minera
 ## Asset map
 
 - Primary wordmark: `client/public/sura-wordmark.svg`
-- App mark: `client/public/sura-mark-neon.svg`
+- Primary app mark: `client/public/sura-mark-signal.svg`
+- Signal favicon: `client/public/sura-favicon-signal.svg`
+- Geometric pattern tile: `client/public/sura-pattern-grid.svg`
+- Legacy neon mark retained for rollback: `client/public/sura-mark-neon.svg`
 - Monochrome mark: `client/public/sura-mark.svg`
 - Hero visual: `client/public/assets/sura-auth-hero.jpg`
 - Interior visual: `client/public/assets/sura-auth-interior.jpg`
@@ -38,7 +41,7 @@ The v2 direction is a warm-dark **signal room**: charcoal ink, acid lime, minera
 - Meta: DM Mono
 - Spacing: 4px base, 8px rhythm
 - Radius: 2px editorial cards, 999px status pills
-- Motion: cubic-bezier(.22, 1, .36, 1), 160ms interaction, 700ms hero
+- Motion: cubic-bezier(.22, 1, .36, 1), 160ms interaction, 700ms hero; ScrollTrigger horizontal field rail; sticky stacking gallery; CSS marquee; low-power native swipe and reduced-motion fallback
 
 ## Copy system
 

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">SURA signal mark</title>
+  <desc id="desc">The SURA monogram framed by a lime signal grid and four geometric diamonds.</desc>
+  <rect width="128" height="128" rx="30" fill="#11130f"/>
+  <path d="M16 27 27 16l11 11-11 11L16 27Zm74 0 11-11 11 11-11 11-11-11ZM16 101l11-11 11 11-11 11-11-11Zm74 0 11-11 11 11-11 11-11-11Z" fill="none" stroke="#CAFF32" stroke-width="2" opacity=".78"/>
+  <path d="M16 16h22M90 16h22M16 112h22M90 112h22" stroke="#F3F0E7" stroke-width="1.5" opacity=".45"/>
+  <circle cx="64" cy="64" r="49" fill="none" stroke="#CAFF32" stroke-width="1.5" stroke-dasharray="3 6" opacity=".38"/>
+  <path d="M89 34c-8-8-18-12-30-12-14 0-24 7-24 17 0 9 7 13 25 18 18 5 28 10 28 24 0 15-13 25-31 25-13 0-25-4-34-13l9-11c7 7 15 10 25 10 9 0 15-4 15-10 0-6-5-9-21-14-20-6-31-12-31-28 0-17 14-29 35-29 15 0 27 4 37 13z" fill="#CAFF32"/>
+  <path d="M35 103h58" stroke="#F3F0E7" stroke-width="2" stroke-linecap="round" opacity=".82"/>
+</svg>

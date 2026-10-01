@@ -51,10 +51,17 @@ function getMotionProfile() {
 
 type GsapInstance = typeof import("gsap")["default"];
 let gsapPromise: Promise<GsapInstance> | null = null;
+type ScrollTriggerInstance = typeof import("gsap/ScrollTrigger")["ScrollTrigger"];
+let scrollMotionPromise: Promise<{ gsap: GsapInstance; ScrollTrigger: ScrollTriggerInstance }> | null = null;
 
 function loadGsap() {
   gsapPromise ??= import("gsap").then((module) => module.default);
   return gsapPromise;
+}
+
+function loadScrollMotion() {
+  scrollMotionPromise ??= Promise.all([loadGsap(), import("gsap/ScrollTrigger")]).then(([gsap, module]) => ({ gsap, ScrollTrigger: module.ScrollTrigger }));
+  return scrollMotionPromise;
 }
 
 const FALLBACK_DOMAINS = [
@@ -86,13 +93,26 @@ const VISUALS = [
   { src: "/assets/sura-auth-interior.jpg", label: "Room / material", className: "hero-visual-wide" },
   { src: "/assets/sura-auth-street.jpg", label: "Movement / place", className: "hero-visual-small" },
 ];
+const FIELD_STAGES = [
+  { label: "Wear / personal style", body: "Fit, repeat-wear, detail and the point of view you carry outside.", tone: "lime" },
+  { label: "Space / interiors", body: "Material, light, arrangement and the rooms that hold your everyday.", tone: "paper" },
+  { label: "Make / craft", body: "Objects with a hand in them, from useful to quietly ceremonial.", tone: "clay" },
+  { label: "Beauty / body art", body: "Consent-led rituals, grooming and expression without body judgement.", tone: "mineral" },
+  { label: "Culture / creative life", body: "Music, image, gathering and the signals that become a scene.", tone: "lime" },
+];
+const STACKED_VISUALS = [
+  { src: "/assets/sura-auth-hero.jpg", kicker: "01 / street signal", title: "A point of view has a place." },
+  { src: "/assets/sura-auth-interior.jpg", kicker: "02 / room study", title: "Make the room answer back." },
+  { src: "/assets/sura-auth-street.jpg", kicker: "03 / movement", title: "Let the everyday carry some voltage." },
+  { src: "/assets/sura-auth-hero.jpg", kicker: "04 / the edit", title: "See it. Shape it. Source it." },
+];
 
 function formatKes(amount: number | null | undefined) {
   return `KES ${(amount ?? 0).toLocaleString("en-KE")}`;
 }
 
 function Logo({ compact = false }: { compact?: boolean }) {
-  return <a href="#top" className="sura-focus inline-flex items-center gap-3" aria-label="SURA home"><img src="/sura-mark-neon.svg" alt="" className={compact ? "h-8 w-8" : "h-9 w-9"} /><span className="font-display text-xl font-bold tracking-[-.08em] text-paper">SURA</span></a>;
+  return <a href="#top" className="sura-focus inline-flex items-center gap-3" aria-label="SURA home"><img src="/sura-mark-signal.svg?v=3" alt="" className={`sura-logo-mark ${compact ? "h-8 w-8" : "h-9 w-9"}`} /><span className="font-display text-xl font-bold tracking-[-.08em] text-paper">SURA</span></a>;
 }
 
 function Meta({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
@@ -128,7 +148,7 @@ function LoadingScreen({ phase }: { phase: Exclude<BootPhase, "done"> }) {
   return <div ref={loadingRef} className={`sura-loading-screen ${phase === "out" ? "is-exiting" : ""}`} role="status" aria-label="Opening SURA">
     <div className="sura-loading-pattern" aria-hidden="true"><svg className="sura-loading-pattern__svg" viewBox="0 0 640 640" fill="none"><path className="sura-loading-pattern__line" d="M0 80 80 0l80 80-80 80L0 80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 240l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 400l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 560l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Z" /><path className="sura-loading-pattern__line" d="M80 0v640M240 0v640M400 0v640M560 0v640" /><path className="sura-loading-pattern__line" d="M0 160h640M0 320h640M0 480h640" /></svg></div>
     <div className="sura-loading-orbit" aria-hidden="true" />
-    <div className="sura-loading-lockup"><img className="sura-loading-mark" src="/sura-mark-neon.svg" alt="" /><span className="sura-loading-wordmark font-display">SURA</span><span className="sura-loading-kicker sura-meta">Nairobi / Kenya</span></div>
+    <div className="sura-loading-lockup"><img className="sura-loading-mark" src="/sura-mark-signal.svg?v=3" alt="" /><span className="sura-loading-wordmark font-display">SURA</span><span className="sura-loading-kicker sura-meta">Nairobi / Kenya</span></div>
     <span className="sura-loading-caption sura-meta">Make the feeling findable</span>
   </div>;
 }
@@ -307,9 +327,71 @@ function MobileNav({ view, mobileNav, setMobileNav, navigate, openDashboard }: {
 }
 
 function HomeView({ domainNames, styleCards, businesses, networkLoading, openAuth, openOnboarding, setSelectedOffer, navigate }: { domainNames: string[]; styleCards: Array<{ slug: string; name: string; body: string; tone: string }>; businesses: Business[]; networkLoading: boolean; openAuth: (mode?: AuthMode) => void; openOnboarding: () => void; setSelectedOffer: (offer: { business: Business; item: CatalogItem }) => void; navigate: (view: View) => void }) {
-  return <main>
+  const landingRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const root = landingRef.current;
+    const profile = getMotionProfile();
+    if (!root || profile.reduced || profile.lowPower || !window.matchMedia("(min-width: 768px)").matches) return;
+    let cancelled = false;
+    let revert = () => {};
+    void loadScrollMotion().then(({ gsap, ScrollTrigger }) => {
+      if (cancelled) return;
+      gsap.registerPlugin(ScrollTrigger);
+      const context = gsap.context(() => {
+        const horizontal = root.querySelector<HTMLElement>(".sura-horizontal-section");
+        const track = root.querySelector<HTMLElement>(".sura-horizontal-track");
+        if (horizontal && track) {
+          const distance = () => Math.max(0, track.scrollWidth - horizontal.clientWidth + 24);
+          gsap.to(track, {
+            x: () => -distance(),
+            ease: "none",
+            scrollTrigger: {
+              trigger: horizontal,
+              start: "top top",
+              end: () => `+=${distance() + window.innerHeight * 0.5}`,
+              pin: true,
+              scrub: 0.9,
+              anticipatePin: 1,
+              invalidateOnRefresh: true,
+            },
+          });
+        }
+
+        gsap.to(".sura-hero-pattern__svg", {
+          y: 120,
+          rotate: 12,
+          ease: "none",
+          scrollTrigger: { trigger: ".sura-hero-visual", start: "top bottom", end: "bottom top", scrub: 1.2 },
+        });
+        gsap.to(".sura-hero-card", {
+          y: (index) => (index % 2 ? -28 : 22),
+          rotate: (index) => (index % 2 ? -2 : 1.5),
+          ease: "none",
+          stagger: 0.06,
+          scrollTrigger: { trigger: ".sura-hero-visual", start: "top bottom", end: "bottom top", scrub: 1.1 },
+        });
+
+        gsap.utils.toArray<HTMLElement>(".sura-stack-card").forEach((card, index) => {
+          gsap.fromTo(card, { y: index === 0 ? 0 : 92 + index * 18, rotate: index % 2 ? 2.8 : -2.8 }, {
+            y: 0,
+            rotate: index % 2 ? -1.1 : 1.1,
+            ease: "none",
+            scrollTrigger: { trigger: card, start: "top bottom-=8%", end: "top 26%", scrub: 0.8 },
+          });
+        });
+        window.setTimeout(() => ScrollTrigger.refresh(), 160);
+      }, root);
+      revert = () => context.revert();
+    });
+    return () => { cancelled = true; revert(); };
+  }, []);
+
+  return <main ref={landingRef} className="sura-landing">
     <section className="relative overflow-hidden px-5 pb-16 pt-10 sm:px-8 sm:pb-24 sm:pt-16 lg:px-14 lg:pt-20"><div className="pointer-events-none absolute right-[-16rem] top-[-12rem] h-[36rem] w-[36rem] rounded-full bg-lime/10 blur-[110px]" /><div className="pointer-events-none absolute bottom-[-10rem] left-[-12rem] h-[28rem] w-[28rem] rounded-full bg-clay/10 blur-[100px]" /><div className="relative mx-auto grid max-w-[1320px] gap-12 lg:grid-cols-[.92fr_1.08fr] lg:items-end"><div className="max-w-3xl"><div className="mb-7 flex items-center gap-3"><span className="h-px w-12 bg-lime" /><Meta>Visual network / 001</Meta></div><h1 className="sura-display max-w-4xl text-[clamp(3.5rem,8vw,8rem)] font-bold text-paper">Make the <span className="text-lime">feeling</span> findable.</h1><p className="mt-7 max-w-xl text-lg leading-8 text-paper/62 sm:text-xl">SURA connects the way you want life to feel with the people, businesses, objects, spaces and next steps that can make it real.</p><div className="mt-9 flex flex-wrap gap-3"><Button onClick={openOnboarding}>Start your direction <ArrowUpRight className="h-4 w-4" /></Button><Button variant="ghost" onClick={() => navigate("discover")}>See the field <ArrowRight className="h-4 w-4" /></Button></div><div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-3 text-xs text-paper/45"><span className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-lime" />Nairobi first, Kenya wide</span><span className="flex items-center gap-2"><ShieldCheck className="h-3.5 w-3.5 text-lime" />Budget without the shame</span></div></div><HeroVisual /></div><div className="relative mx-auto mt-16 grid max-w-[1320px] gap-4 border-y border-white/10 py-4 sm:grid-cols-4"><div className="sm:col-span-1"><Meta>See → shape → source</Meta></div><div className="sm:col-span-3 grid gap-3 text-sm text-paper/55 sm:grid-cols-3"><span>Choose a direction.</span><span>Meet a point of view.</span><span>Move when it feels right.</span></div></div></section>
     <section id="about" className="sura-paper px-5 py-16 sm:px-8 sm:py-24 lg:px-14"><div className="mx-auto grid max-w-[1320px] gap-12 lg:grid-cols-[.75fr_1.25fr]"><div><Meta dark>What SURA sees</Meta><h2 className="sura-display mt-5 text-5xl font-bold sm:text-6xl">Aesthetics are a network.</h2></div><div className="grid gap-10 sm:grid-cols-2"><p className="text-lg leading-8 text-ink/65">Not just fashion. The room, the ride, the table, the salon, the studio, the object, the pet, the place and the small ritual that keeps showing up.</p><div><div className="mb-4 flex items-center gap-2"><Layers3 className="h-4 w-4 text-ink/50" /><Meta dark>Eight fields to start</Meta></div><div className="flex flex-wrap gap-2">{domainNames.slice(0, 8).map((domain) => <span key={domain} className="border border-ink/15 px-3 py-2 text-xs font-bold">{domain}</span>)}</div></div></div></div></section>
+    <HorizontalField />
+    <StackingGallery />
     <section id="pockets" className="px-5 py-16 sm:px-8 sm:py-24 lg:px-14"><div className="mx-auto max-w-[1320px]"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><Meta>Your pocket is a design input</Meta><h2 className="sura-display mt-4 max-w-2xl text-5xl font-bold sm:text-6xl">Taste, with a route to reality.</h2></div><p className="max-w-sm text-sm leading-6 text-paper/50">SURA never turns price into a ranking. It uses it to make the next step honest.</p></div><div className="mt-10 grid border-y border-white/10 sm:grid-cols-2 lg:grid-cols-4">{POCKETS.map((pocket, index) => <article key={pocket.label} className="border-b border-white/10 p-5 last:border-b-0 sm:border-r sm:last:border-r-0 lg:border-b-0"><div className="mb-12 flex items-center justify-between"><span className="h-3 w-3 rounded-full" style={{ background: pocket.color }} /><Meta>{String(index + 1).padStart(2, "0")}</Meta></div><h3 className="font-display text-2xl font-bold">{pocket.label}</h3><p className="mt-2 text-xs font-bold text-lime">{pocket.range}</p><p className="mt-5 text-sm leading-6 text-paper/50">{pocket.body}</p></article>)}</div></div></section>
     <section id="signals" className="sura-paper px-5 py-16 sm:px-8 sm:py-24 lg:px-14"><div className="mx-auto max-w-[1320px]"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><Meta dark>Current directions</Meta><h2 className="sura-display mt-4 text-5xl font-bold sm:text-6xl">Find your mix.</h2></div><button onClick={() => navigate("discover")} className="sura-focus inline-flex items-center gap-2 self-start text-xs font-bold text-ink/60 hover:text-ink sm:self-auto">Open the whole taxonomy <ArrowUpRight className="h-4 w-4" /></button></div><div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{styleCards.slice(0, 6).map((style, index) => <article key={style.slug} className={`group relative min-h-[260px] overflow-hidden p-5 ${index === 0 ? "bg-ink text-paper" : index === 1 ? "bg-clay text-ink" : index === 2 ? "bg-mineral text-ink" : "bg-soft-paper text-ink"}`}><div className="flex items-start justify-between"><span className="font-display text-3xl font-bold">{String(index + 1).padStart(2, "0")}</span><ArrowUpRight className="h-5 w-5 opacity-50 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" /></div><div className="absolute inset-x-5 bottom-5"><h3 className="font-display text-3xl font-bold tracking-[-.06em]">{style.name}</h3><p className="mt-2 max-w-xs text-sm opacity-70">{style.body}</p></div></article>)}</div></div></section>
     <BusinessSignals businesses={businesses} loading={networkLoading} setSelectedOffer={setSelectedOffer} openAuth={openAuth} />
@@ -318,7 +400,15 @@ function HomeView({ domainNames, styleCards, businesses, networkLoading, openAut
 }
 
 function HeroVisual() {
-  return <div className="relative min-h-[420px] lg:min-h-[520px]"><div className="absolute left-[6%] top-[9%] z-10 w-[48%] rotate-[-5deg] overflow-hidden border border-white/20 bg-field p-2 shadow-2xl sm:left-[8%]"><img src={VISUALS[0].src} alt="A street-level SURA visual signal" className="sura-image aspect-[.76] w-full object-cover" /><div className="flex items-center justify-between px-1 py-3"><Meta>01 / street</Meta><span className="h-2 w-2 rounded-full bg-lime" /></div></div><div className="absolute right-[3%] top-0 w-[55%] overflow-hidden border border-white/20 bg-field p-2 shadow-2xl sm:right-[5%]"><img src={VISUALS[1].src} alt="A warm interior material study" className="sura-image aspect-[1.08] w-full object-cover" /><div className="flex items-center justify-between px-1 py-3"><Meta>02 / interior</Meta><span className="text-[10px] text-paper/45">soft utility</span></div></div><div className="absolute bottom-[3%] right-[9%] z-20 w-[43%] rotate-[4deg] overflow-hidden border border-lime/40 bg-lime p-2 text-ink shadow-2xl"><img src={VISUALS[2].src} alt="A moving street detail" className="sura-image aspect-[1.15] w-full object-cover grayscale-[.1]" /><div className="flex items-center justify-between px-1 py-3"><Meta dark>03 / movement</Meta><ArrowUpRight className="h-4 w-4" /></div></div><div className="absolute bottom-[12%] left-0 z-30 hidden rotate-[-12deg] border border-white/20 bg-paper px-4 py-3 text-ink shadow-2xl sm:block"><span className="sura-meta text-[10px] font-bold">Make it yours.</span></div></div>;
+  return <div className="sura-hero-visual relative min-h-[420px] lg:min-h-[520px]"><div className="sura-hero-pattern absolute inset-[-12%] z-0 opacity-75" aria-hidden="true"><svg className="sura-hero-pattern__svg h-full w-full" viewBox="0 0 640 520" fill="none"><path d="M0 80 80 0l80 80-80 80L0 80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 240l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 400l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Z" stroke="#CAFF32" strokeWidth="1.2" opacity=".24" /><path d="M0 0h640M0 160h640M0 320h640M0 480h640M80 0v520M240 0v520M400 0v520M560 0v520" stroke="#F3F0E7" strokeWidth="1" opacity=".12" /></svg></div><div className="sura-hero-card absolute left-[6%] top-[9%] z-10 w-[48%] rotate-[-5deg] overflow-hidden border border-white/20 bg-field p-2 shadow-2xl sm:left-[8%]"><img src={VISUALS[0].src} alt="A street-level SURA visual signal" width="760" height="1000" fetchPriority="high" className="sura-image aspect-[.76] w-full object-cover" /><div className="flex items-center justify-between px-1 py-3"><Meta>01 / street</Meta><span className="h-2 w-2 rounded-full bg-lime" /></div></div><div className="sura-hero-card absolute right-[3%] top-0 w-[55%] overflow-hidden border border-white/20 bg-field p-2 shadow-2xl sm:right-[5%]"><img src={VISUALS[1].src} alt="A warm interior material study" width="860" height="800" loading="lazy" decoding="async" className="sura-image aspect-[1.08] w-full object-cover" /><div className="flex items-center justify-between px-1 py-3"><Meta>02 / interior</Meta><span className="text-[10px] text-paper/45">soft utility</span></div></div><div className="sura-hero-card absolute bottom-[3%] right-[9%] z-20 w-[43%] rotate-[4deg] overflow-hidden border border-lime/40 bg-lime p-2 text-ink shadow-2xl"><img src={VISUALS[2].src} alt="A moving street detail" width="760" height="660" loading="lazy" decoding="async" className="sura-image aspect-[1.15] w-full object-cover grayscale-[.1]" /><div className="flex items-center justify-between px-1 py-3"><Meta dark>03 / movement</Meta><ArrowUpRight className="h-4 w-4" /></div></div><div className="sura-hero-card absolute bottom-[12%] left-0 z-30 hidden rotate-[-12deg] border border-white/20 bg-paper px-4 py-3 text-ink shadow-2xl sm:block"><span className="sura-meta text-[10px] font-bold">Make it yours.</span></div></div>;
+}
+
+function HorizontalField() {
+  return <section className="sura-horizontal-section sura-pattern-surface overflow-hidden" aria-labelledby="field-title"><div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24 lg:px-14"><div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"><div className="max-w-2xl"><Meta>Scroll the field / 002</Meta><h2 id="field-title" className="sura-display mt-5 text-5xl font-bold text-paper sm:text-7xl">Five doors.<br /><span className="text-lime">Infinite mixes.</span></h2></div><div className="max-w-sm"><p className="text-sm leading-6 text-paper/55">On desktop, vertical scroll becomes a horizontal walk through the network. On touch screens, the same field becomes a native swipe rail.</p><div className="sura-scroll-cue mt-5"><span className="sura-scroll-cue__line" /> scroll / drag →</div></div></div></div><div className="sura-horizontal-viewport"><div className="sura-horizontal-track">{FIELD_STAGES.map((stage, index) => <article key={stage.label} className={`sura-horizontal-panel sura-tone-${stage.tone}`}><div className="flex items-start justify-between"><span className="sura-pattern-glyph" aria-hidden="true"><span /><span /><span /></span><Meta dark>{String(index + 1).padStart(2, "0")} / 05</Meta></div><div className="mt-auto"><p className="sura-meta text-[10px] opacity-60">Aesthetic field</p><h3 className="mt-4 max-w-[15ch] font-display text-4xl font-bold leading-[.92] tracking-[-.07em]">{stage.label}</h3><p className="mt-5 max-w-xs text-sm leading-6 opacity-70">{stage.body}</p></div><span className="sura-panel-index" aria-hidden="true">0{index + 1}</span></article>)}</div></div><div className="mx-auto flex max-w-[1320px] items-center justify-between px-5 pb-8 pt-5 text-[10px] font-bold uppercase tracking-[.16em] text-paper/35 sm:px-8 lg:px-14"><span>Scroll to compose your mix</span><span>01 — 05</span></div><div className="sura-marquee" aria-hidden="true"><div className="sura-marquee__track"><span>MAKE THE FEELING FINDABLE</span><i>◆</i><span>NAIROBI / KENYA</span><i>◆</i><span>SEE → SHAPE → SOURCE</span><i>◆</i><span>MAKE THE FEELING FINDABLE</span><i>◆</i><span>NAIROBI / KENYA</span><i>◆</i><span>SEE → SHAPE → SOURCE</span><i>◆</i></div></div></section>;
+}
+
+function StackingGallery() {
+  return <section className="sura-stack-section sura-paper px-5 py-16 sm:px-8 sm:py-24 lg:px-14" aria-labelledby="stack-title"><div className="mx-auto grid max-w-[1320px] gap-12 lg:grid-cols-[.72fr_1.28fr] lg:gap-20"><div className="sura-stack-intro lg:sticky lg:top-32 lg:h-fit"><Meta dark>Signal studies / 003</Meta><h2 id="stack-title" className="sura-display mt-5 max-w-xl text-5xl font-bold sm:text-7xl">A moodboard that <span className="text-clay">moves.</span></h2><p className="mt-6 max-w-md text-base leading-7 text-ink/60">The feeling is not flat. Scroll through the layers until one starts to feel like yours.</p><div className="sura-stack-rule mt-10"><span /> <span /> <span /></div></div><div className="sura-stack-stage">{STACKED_VISUALS.map((visual, index) => <figure key={`${visual.kicker}-${index}`} className="sura-stack-card" style={{ "--stack-index": index } as React.CSSProperties}><div className="sura-stack-card__image"><img src={visual.src} alt={visual.title} width="960" height="720" loading={index === 0 ? "eager" : "lazy"} decoding="async" /></div><figcaption className="flex items-end justify-between gap-5 p-5 sm:p-7"><div><span className="sura-meta text-[10px] text-ink/45">{visual.kicker}</span><h3 className="mt-3 max-w-sm font-display text-3xl font-bold leading-none tracking-[-.06em] sm:text-5xl">{visual.title}</h3></div><span className="sura-meta hidden text-[10px] text-ink/45 sm:block">SURA / field note</span></figcaption></figure>)}</div></div></section>;
 }
 
 function BusinessSignals({ businesses, loading, setSelectedOffer, openAuth }: { businesses: Business[]; loading: boolean; setSelectedOffer: (offer: { business: Business; item: CatalogItem }) => void; openAuth: (mode?: AuthMode) => void }) {
