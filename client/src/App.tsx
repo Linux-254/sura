@@ -34,6 +34,10 @@ const LazyOnboardingModal = lazy(() => import("./lazy-views").then((module) => (
 const LazyCheckoutModal = lazy(() => import("./lazy-views").then((module) => ({ default: module.CheckoutModal })));
 const LazyBelowFoldHome = lazy(() => import("./lazy-views").then((module) => ({ default: module.BelowFoldHome })));
 
+function warmLazyViews() {
+  void import("./lazy-views");
+}
+
 type View = "home" | "discover" | "dashboard";
 type AuthMode = "signin" | "signup";
 type OnboardingRole = "member" | "creator" | "business_owner";
@@ -315,7 +319,7 @@ function MobileNav({ view, mobileNav, setMobileNav, navigate, openDashboard }: {
     { id: "discover", label: "Explore", Icon: Compass },
     { id: "dashboard", label: "Pocket", Icon: Palette },
   ];
-  return <nav className="sura-mobile-nav" aria-label="Primary mobile navigation"><div className="sura-mobile-nav__track">
+  return <nav className="sura-mobile-nav" aria-label="Primary mobile navigation" onPointerDown={warmLazyViews}><div className="sura-mobile-nav__track">
     {items.map(({ id, label, Icon }) => {
       const active = view === id;
       return <button key={id} type="button" data-active={active} aria-current={active ? "page" : undefined} className="sura-focus sura-mobile-nav__item" onClick={() => { setMobileNav(false); id === "dashboard" ? openDashboard() : navigate(id); }}>
