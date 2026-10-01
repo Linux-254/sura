@@ -156,6 +156,10 @@ function App() {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(1);
   const [onboardingRole, setOnboardingRole] = useState<OnboardingRole>("member");
+  const [requestedRole, setRequestedRole] = useState<OnboardingRole | null>(() => {
+    const pending = window.localStorage.getItem("sura.pendingRole");
+    return pending === "creator" || pending === "business_owner" || pending === "member" ? pending : null;
+  });
   const [onboardingBusy, setOnboardingBusy] = useState(false);
   const [onboardingForm, setOnboardingForm] = useState({ displayName: "", handle: "", county: "Nairobi", city: "Nairobi", bio: "", businessName: "", businessType: "", businessDescription: "", businessEmail: "", businessPhone: "" });
   const [selectedAesthetics, setSelectedAesthetics] = useState<string[]>([]);
@@ -221,6 +225,15 @@ function App() {
   }, [session]);
 
   useEffect(() => {
+    if (!session || !requestedRole) return;
+    window.localStorage.removeItem("sura.pendingRole");
+    setRequestedRole(null);
+    setOnboardingRole(requestedRole);
+    setOnboardingStep(1);
+    setOnboardingOpen(true);
+  }, [session, requestedRole]);
+
+  useEffect(() => {
     const root = shellRef.current;
     const profile = getMotionProfile();
     if (!root || profile.reduced || profile.lowPower) return;
@@ -243,8 +256,30 @@ function App() {
   const styleCards = styles.length ? styles.map((node, index) => ({ slug: node.slug, name: node.name, body: node.kenya_relevance ?? "A direction with room for your own interpretation.", tone: ["lime", "clay", "mineral", "paper"][index % 4] })) : FALLBACK_STYLES;
 
   const openAuth = (mode: AuthMode = "signup") => { setAuthMode(mode); setNotice(null); setAuthOpen(true); };
-  const openOnboarding = () => { if (!session) { openAuth("signup"); return; } setOnboardingOpen(true); setOnboardingStep(1); setNotice(null); };
+  const openOnboarding = (role: OnboardingRole = "member") => {
+    if (!session) {
+      setRequestedRole(role);
+      window.localStorage.setItem("sura.pendingRole", role);
+      openAuth("signup");
+      return;
+    }
+    setOnboardingRole(role); setOnboardingOpen(true); setOnboardingStep(1); setNotice(null);
+  };
   const navigate = (nextView: View) => { setView(nextView); setMobileNav(false); window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 10); };
+  const openPocket = () => {
+    setMobileNav(false);
+    setView("home");
+    window.setTimeout(() => {
+      window.dispatchEvent(new Event("sura:load-belowfold"));
+      const started = Date.now();
+      const seek = (behavior: ScrollBehavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth") => {
+        const target = document.getElementById("pockets");
+        if (target) { const top = target.getBoundingClientRect().top + window.scrollY - 88; window.scrollTo({ top: Math.max(0, top), behavior }); if (Date.now() - started < 1500) window.setTimeout(() => seek("auto"), 220); return; }
+        if (Date.now() - started < 1800) window.requestAnimationFrame(() => seek());
+      };
+      seek();
+    }, 24);
+  };
   const handleAuth = async (event: React.FormEvent) => {
     event.preventDefault();
     const client = await getSupabase();
@@ -257,7 +292,7 @@ function App() {
         : await client.auth.signInWithPassword({ email: authEmail.trim().toLowerCase(), password: authPassword });
       if (response.error) throw response.error;
       if (authMode === "signup" && !response.data.session) {
-        setNotice({ tone: "good", text: "Confirmation email sent. Open it, then return to enter the signal." });
+        setNotice({ tone: "good", text: requestedRole === "business_owner" ? "Confirmation email sent. After confirming, SURA will open business-owner onboarding." : "Confirmation email sent. Open it, then return to enter the signal." });
       } else {
         setAuthOpen(false); setView("dashboard"); setNotice({ tone: "good", text: "Your private SURA space is open." });
       }
@@ -290,7 +325,7 @@ function App() {
 
   return <div ref={shellRef} id="top" className={`sura-shell ${lowPower ? "sura-low-power" : ""}`}>
     {bootPhase !== "done" && <LoadingScreen phase={bootPhase} />}
-    <Header view={view} session={session} mobileNav={mobileNav} setMobileNav={setMobileNav} navigate={navigate} openAuth={openAuth} openDashboard={() => session ? navigate("dashboard") : openAuth("signin")} />
+    <Header view={view} session={session} mobileNav={mobileNav} setMobileNav={setMobileNav} navigate={navigate} openAuth={openAuth} openPocket={openPocket} openDashboard={() => session ? navigate("dashboard") : openAuth("signin")} />
     <div key={view} className="sura-view-shell">
       {view === "home" && <HomeView domainNames={domainNames} styleCards={styleCards} businesses={network.businesses} networkLoading={networkLoading} openAuth={openAuth} openOnboarding={openOnboarding} setSelectedOffer={setSelectedOffer} navigate={navigate} />}
       <Suspense fallback={null}>
@@ -300,17 +335,17 @@ function App() {
     </div>
     {notice && <NoticeBar notice={notice} onClose={() => setNotice(null)} />}
     <Suspense fallback={null}>
-      {authOpen && <LazyAuthModal mode={authMode} setMode={setAuthMode} email={authEmail} setEmail={setAuthEmail} password={authPassword} setPassword={setAuthPassword} busy={authBusy} notice={notice} onSubmit={handleAuth} onClose={() => setAuthOpen(false)} />}
+      {authOpen && <LazyAuthModal mode={authMode} setMode={setAuthMode} email={authEmail} setEmail={setAuthEmail} password={authPassword} setPassword={setAuthPassword} busy={authBusy} notice={notice} onSubmit={handleAuth} onClose={() => setAuthOpen(false)} onBusinessJoin={() => { setRequestedRole("business_owner"); window.localStorage.setItem("sura.pendingRole", "business_owner"); setAuthMode("signup"); setNotice(null); }} />}
       {onboardingOpen && <LazyOnboardingModal step={onboardingStep} setStep={setOnboardingStep} role={onboardingRole} setRole={setOnboardingRole} form={onboardingForm} setForm={setOnboardingForm} styles={styleCards} selected={selectedAesthetics} setSelected={setSelectedAesthetics} busy={onboardingBusy} onFinish={finishOnboarding} onClose={() => setOnboardingOpen(false)} />}
       {selectedOffer && <LazyCheckoutModal offer={selectedOffer} form={checkoutForm} setForm={setCheckoutForm} busy={checkoutBusy} done={checkoutDone} submit={submitOrder} onClose={() => { setSelectedOffer(null); setCheckoutDone(null); }} />}
     </Suspense>
     <MobileNav view={view} mobileNav={mobileNav} setMobileNav={setMobileNav} navigate={navigate} openDashboard={() => session ? navigate("dashboard") : openAuth("signin")} />
-    <footer className="border-t border-white/10 px-5 py-10 sm:px-8 lg:px-14"><div className="mx-auto flex max-w-[1320px] flex-col gap-8 sm:flex-row sm:items-end sm:justify-between"><div><Logo compact /><p className="mt-4 max-w-sm text-sm leading-6 text-paper/50">Africa’s visual network for the things people see, wear, touch, arrange, drive, live with and carry.</p></div><div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-paper/55"><a href="#about" className="sura-focus hover:text-lime">About</a><a href="#pockets" className="sura-focus hover:text-lime">Pocket ladder</a><a href="#signals" className="sura-focus hover:text-lime">Signals</a><button className="sura-focus hover:text-lime" onClick={() => openAuth("signin")}>Private space</button></div></div></footer>
+    <footer className="border-t border-white/10 px-5 py-10 sm:px-8 lg:px-14"><div className="mx-auto flex max-w-[1320px] flex-col gap-8 sm:flex-row sm:items-end sm:justify-between"><div><Logo compact /><p className="mt-4 max-w-sm text-sm leading-6 text-paper/50">Africa’s visual network for the things people see, wear, touch, arrange, drive, live with and carry.</p></div><div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-paper/55"><a href="#about" className="sura-focus hover:text-lime">About</a><button className="sura-focus hover:text-lime" onClick={openPocket}>Pocket ladder</button><a href="#signals" className="sura-focus hover:text-lime">Signals</a><button className="sura-focus hover:text-lime" onClick={() => openAuth("signin")}>Private space</button></div></div></footer>
   </div>;
 }
 
-function Header({ view, session, mobileNav, setMobileNav, navigate, openAuth, openDashboard }: { view: View; session: Session | null; mobileNav: boolean; setMobileNav: (value: boolean) => void; navigate: (view: View) => void; openAuth: (mode?: AuthMode) => void; openDashboard: () => void }) {
-  return <header className="sura-site-header sticky top-0 z-30 border-b border-white/10 px-5 py-4 sm:px-8 lg:px-14"><div className="relative mx-auto flex max-w-[1320px] items-center justify-between gap-6"><Logo /><nav className={`sura-header-nav ${mobileNav ? "is-open" : ""} items-center gap-1`}><button onClick={() => navigate("home")} className={`sura-focus px-3 py-2 text-xs font-bold ${view === "home" ? "text-lime" : "text-paper/60 hover:text-paper"}`}>The signal</button><button onClick={() => navigate("discover")} className={`sura-focus px-3 py-2 text-xs font-bold ${view === "discover" ? "text-lime" : "text-paper/60 hover:text-paper"}`}>Explore</button><a href="#pockets" onClick={() => setMobileNav(false)} className="sura-focus px-3 py-2 text-xs font-bold text-paper/60 hover:text-paper">Your pocket</a></nav><div className="flex items-center gap-2"><Meta>NAI / KE</Meta>{session ? <button onClick={openDashboard} className="sura-focus hidden items-center gap-2 border border-white/15 px-3 py-2 text-xs font-bold text-paper sm:inline-flex"><CircleDot className="h-3 w-3 text-lime" /> My SURA</button> : <button onClick={() => openAuth("signin")} className="sura-focus hidden px-3 py-2 text-xs font-bold text-paper/70 hover:text-lime sm:inline-flex">Sign in</button>}<button onClick={() => session ? openDashboard() : openAuth("signup")} className="sura-focus sura-button sura-button-primary min-h-10 px-3 text-[10px]">{session ? "Open space" : "Enter signal"}</button><button onClick={() => setMobileNav(!mobileNav)} className="sura-focus grid h-10 w-10 place-items-center border border-white/15 sm:hidden" aria-label="Toggle navigation" aria-expanded={mobileNav}>{mobileNav ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button></div></div></header>;
+function Header({ view, session, mobileNav, setMobileNav, navigate, openAuth, openPocket, openDashboard }: { view: View; session: Session | null; mobileNav: boolean; setMobileNav: (value: boolean) => void; navigate: (view: View) => void; openAuth: (mode?: AuthMode) => void; openPocket: () => void; openDashboard: () => void }) {
+  return <header className="sura-site-header sticky top-0 z-30 border-b border-white/10 px-5 py-4 sm:px-8 lg:px-14"><div className="relative mx-auto flex max-w-[1320px] items-center justify-between gap-6"><Logo /><nav className={`sura-header-nav ${mobileNav ? "is-open" : ""} items-center gap-1`}><button onClick={() => navigate("home")} className={`sura-focus px-3 py-2 text-xs font-bold ${view === "home" ? "text-lime" : "text-paper/60 hover:text-paper"}`}>The signal</button><button onClick={() => navigate("discover")} className={`sura-focus px-3 py-2 text-xs font-bold ${view === "discover" ? "text-lime" : "text-paper/60 hover:text-paper"}`}>Explore</button><button onClick={openPocket} className="sura-focus px-3 py-2 text-xs font-bold text-paper/60 hover:text-paper">Your pocket</button></nav><div className="flex items-center gap-2"><Meta>NAI / KE</Meta>{session ? <button onClick={openDashboard} className="sura-focus hidden items-center gap-2 border border-white/15 px-3 py-2 text-xs font-bold text-paper sm:inline-flex"><CircleDot className="h-3 w-3 text-lime" /> My SURA</button> : <button onClick={() => openAuth("signin")} className="sura-focus hidden px-3 py-2 text-xs font-bold text-paper/70 hover:text-lime sm:inline-flex">Sign in</button>}<button onClick={() => session ? openDashboard() : openAuth("signup")} className="sura-focus sura-button sura-button-primary min-h-10 px-3 text-[10px]">{session ? "Open space" : "Enter signal"}</button><button onClick={() => setMobileNav(!mobileNav)} className="sura-focus grid h-10 w-10 place-items-center border border-white/15 sm:hidden" aria-label="Toggle navigation" aria-expanded={mobileNav}>{mobileNav ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button></div></div></header>;
 }
 
 function MobileNav({ view, mobileNav, setMobileNav, navigate, openDashboard }: { view: View; mobileNav: boolean; setMobileNav: (value: boolean) => void; navigate: (view: View) => void; openDashboard: () => void }) {
@@ -348,9 +383,10 @@ function DeferredHomeSections({ landingRef, domainNames, styleCards, businesses,
     let started = false;
     const start = () => { if (started) return; started = true; setReady(true); };
     const timer = window.setTimeout(start, 8000);
+    window.addEventListener("sura:load-belowfold", start);
     window.addEventListener("pointerdown", start, { passive: true });
     window.addEventListener("scroll", start, { passive: true, once: true });
-    return () => { window.clearTimeout(timer); window.removeEventListener("pointerdown", start); window.removeEventListener("scroll", start); };
+    return () => { window.clearTimeout(timer); window.removeEventListener("sura:load-belowfold", start); window.removeEventListener("pointerdown", start); window.removeEventListener("scroll", start); };
   }, []);
   if (!ready) return null;
   return <Suspense fallback={null}><LazyBelowFoldHome landingRef={landingRef} domainNames={domainNames} styleCards={styleCards} businesses={businesses} networkLoading={networkLoading} openAuth={openAuth} openOnboarding={openOnboarding} setSelectedOffer={setSelectedOffer} navigate={navigate} /></Suspense>;

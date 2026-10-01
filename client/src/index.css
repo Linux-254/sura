@@ -54,6 +54,12 @@ button:disabled { cursor: wait; }
 .sura-shell { min-height: 100vh; overflow-x: clip; padding-bottom: 6.3rem; background: var(--color-ink); }
 .sura-site-header { background: linear-gradient(180deg, rgb(17 19 15 / .96), rgb(17 19 15 / .78)); backdrop-filter: blur(20px) saturate(140%); box-shadow: 0 1px 0 rgb(255 255 255 / .04), 0 18px 50px rgb(0 0 0 / .12); }
 .sura-view-shell { min-height: 40vh; animation: sura-route-lite .42s var(--ease-sura); }
+.sura-page-motion { min-height: 40vh; }
+.sura-page-motion .sura-scroll-reveal { will-change: transform, opacity; }
+.sura-motion-lite .sura-scroll-reveal { animation: sura-page-rise .56s var(--ease-sura) both; }
+.sura-motion-lite .sura-scroll-reveal:nth-child(2) { animation-delay: .06s; }
+.sura-motion-lite .sura-scroll-reveal:nth-child(3) { animation-delay: .12s; }
+.sura-motion-lite .sura-scroll-reveal:nth-child(4) { animation-delay: .18s; }
 .sura-header-nav { position: absolute; top: calc(100% + .75rem); left: 0; right: 0; display: flex; flex-direction: column; align-items: stretch; gap: .25rem; padding: .5rem; border: 1px solid rgb(243 240 231 / .13); border-radius: 1.25rem; background: linear-gradient(145deg, rgb(35 40 29 / .92), rgb(17 19 15 / .88)); box-shadow: 0 24px 60px rgb(0 0 0 / .28); backdrop-filter: blur(22px) saturate(145%); opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-8px) scale(.98); transform-origin: top center; transition: opacity .28s var(--ease-sura), transform .28s var(--ease-sura), visibility .28s; }
 .sura-header-nav.is-open { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0) scale(1); }
 .sura-header-nav > button, .sura-header-nav > a { width: 100%; text-align: left; border-radius: .85rem; }
@@ -145,6 +151,7 @@ button:disabled { cursor: wait; }
 @keyframes sura-pattern-drift { from { transform: translate3d(-2%, -1%, 0) scale(1.03); } to { transform: translate3d(2%, 1%, 0) scale(1.08); } }
 @keyframes sura-orbit-pulse { 0%, 100% { transform: scale(.98); opacity: .72; } 50% { transform: scale(1.04); opacity: 1; } }
 @keyframes sura-route-lite { from { transform: translate3d(0, 8px, 0); } to { transform: translate3d(0, 0, 0); } }
+@keyframes sura-page-rise { from { opacity: 0; transform: translate3d(0, 18px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 @keyframes sura-pattern-shift { from { background-position: 0 0, 0 0, 0 0; } to { background-position: 160px 80px, 48px 0, 0 48px; } }
 @keyframes sura-scroll-pulse { 0%, 100% { transform: scaleX(.45); opacity: .45; } 50% { transform: scaleX(1); opacity: 1; } }
 @keyframes sura-marquee { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-50%, 0, 0); } }
