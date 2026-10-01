@@ -1,9 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 
 export const isSupabaseConfigured = Boolean(url && publishableKey);
-export const supabase = isSupabaseConfigured
-  ? createClient(url!, publishableKey!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } })
-  : null;
+let clientPromise: Promise<SupabaseClient | null> | null = null;
+
+export function getSupabase() {
+  if (!isSupabaseConfigured) return Promise.resolve(null);
+  clientPromise ??= import("@supabase/supabase-js").then(({ createClient }) => createClient(url!, publishableKey!, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  }));
+  return clientPromise;
+}

@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getSupabase } from "./supabase";
 
 export type TaxonomyNode = { id: string; slug: string; name: string; node_type: string; affordability: string | null; domain_id: string; parent_id: string | null; kenya_relevance: string | null; metadata: Record<string, unknown> | null };
 export type TaxonomyDomain = { id: string; slug: string; name: string; description: string; sort_order: number };
@@ -9,7 +9,8 @@ export type MeBundle = { user: { id: string; email: string | null }; profile: { 
 export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
-  const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+  const client = await getSupabase();
+  const { data } = client ? await client.auth.getSession() : { data: { session: null } };
   if (data.session?.access_token) headers.set("Authorization", `Bearer ${data.session.access_token}`);
   const response = await fetch(path, { ...init, headers });
   const payload = await response.json().catch(() => ({}));
@@ -18,18 +19,19 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
 }
 
 export async function loadPublicNetwork() {
-  if (!supabase) return { domains: [] as TaxonomyDomain[], nodes: [] as TaxonomyNode[], businesses: [] as Business[] };
+  const client = await getSupabase();
+  if (!client) return { domains: [] as TaxonomyDomain[], nodes: [] as TaxonomyNode[], businesses: [] as Business[] };
   const [domainsResponse, nodesResponse, businessesResponse] = await Promise.all([
-    supabase.from("aesthetic_domains").select("id,slug,name,description,sort_order").eq("is_active", true).order("sort_order").limit(20),
-    supabase.from("aesthetic_nodes").select("id,slug,name,node_type,affordability,domain_id,parent_id,kenya_relevance,metadata").eq("is_active", true).order("name").limit(120),
-    supabase.from("businesses").select("id,slug,display_name,business_type,status,county,city,description,contact_email,phone,website_url").eq("status", "verified").order("created_at", { ascending: false }).limit(18),
+    client.from("aesthetic_domains").select("id,slug,name,description,sort_order").eq("is_active", true).order("sort_order").limit(20),
+    client.from("aesthetic_nodes").select("id,slug,name,node_type,affordability,domain_id,parent_id,kenya_relevance,metadata").eq("is_active", true).order("name").limit(120),
+    client.from("businesses").select("id,slug,display_name,business_type,status,county,city,description,contact_email,phone,website_url").eq("status", "verified").order("created_at", { ascending: false }).limit(18),
   ]);
   if (domainsResponse.error) throw domainsResponse.error;
   if (nodesResponse.error) throw nodesResponse.error;
   if (businessesResponse.error) throw businessesResponse.error;
   const businesses = (businessesResponse.data ?? []) as Business[];
   if (businesses.length) {
-    const { data: catalog } = await supabase.from("catalog_items").select("id,business_id,item_type,name,description,affordability,price_min_kes,price_max_kes,currency,media").in("business_id", businesses.map((business) => business.id)).eq("is_published", true).limit(60);
+    const { data: catalog } = await client.from("catalog_items").select("id,business_id,item_type,name,description,affordability,price_min_kes,price_max_kes,currency,media").in("business_id", businesses.map((business) => business.id)).eq("is_published", true).limit(60);
     for (const business of businesses) business.catalog = (catalog ?? []).filter((item) => item.business_id === business.id) as CatalogItem[];
   }
   return { domains: (domainsResponse.data ?? []) as TaxonomyDomain[], nodes: (nodesResponse.data ?? []) as TaxonomyNode[], businesses };
