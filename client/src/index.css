@@ -188,6 +188,10 @@ input:focus, textarea:focus, select:focus { border-color: rgb(202 255 50 / .7) !
   .sura-stack-card__image { min-height: 54vh; }
 }
 
+@media (max-width: 767px) {
+  .sura-low-power .sura-mobile-nav { -webkit-backdrop-filter: blur(12px) saturate(135%); backdrop-filter: blur(12px) saturate(135%); }
+}
+
 @media (max-width: 359px) {
   .sura-site-header { padding-left: .75rem; padding-right: .75rem; }
   .sura-site-header > div { gap: .5rem; }
