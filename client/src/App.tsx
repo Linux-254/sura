@@ -29,8 +29,10 @@ import { getSupabase } from "./lib/supabase";
 
 const LazyDiscoverView = lazy(() => import("./lazy-views").then((module) => ({ default: module.DiscoverView })));
 const LazyDashboardView = lazy(() => import("./lazy-views").then((module) => ({ default: module.DashboardView })));
+const LazyAdminView = lazy(() => import("./lazy-views").then((module) => ({ default: module.AdminView })));
 const LazyAuthModal = lazy(() => import("./lazy-views").then((module) => ({ default: module.AuthModal })));
 const LazyOnboardingModal = lazy(() => import("./lazy-views").then((module) => ({ default: module.OnboardingModal })));
+const LazyBusinessRegistrationModal = lazy(() => import("./lazy-views").then((module) => ({ default: module.BusinessRegistrationModal })));
 const LazyCheckoutModal = lazy(() => import("./lazy-views").then((module) => ({ default: module.CheckoutModal })));
 const LazyBelowFoldHome = lazy(() => import("./lazy-views").then((module) => ({ default: module.BelowFoldHome })));
 
@@ -38,7 +40,7 @@ function warmLazyViews() {
   void import("./lazy-views");
 }
 
-type View = "home" | "discover" | "dashboard";
+type View = "home" | "discover" | "dashboard" | "admin";
 type AuthMode = "signin" | "signup";
 type OnboardingRole = "member" | "creator" | "business_owner";
 type BootPhase = "in" | "out" | "done";
@@ -95,7 +97,7 @@ function ResponsiveImage({ asset, sizes = "(max-width: 767px) 100vw, 50vw", ...p
 }
 
 function Logo({ compact = false }: { compact?: boolean }) {
-  return <a href="#top" className="sura-focus inline-flex items-center gap-3" aria-label="SURA home"><img src="/sura-mark-signal.svg?v=3" alt="" className={`sura-logo-mark ${compact ? "h-8 w-8" : "h-9 w-9"}`} /><span className="font-display text-xl font-bold tracking-[-.08em] text-paper">SURA</span></a>;
+  return <a href="#top" className="sura-focus inline-flex items-center gap-3" aria-label="SURA home"><img src="/sura-logo-africa.png?v=4" alt="" className={`sura-logo-mark ${compact ? "h-8 w-8" : "h-9 w-9"}`} /><span className="font-display text-xl font-bold tracking-[-.08em] text-paper">SURA</span></a>;
 }
 
 function Meta({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
@@ -131,7 +133,7 @@ function LoadingScreen({ phase }: { phase: Exclude<BootPhase, "done"> }) {
   return <div ref={loadingRef} className={`sura-loading-screen ${phase === "out" ? "is-exiting" : ""}`} role="status" aria-label="Opening SURA">
     <div className="sura-loading-pattern" aria-hidden="true"><svg className="sura-loading-pattern__svg" viewBox="0 0 640 640" fill="none"><path className="sura-loading-pattern__line" d="M0 80 80 0l80 80-80 80L0 80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 240l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 400l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 560l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Z" /><path className="sura-loading-pattern__line" d="M80 0v640M240 0v640M400 0v640M560 0v640" /><path className="sura-loading-pattern__line" d="M0 160h640M0 320h640M0 480h640" /></svg></div>
     <div className="sura-loading-orbit" aria-hidden="true" />
-    <div className="sura-loading-lockup"><img className="sura-loading-mark" src="/sura-mark-signal.svg?v=3" alt="" /><span className="sura-loading-wordmark font-display">SURA</span><span className="sura-loading-kicker sura-meta">Nairobi / Kenya</span></div>
+    <div className="sura-loading-lockup"><img className="sura-loading-mark" src="/sura-logo-africa.png?v=4" alt="" /><span className="sura-loading-wordmark font-display">SURA</span><span className="sura-loading-kicker sura-meta">Nairobi / Africa</span></div>
     <span className="sura-loading-caption sura-meta">Make the feeling findable</span>
   </div>;
 }
@@ -141,10 +143,12 @@ function App() {
   const shellRef = useRef<HTMLDivElement>(null);
   const [bootPhase, setBootPhase] = useState<BootPhase>(() => initialMotion.lowPower ? "done" : "in");
   const [lowPower, setLowPower] = useState(() => initialMotion.lowPower);
-  const [view, setView] = useState<View>("home");
+  const [view, setView] = useState<View>(() => window.location.hash === "#admin" ? "admin" : "home");
   const [session, setSession] = useState<Session | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("signin");
+  const [authDisplayName, setAuthDisplayName] = useState("");
+  const [authHandle, setAuthHandle] = useState("");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
@@ -226,6 +230,14 @@ function App() {
 
   useEffect(() => {
     if (!session || !requestedRole) return;
+    const draft = window.localStorage.getItem("sura.pendingProfile");
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft) as { displayName?: string; handle?: string };
+        setOnboardingForm((current) => ({ ...current, displayName: parsed.displayName || current.displayName, handle: parsed.handle || current.handle }));
+      } catch { /* ignore an incomplete local draft */ }
+      window.localStorage.removeItem("sura.pendingProfile");
+    }
     window.localStorage.removeItem("sura.pendingRole");
     setRequestedRole(null);
     setOnboardingRole(requestedRole);
@@ -284,17 +296,22 @@ function App() {
     event.preventDefault();
     const client = await getSupabase();
     if (!client) { setNotice({ tone: "bad", text: "Add the new SURA Supabase URL and publishable key to this deployment first." }); return; }
+    if (authMode === "signup" && (!authDisplayName.trim() || !authHandle.trim())) { setNotice({ tone: "bad", text: "Add your full name and preferred username before creating the account." }); return; }
     if (authPassword.length < 8) { setNotice({ tone: "bad", text: "Use at least 8 characters for your password." }); return; }
     setAuthBusy(true); setNotice(null);
     try {
       const response = authMode === "signup"
-        ? await client.auth.signUp({ email: authEmail.trim().toLowerCase(), password: authPassword, options: { emailRedirectTo: `${window.location.origin}/` } })
+        ? await client.auth.signUp({ email: authEmail.trim().toLowerCase(), password: authPassword, options: { data: { displayName: authDisplayName.trim(), handle: authHandle.trim().toLowerCase(), requestedRole }, emailRedirectTo: `${window.location.origin}/` } })
         : await client.auth.signInWithPassword({ email: authEmail.trim().toLowerCase(), password: authPassword });
       if (response.error) throw response.error;
+      if (authMode === "signup") {
+        setOnboardingForm((current) => ({ ...current, displayName: authDisplayName.trim(), handle: authHandle.trim().toLowerCase() }));
+        window.localStorage.setItem("sura.pendingProfile", JSON.stringify({ displayName: authDisplayName.trim(), handle: authHandle.trim().toLowerCase() }));
+      }
       if (authMode === "signup" && !response.data.session) {
         setNotice({ tone: "good", text: requestedRole === "business_owner" ? "Confirmation email sent. After confirming, SURA will open business-owner onboarding." : "Confirmation email sent. Open it, then return to enter the signal." });
       } else {
-        setAuthOpen(false); setView("dashboard"); setNotice({ tone: "good", text: "Your private SURA space is open." });
+        setAuthOpen(false); setView(window.location.hash === "#admin" ? "admin" : "dashboard"); setNotice({ tone: "good", text: "Your private SURA space is open." });
       }
     } catch (error) { setNotice({ tone: "bad", text: error instanceof Error ? error.message : "That sign-in did not complete." }); }
     finally { setAuthBusy(false); }
@@ -330,13 +347,15 @@ function App() {
       {view === "home" && <HomeView domainNames={domainNames} styleCards={styleCards} businesses={network.businesses} networkLoading={networkLoading} openAuth={openAuth} openOnboarding={openOnboarding} setSelectedOffer={setSelectedOffer} navigate={navigate} />}
       <Suspense fallback={null}>
         {view === "discover" && <LazyDiscoverView domains={domainNames} nodes={network.nodes} businesses={network.businesses} loading={networkLoading} setSelectedOffer={setSelectedOffer} openOnboarding={openOnboarding} />}
-        {view === "dashboard" && <LazyDashboardView me={me} session={session} openOnboarding={openOnboarding} navigate={navigate} openAuth={openAuth} signOut={handleSignOut} />}
+        {view === "dashboard" && <LazyDashboardView me={me} session={session} openOnboarding={openOnboarding} navigate={navigate} openAuth={openAuth} openAdmin={() => navigate("admin")} signOut={handleSignOut} />}
+        {view === "admin" && <LazyAdminView me={me} session={session} openAuth={openAuth} navigate={navigate} />}
       </Suspense>
     </div>
     {notice && <NoticeBar notice={notice} onClose={() => setNotice(null)} />}
     <Suspense fallback={null}>
-      {authOpen && <LazyAuthModal mode={authMode} setMode={setAuthMode} email={authEmail} setEmail={setAuthEmail} password={authPassword} setPassword={setAuthPassword} busy={authBusy} notice={notice} onSubmit={handleAuth} onClose={() => setAuthOpen(false)} onBusinessJoin={() => { setRequestedRole("business_owner"); window.localStorage.setItem("sura.pendingRole", "business_owner"); setAuthMode("signup"); setNotice(null); }} />}
-      {onboardingOpen && <LazyOnboardingModal step={onboardingStep} setStep={setOnboardingStep} role={onboardingRole} setRole={setOnboardingRole} form={onboardingForm} setForm={setOnboardingForm} styles={styleCards} selected={selectedAesthetics} setSelected={setSelectedAesthetics} busy={onboardingBusy} onFinish={finishOnboarding} onClose={() => setOnboardingOpen(false)} />}
+      {authOpen && <LazyAuthModal mode={authMode} setMode={setAuthMode} authDisplayName={authDisplayName} setAuthDisplayName={setAuthDisplayName} authHandle={authHandle} setAuthHandle={setAuthHandle} email={authEmail} setEmail={setAuthEmail} password={authPassword} setPassword={setAuthPassword} busy={authBusy} notice={notice} onSubmit={handleAuth} onClose={() => setAuthOpen(false)} onBusinessJoin={() => { setRequestedRole("business_owner"); window.localStorage.setItem("sura.pendingRole", "business_owner"); setAuthMode("signup"); setNotice(null); }} />}
+      {onboardingOpen && onboardingRole === "business_owner" && <LazyBusinessRegistrationModal form={onboardingForm} setForm={setOnboardingForm} styles={styleCards} selected={selectedAesthetics} setSelected={setSelectedAesthetics} busy={onboardingBusy} onFinish={finishOnboarding} onClose={() => setOnboardingOpen(false)} />}
+      {onboardingOpen && onboardingRole !== "business_owner" && <LazyOnboardingModal step={onboardingStep} setStep={setOnboardingStep} role={onboardingRole} setRole={setOnboardingRole} form={onboardingForm} setForm={setOnboardingForm} styles={styleCards} selected={selectedAesthetics} setSelected={setSelectedAesthetics} busy={onboardingBusy} onFinish={finishOnboarding} onClose={() => setOnboardingOpen(false)} />}
       {selectedOffer && <LazyCheckoutModal offer={selectedOffer} form={checkoutForm} setForm={setCheckoutForm} busy={checkoutBusy} done={checkoutDone} submit={submitOrder} onClose={() => { setSelectedOffer(null); setCheckoutDone(null); }} />}
     </Suspense>
     <MobileNav view={view} mobileNav={mobileNav} setMobileNav={setMobileNav} navigate={navigate} openDashboard={() => session ? navigate("dashboard") : openAuth("signin")} />

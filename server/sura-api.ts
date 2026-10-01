@@ -57,6 +57,22 @@ async function withUser(req: Request, res: Response) {
   return user;
 }
 
+async function withRoles(req: Request, res: Response, allowedRoles: string[]) {
+  const user = await withUser(req, res);
+  if (!user) return null;
+  const client = getAdminClient();
+  if (!client) {
+    jsonError(res, 503, "Supabase server environment is incomplete.");
+    return null;
+  }
+  const { data: role } = await client.from("profile_roles").select("role").eq("profile_id", user.id).in("role", allowedRoles).limit(1).maybeSingle();
+  if (!role) {
+    jsonError(res, 403, "This SURA operations area is restricted to authorized staff.");
+    return null;
+  }
+  return { user, client, role: role.role as string };
+}
+
 function safeSlug(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || `studio-${crypto.randomUUID().slice(0, 8)}`;
 }
@@ -85,6 +101,32 @@ export function createSuraApi(): Express {
       client.from("orders").select("id,business_id,status,total_kes,created_at,updated_at,provider_reference").eq("buyer_profile_id", user.id).order("created_at", { ascending: false }).limit(10),
     ]);
     return res.json({ user: { id: user.id, email: user.email ?? null }, profile: profile.data, roles: roles.data ?? [], businesses: businesses.data ?? [], orders: orders.data ?? [] });
+  });
+
+  app.get("/api/v1/admin/overview", async (req, res) => {
+    const staff = await withRoles(req, res, ["admin"]);
+    if (!staff) return;
+    const { client } = staff;
+    const [profiles, pending, verified, orders, receipts, pendingBusinesses] = await Promise.all([
+      client.from("profiles").select("id", { count: "exact", head: true }),
+      client.from("businesses").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
+      client.from("businesses").select("id", { count: "exact", head: true }).eq("status", "verified"),
+      client.from("orders").select("id", { count: "exact", head: true }),
+      client.from("receipts").select("id", { count: "exact", head: true }),
+      client.from("businesses").select("id,display_name,business_type,status,county,city,contact_email,created_at").eq("status", "pending_review").order("created_at", { ascending: true }).limit(20),
+    ]);
+    return res.json({ authorized: true, role: staff.role, counts: { profiles: profiles.count ?? 0, pendingBusinesses: pending.count ?? 0, verifiedBusinesses: verified.count ?? 0, orders: orders.count ?? 0, receipts: receipts.count ?? 0 }, pendingBusinesses: pendingBusinesses.data ?? [] });
+  });
+
+  app.patch("/api/v1/admin/businesses/:businessId", async (req, res) => {
+    const staff = await withRoles(req, res, ["admin", "moderator"]);
+    if (!staff) return;
+    const status = z.enum(["pending_review", "verified", "rejected"]).safeParse(req.body?.status);
+    if (!status.success) return jsonError(res, 400, "Business status must be pending_review, verified or rejected.");
+    const { data, error } = await staff.client.from("businesses").update({ status: status.data, updated_at: new Date().toISOString() }).eq("id", req.params.businessId).select("id,display_name,business_type,status,county,city,contact_email,created_at,updated_at").maybeSingle();
+    if (error) return jsonError(res, 400, error.message);
+    if (!data) return jsonError(res, 404, "Business not found.");
+    return res.json({ ok: true, business: data });
   });
 
   app.post("/api/v1/onboarding", async (req, res) => {

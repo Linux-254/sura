@@ -1,7 +1,7 @@
 {
-  "name": "Sura — Local Network",
+  "name": "SURA — Africa Visual Network",
   "short_name": "Sura",
-  "description": "A visual platform for local ideas, companies, products, and plans.",
+  "description": "Africa’s visual network for people, businesses, objects, spaces, culture and the details that make life feel like yours.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -9,6 +9,6 @@
   "background_color": "#121410",
   "theme_color": "#121410",
   "icons": [
-    { "src": "/sura-favicon-signal.svg?v=3", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/sura-favicon-africa.png?v=4", "sizes": "128x128", "type": "image/png", "purpose": "any maskable" }
   ]
 }

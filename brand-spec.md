@@ -6,7 +6,7 @@ SURA is an **affordability-aware visual network** for Nairobi-first discovery: p
 
 SURA is being built as a **company and category**, not only a platform. The long-term ambition is an Africa-first visual network: identity, discovery, media, community, trust and commerce infrastructure for the people and businesses shaping how Africa feels. Nairobi is the wedge; Africa is the network. See `docs/company-thesis.md` for the product and company expansion thesis.
 
-The v2 direction is a warm-dark **signal room**: charcoal ink, acid lime, mineral paper, clay and soft blue accents; geometric display type paired with a calm humanist sans; sharp editorial cards softened by large image crops; motion that feels like a camera finding a detail rather than a dashboard animating itself. The landing now uses an original East African geometric rhythm — diamonds, grid lines and signal dots — as a system, not as a pasted stock textile.
+The v2 direction is a warm-dark **signal room**: charcoal ink, acid lime, mineral paper, clay and soft blue accents; geometric display type paired with a calm humanist sans; sharp editorial cards softened by large image crops; motion that feels like a camera finding a detail rather than a dashboard animating itself. The landing now uses an original East African geometric rhythm — diamonds, grid lines and signal dots — as a system, not as a pasted stock textile. The primary mark now makes the company promise explicit: a recognizable African continent silhouette carrying a connected city-to-city signal path.
 
 | Dial | Decision |
 | --- | --- |
@@ -14,13 +14,14 @@ The v2 direction is a warm-dark **signal room**: charcoal ink, acid lime, minera
 | Motion intensity | 6/10 — logo/hero reveals and restrained hover choreography; reduced-motion fallback everywhere |
 | Information density | 6/10 — compact discovery cards, progressive disclosure for onboarding and checkout |
 | Asset dependence | 8/10 — real SURA marks and local visual assets lead the experience |
-| Brand fidelity | 9/10 — use the supplied SVG marks and the SURA lime/charcoal system |
+| Brand fidelity | 9/10 — use the Africa-network symbol and SURA lime/charcoal/clay system consistently |
 
 ## Asset map
 
 - Primary wordmark: `client/public/sura-wordmark.svg`
-- Primary app mark: `client/public/sura-mark-signal.svg`
-- Signal favicon: `client/public/sura-favicon-signal.svg`
+- Primary app mark: `client/public/sura-logo-africa.png` — African continent silhouette with connected signal nodes
+- Primary favicon: `client/public/sura-favicon-africa.png` — compact lime tile for browser and home-screen clarity
+- Previous signal SVG retained for rollback: `client/public/sura-mark-signal.svg`
 - Geometric pattern tile: `client/public/sura-pattern-grid.svg`
 - Legacy neon mark retained for rollback: `client/public/sura-mark-neon.svg`
 - Monochrome mark: `client/public/sura-mark.svg`
