@@ -159,9 +159,10 @@ function LoadingScreen({ phase }: { phase: Exclude<BootPhase, "done"> }) {
 }
 
 function App() {
+  const initialMotion = getMotionProfile();
   const shellRef = useRef<HTMLDivElement>(null);
-  const [bootPhase, setBootPhase] = useState<BootPhase>("in");
-  const [lowPower, setLowPower] = useState(false);
+  const [bootPhase, setBootPhase] = useState<BootPhase>(() => initialMotion.lowPower ? "done" : "in");
+  const [lowPower, setLowPower] = useState(() => initialMotion.lowPower);
   const [view, setView] = useState<View>("home");
   const [session, setSession] = useState<Session | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -191,6 +192,7 @@ function App() {
 
   useEffect(() => {
     const { reduced } = getMotionProfile();
+    if (lowPower) { setBootPhase("done"); return; }
     const exitDelay = reduced ? 120 : lowPower ? 180 : 900;
     const doneDelay = reduced ? 260 : lowPower ? 360 : 1350;
     const exitTimer = window.setTimeout(() => setBootPhase("out"), exitDelay);
