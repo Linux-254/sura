@@ -97,7 +97,7 @@ function ResponsiveImage({ asset, sizes = "(max-width: 767px) 100vw, 50vw", ...p
 }
 
 function Logo({ compact = false }: { compact?: boolean }) {
-  return <a href="#top" className="sura-focus inline-flex items-center gap-3" aria-label="SURA home"><img src="/sura-logo-africa-rhythm.png?v=5" alt="" className={`sura-logo-mark ${compact ? "h-8 w-8" : "h-9 w-9"}`} /><span className="sura-wordmark-divider" aria-hidden="true" /><span data-word="SURA" className="sura-wordmark-pattern font-display text-xl font-bold tracking-[-.08em]">SURA</span></a>;
+  return <a href="#top" className="sura-focus inline-flex items-center gap-3" aria-label="SURA home"><img src="/sura-logo-africa-rhythm.png?v=6" alt="" className={`sura-logo-mark ${compact ? "h-10 w-10" : "h-12 w-12"}`} /><span className="sura-wordmark font-display text-xl font-bold tracking-[-.08em]">SURA</span></a>;
 }
 
 function Meta({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
@@ -133,7 +133,7 @@ function LoadingScreen({ phase }: { phase: Exclude<BootPhase, "done"> }) {
   return <div ref={loadingRef} className={`sura-loading-screen ${phase === "out" ? "is-exiting" : ""}`} role="status" aria-label="Opening SURA">
     <div className="sura-loading-pattern" aria-hidden="true"><svg className="sura-loading-pattern__svg" viewBox="0 0 640 640" fill="none"><path className="sura-loading-pattern__line" d="M0 80 80 0l80 80-80 80L0 80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 240l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 400l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80ZM0 560l80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Zm160 0 80-80 80 80-80 80-80-80Z" /><path className="sura-loading-pattern__line" d="M80 0v640M240 0v640M400 0v640M560 0v640" /><path className="sura-loading-pattern__line" d="M0 160h640M0 320h640M0 480h640" /></svg></div>
     <div className="sura-loading-orbit" aria-hidden="true" />
-    <div className="sura-loading-lockup"><img className="sura-loading-mark" src="/sura-logo-africa-rhythm.png?v=5" alt="" /><span data-word="SURA" className="sura-loading-wordmark sura-wordmark-pattern font-display">SURA</span><span className="sura-loading-kicker sura-meta">Nairobi / Africa</span></div>
+    <div className="sura-loading-lockup"><img className="sura-loading-mark" src="/sura-logo-africa-rhythm.png?v=6" alt="" /><span className="sura-loading-wordmark sura-wordmark font-display">SURA</span><span className="sura-loading-kicker sura-meta">Nairobi / Africa</span></div>
     <span className="sura-loading-caption sura-meta">Make the feeling findable</span>
   </div>;
 }
